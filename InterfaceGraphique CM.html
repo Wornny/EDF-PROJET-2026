@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Page MIP 10</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="card">
+    <div class="titre">Pourcentage Contamination :</div>
+
+    <div class="row">
+      <input
+        type="range"
+        id="jauge"
+        name="jauge"
+        min="0"
+        max="100"
+        value="0"
+      >
+
+      <p id="valeur">0 %</p>
+    </div>
+  </div>
+
+  <script>
+    const jauge = document.getElementById('jauge');
+    const valeur = document.getElementById('valeur');
+
+    function sendValue(v) {
+      const formData = new FormData();
+      formData.append('value', v);
+
+      fetch('http://localhost:5000/slider', {
+        method: 'POST',
+        body: formData
+      });
+    }
+
+    // Envoie seulement quand on arrête de bouger la jauge
+    jauge.addEventListener('change', function () {
+      const v = jauge.value;
+      valeur.textContent = v + ' %';
+      sendValue(v);
+    });
+  </script>
+
+</body>
+</html>
