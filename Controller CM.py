@@ -5,7 +5,7 @@ app = Flask(__name__)
 @app.route("/slider", methods=["POST"])
 def slider():
     value = request.form.get("value")
-    print("Valeur du slider :", value)
+    print("Valeur du slider :", value)  
     return "ok"
 
 if __name__ == "__main__":
