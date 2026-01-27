@@ -7,30 +7,56 @@
 </head>
 <body>
 
-  <div class="card">
-    <div class="titre">Pourcentage Contamination :</div>
+  <div class="tablet">
+    <div class="tablet-header">
+      <span class="dot"></span>
+      <span class="title">Pourcentage Contamination</span>
+    </div>
 
-    <div class="row">
-      <input
-        type="range"
-        id="jauge"
-        name="jauge"
-        min="0"
-        max="100"
-        value="0"
-      >
+    <div class="tablet-body">
+      <div class="row">
+        <!-- Wrapper pour la jauge + barres de repère -->
+        <div class="jauge-wrapper">
+          <div class="jauge-separators">
+            <!-- barres tous les 10 % (0 à 100) -->
+            <span class="sep" style="left: 0%;"></span>
+            <span class="sep" style="left: 10%;"></span>
+            <span class="sep" style="left: 20%;"></span>
+            <span class="sep" style="left: 30%;"></span>
+            <span class="sep" style="left: 40%;"></span>
+            <span class="sep" style="left: 50%;"></span>
+            <span class="sep" style="left: 60%;"></span>
+            <span class="sep" style="left: 70%;"></span>
+            <span class="sep" style="left: 80%;"></span>
+            <span class="sep" style="left: 90%;"></span>
+            <span class="sep" style="left: 100%;"></span>
+          </div>
 
-      <p id="valeur">0 %</p>
+          <!-- Slider linéaire 0–1000 -->
+          <input
+            type="range"
+            id="jauge"
+            name="jauge"
+            min="0"
+            max="1000"
+            step="1"
+            value="0"
+          >
+        </div>
+
+        <!-- Affiche la valeur entière -->
+        <p id="valeur">0</p>
+      </div>
     </div>
   </div>
 
   <script>
-    const jauge = document.getElementById('jauge');
+    const jauge  = document.getElementById('jauge');
     const valeur = document.getElementById('valeur');
 
-    function sendValue(v) {
+    function sendValue(vInt) {
       const formData = new FormData();
-      formData.append('value', v);
+      formData.append('value', vInt.toString());
 
       fetch('http://localhost:5000/slider', {
         method: 'POST',
@@ -38,12 +64,39 @@
       });
     }
 
-    // Envoie seulement quand on arrête de bouger la jauge
-    jauge.addEventListener('change', function () {
-      const v = jauge.value;
-      valeur.textContent = v + ' %';
-      sendValue(v);
+    // couleur selon la valeur (0–1000)
+    function updateColor(vInt) {
+      let color;
+      if (vInt < 300) {
+        color = '#22c55e';   // vert
+      } else if (vInt < 800) {
+        color = '#f97316';   // orange
+      } else {
+        color = '#ef4444';   // rouge
+      }
+      document.documentElement.style.setProperty('--jauge-color', color);
+    }
+
+    function updateFromSlider() {
+      const intValue = Number(jauge.value);   // 0–1000
+      valeur.textContent = intValue.toString();
+      updateColor(intValue);
+      return intValue;
+    }
+
+    // mise à jour visuelle en temps réel
+    jauge.addEventListener('input', function () {
+      updateFromSlider();
     });
+
+    // envoi au Python seulement quand on lâche la jauge
+    jauge.addEventListener('change', function () {
+      const intValue = updateFromSlider();
+      sendValue(intValue);
+    });
+
+    // init
+    updateFromSlider();
   </script>
 
 </body>
