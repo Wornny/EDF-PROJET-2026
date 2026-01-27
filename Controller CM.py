@@ -1,9 +1,4 @@
 from flask import Flask, request
-import logging
-
-# Désactiver les logs HTTP de Werkzeug
-log = logging.getLogger("werkzeug")
-log.disabled = True
 
 app = Flask(__name__)
 
