@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>C2 - Capteurs</title>
+    <link rel="stylesheet" href="../static/C2.css">
+</head>
+<body>
+    
+<div id="page"></div>
+
+<div class="c2-container">
+    <!-- fond : ton image / animation -->
+    <img src="" class="c2-bg" alt="C2 fond">
+
+    <!-- COLONNE 3x5 à gauche -->
+    <!-- colonne 1 -->
+    <button class="cap cap-c1 cap-c1r1" data-capteur="c1"><i>1</i></button>
+    <button class="cap cap-c1 cap-c1r2" data-capteur="c4"><i>4</i></button>
+    <button class="cap cap-c1 cap-c1r3" data-capteur="c7"><i>7</i></button>
+    <button class="cap cap-c1 cap-c1r4" data-capteur="c10"><i>10</i></button>
+    <button class="cap cap-c1 cap-c1r5" data-capteur="c13"><i>13</i></button>
+
+    <!-- colonne 2 -->
+    <button class="cap cap-c2 cap-c2r1" data-capteur="c2"><d>2</d></button>
+    <button class="cap cap-c2 cap-c2r2" data-capteur="c5"><d>5</d></button>
+    <button class="cap cap-c2 cap-c2r3" data-capteur="c8"><d>8</d></button>
+    <button class="cap cap-c2 cap-c2r4" data-capteur="c11"><d>11</d></button>
+    <button class="cap cap-c2 cap-c2r5" data-capteur="c14"><d>14</d></button>
+
+    <!-- colonne 3 -->
+    <button class="cap cap-c3 cap-c3r1" data-capteur="c3"><i>3</i></button>
+    <button class="cap cap-c3 cap-c3r2" data-capteur="c6"><i>6</i></button>
+    <button class="cap cap-c3 cap-c3r3" data-capteur="c9"><i>9</i></button>
+    <button class="cap cap-c3 cap-c3r4" data-capteur="c12"><i>12</i></button>
+    <button class="cap cap-c3 cap-c3r5" data-capteur="c15"><i>15</i></button>
+
+
+    <!-- PETITE COLONNE DE 3 (verte au centre) -->
+    <button class="cap cap-colS-r1" data-capteur="c16"><d>16</d></button>
+    <button class="cap cap-colS-r2" data-capteur="c17"><d>17</d></button>
+    <button class="cap cap-colS-r3" data-capteur="c18"><d>18</d></button>
+
+    <!-- TRIANGLE DE 3 (marron à droite) -->
+    <button class="cap cap-tri-top" data-capteur="c19"><i>19</i></button>
+    <button class="cap cap-tri-left" data-capteur="c20"><i>20</i></button>
+    <button class="cap cap-tri-right" data-capteur="c21"><i>21</i></button>
+</div>
+
+<!-- Image / silhouette du corps à droite -->
+<div class="body-container">
+    <img src="../static/img/homme_face_blanc.png" class="body-img" alt="corps">
+
+    <!-- zones cliquables -->
+    <button class="body-zone zone-tete"    data-group="tete"></button>
+    <button class="body-zone zone-bras"  data-group="bras"></button>
+    <button class="body-zone zone-buste"   data-group="buste"></button>
+    <button class="body-zone zone-jambes"  data-group="jambes"></button>
+</div>
+
+
+<script src="../static/script.js"></script>
+</body>
+</html>
+
