@@ -1,0 +1,335 @@
+body {
+  margin: 0;
+  height: 100vh;
+  background: radial-gradient(circle at center, #1e3a8a 0%, #020617 70%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: system-ui, sans-serif;
+  color: #e5e7eb;
+}
+
+/* ================== TABLETTE ================== */
+
+.tablet {
+  position: relative;
+  width: 1100px;
+  height: 650px;
+  background: linear-gradient(#0b2f57, #071a30);
+  border-radius: 40px;
+  padding: 20px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.8);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* ================== DRAWER GAUCHE ================== */
+
+.side-panel {
+  position: absolute;
+  left: 30px;                 /* position normale */
+  top: 60px;
+  bottom: 60px;
+  width: 190px;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  transition: left 0.25s ease, width 0.25s ease;
+}
+
+/* ÉTAT REPLIÉ : flèche collée au bord de la tablette */
+.side-panel.collapsed {
+  left: -82px;     /* ✅ compense le padding de .tablet (20px) */
+  width: 40px;     /* ✅ largeur = flèche */
+}
+
+/* ✅ enlève tout décalage du bouton en mode replié */
+.side-panel.collapsed .drawer-toggle {
+  margin-left: 0;
+}
+
+
+/* panneau bleu */
+.side-panel-inner {
+  background: #04315c;
+  border-radius: 8px 0 0 8px;
+  width: 150px;
+  padding-top: 10px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.25s ease, opacity 0.2s ease;
+}
+
+/* cacher complètement les CM ID */
+.side-panel.collapsed .side-panel-inner {
+  transform: translateX(-260px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* bouton refresh */
+.refresh-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background: #0b5ed7;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.refresh-btn:hover {
+  filter: brightness(1.1);
+}
+
+/* liste CM */
+.cm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  align-items: center;
+}
+
+.cm-btn {
+  width: 120px;
+  height: 26px;
+  background: linear-gradient(#ffdd99, #ffb466);
+  border-radius: 4px;
+  border: 1px solid #c87a30;
+  font-size: 12px;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.cm-btn:hover {
+  filter: brightness(1.05);
+}
+
+.cm-add {
+  background: #ffcc66;
+  font-weight: bold;
+}
+
+/* ================== FLÈCHE ================== */
+
+.drawer-toggle {
+  width: 40px;
+  height: 80px;
+  align-self: center;
+  border-radius: 8px;
+  background: #0b315e;
+  border: none;
+  color: #fff;
+  font-size: 26px;
+  cursor: pointer;
+  margin-left: 4px;
+  transition: transform 0.25s ease;
+}
+
+.drawer-toggle:hover {
+  filter: brightness(1.1);
+}
+
+/* ================== BANDEAU HAUT ================== */
+
+.top-bar {
+  position: absolute;
+  top: 25px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.title {
+  background: #0b5ed7;
+  padding: 6px 30px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.home {
+  position: absolute;
+  right: 40px;
+  cursor: pointer;
+}
+
+/* ================== ZONE DROITE ================== */
+
+.right-area {
+  position: absolute;
+  left: 230px;
+  top: 80px;
+  right: 40px;
+  bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* panneau jauge */
+.detector-panel {
+  background: linear-gradient(#0b4a85, #07335e);
+  border-radius: 8px;
+  padding: 20px 24px;
+  width: 100%;
+  max-width: 820px;
+  box-sizing: border-box;
+}
+
+.detector-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.value-box {
+  background: #b91c1c;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+/* jauge */
+.detector-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.beta-icon {
+  width: 46px;
+  height: 46px;
+  background: #0b5ed7;
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 26px;
+  font-weight: bold;
+}
+
+.gauge-zone {
+  flex: 1;
+  position: relative;
+}
+
+.gauge-bg {
+  position: relative;
+  height: 18px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    #22c55e 0%,
+    #22c55e 25%,
+    #facc15 40%,
+    #f97316 65%,
+    #ef4444 100%
+  );
+  overflow: hidden;
+}
+
+.gauge-mask {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  background: rgba(255,255,255,0.75);
+}
+
+.gauge-separators {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.gauge-separators span {
+  position: absolute;
+  top: -2px;
+  width: 2px;
+  height: 22px;
+  background: #000;
+}
+
+.scale {
+  position: relative;
+  height: 20px;
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.scale span {
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+#jauge {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* ===== Curseur de jauge (comme sur ton image) ===== */
+.gauge-cursor {
+  position: absolute;
+  top: -7px;               /* triangle au-dessus */
+  height: 32px;            /* triangle + tige */
+  width: 0;
+  z-index: 4;              /* au-dessus du mask et séparateurs */
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+/* triangle au-dessus */
+.gauge-cursor::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -7px;
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 10px solid #ff6b6b; /* rose/rouge comme l’image */
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,0.35));
+}
+
+/* "tige" / repère dans la barre */
+.gauge-cursor::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: -1px;
+  width: 2px;
+  height: 22px;
+  background: #e5e7eb;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.15);
+  border-radius: 2px;
+}
+
+/* optionnel : petit “sablier” (poignée) au milieu, style image */
+.gauge-cursor .handle {
+  position: absolute;
+  top: 14px;
+  left: -5px;
+  width: 10px;
+  height: 14px;
+  background: linear-gradient(#7dd3fc, #2563eb);
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.45),
+              0 1px 2px rgba(0,0,0,0.35);
+  clip-path: polygon(20% 0%, 80% 0%, 60% 50%, 80% 100%, 20% 100%, 40% 50%);
+}
