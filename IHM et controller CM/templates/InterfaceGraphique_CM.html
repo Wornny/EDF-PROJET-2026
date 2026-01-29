@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>CM ID {{ cm_id }}</title>
+
+  <!-- IMPORTANT : affichage tablette / responsive -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="../static/styleCM.css">
+  <script defer src="../static/script.js"></script>
+</head>
+
+<body data-cm-id="{{ cm_id }}">
+
+<div class="tablet">
+
+  <!-- ================== DRAWER GAUCHE ================== -->
+  <div class="side-panel" id="sidePanel">
+
+    <div class="side-panel-inner" id="sidePanelInner">
+      <button class="refresh-btn" onclick="location.reload()">⟳</button>
+
+      <div class="cm-list">
+        <a class="cm-btn {% if cm_id == 1 %}active{% endif %}" href="/CapteurMobile/1">CM ID 1</a>
+        <a class="cm-btn {% if cm_id == 2 %}active{% endif %}" href="/CapteurMobile/2">CM ID 2</a>
+        <a class="cm-btn {% if cm_id == 3 %}active{% endif %}" href="/CapteurMobile/3">CM ID 3</a>
+        <a class="cm-btn {% if cm_id == 4 %}active{% endif %}" href="/CapteurMobile/4">CM ID 4</a>
+        <a class="cm-btn {% if cm_id == 5 %}active{% endif %}" href="/CapteurMobile/5">CM ID 5</a>
+        <a class="cm-btn {% if cm_id == 6 %}active{% endif %}" href="/CapteurMobile/6">CM ID 6</a>
+        <a class="cm-btn {% if cm_id == 7 %}active{% endif %}" href="/CapteurMobile/7">CM ID 7</a>
+        <a class="cm-btn {% if cm_id == 8 %}active{% endif %}" href="/CapteurMobile/8">CM ID 8</a>
+        <a class="cm-btn {% if cm_id == 9 %}active{% endif %}" href="/CapteurMobile/9">CM ID 9</a>
+        <a class="cm-btn {% if cm_id == 10 %}active{% endif %}" href="/CapteurMobile/10">CM ID 10</a>
+        <a class="cm-btn {% if cm_id == 11 %}active{% endif %}" href="/CapteurMobile/11">CM ID 11</a>
+
+        <button class="cm-btn cm-add" type="button">+</button>
+      </div>
+    </div>
+
+    <button class="drawer-toggle" id="drawerToggle">◀</button>
+  </div>
+
+  <!-- ================== BANDEAU HAUT ================== -->
+  <div class="top-bar">
+    <span class="title">CM ID {{ cm_id }}</span>
+    <a class="home" href="/CapteurMobile/1" title="Retour CM ID 1">🏠</a>   <!-- Quand j'appuie sur la maison, ça revient à la pa ge CM ID1 -->
+  </div>
+
+  <!-- ================== ZONE DROITE ================== -->
+  <div class="right-area">
+
+    <!-- ===== PANEL NIVEAU CONTAMINATION ===== -->
+    <div class="detector-panel">
+
+      <div class="detector-title">
+        <span>Niveau Contamination</span>
+
+        <span class="value-box value-green" id="valueBox">
+          <span id="valeur">{{ valeur_init }}</span> Bq/cm²
+        </span>
+      </div>
+
+      <div class="detector-content">
+        <div class="beta-icon">β</div>
+
+        <div class="gauge-zone">
+
+          <!-- overlay triangle -->
+          <div class="gauge-overlay">
+            <div class="gauge-triangle" id="gaugeTriangle"></div>
+          </div>
+
+          <!-- barre -->
+          <div class="gauge-bg">
+            <div class="gauge-mask" id="gaugeMask"></div>
+
+            <div class="gauge-separators">
+              <span style="left:0%"></span>
+              <span style="left:20%"></span>
+              <span style="left:40%"></span>
+              <span style="left:60%"></span>
+              <span style="left:80%"></span>
+              <span style="left:100%"></span>
+            </div>
+          </div>
+
+          <!-- échelle -->
+          <div class="scale">
+            <span style="left:0%">0</span>
+            <span style="left:20%">1</span>
+            <span style="left:40%">10</span>
+            <span style="left:60%">100</span>
+            <span style="left:80%">1000</span>
+            <span style="left:100%">C/S</span>
+          </div>
+
+          <!-- slider invisible -->
+          <input
+            type="range"
+            id="jauge"
+            min="0"
+            max="1000"
+            step="1"
+            value="0"
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- PLUS TARD :
+         Ajouter le panel "Bruit de fond"
+     
+    -->
+
+  </div>
+
+</div>
+
+</body>
+</html>
