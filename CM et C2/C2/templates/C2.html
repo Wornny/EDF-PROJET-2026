@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>C2 - Capteurs</title>
+    <link rel="stylesheet" href="../static/C2.css">
+</head>
+<body data-c2-id="C2_{{ c2_id }}">
+<!-- DRAWER GAUCHE -->
+<div class="drawer" id="drawer">
+    <div class="drawer-content">
+        <h2>Panneau de Contrôle</h2>
+        <div class="drawer-section">
+            <div class="cm-list">
+                <a class="cm-btn" href="/C2/1">C2 ID 1</a>
+                <a class="cm-btn" href="/C2/2">C2 ID 2</a>
+                <button class="cm-btn cm-add">+</button>
+            </div>
+        </div>
+        <div class="drawer-section">
+        </div>
+    </div>
+</div>
+
+<!-- TOGGLE BUTTON (Rectangle avec triangle) -->
+<button class="drawer-toggle-btn" id="drawerToggle"></button>
+
+<div class="banner">
+    <div class="banner-text"></div>
+    <p class="c2-id-display">C2 ID : C2_{{ c2_id }}</p>
+</div>
+<div class="c2-wrapper">
+    <div class="c2-container">
+        <div id="page"></div>
+
+        <div class="c2-container">
+            <!-- fond : ton image / animation -->
+            <!-- <img src="" class="c2-bg" alt="C2 fond"> -->
+
+            <!-- CAPTEURS FACE -->
+            <!-- COLONNE 3x5 à gauche -->
+            <!-- colonne 1 -->
+            <button class="cap cap-c1 cap-c1r1" data-capteur="c1" data-mode="FACE"><i>1</i></button>
+            <button class="cap cap-c1 cap-c1r2" data-capteur="c4" data-mode="FACE"><i>4</i></button>
+            <button class="cap cap-c1 cap-c1r3" data-capteur="c7" data-mode="FACE"><i>7</i></button>
+            <button class="cap cap-c1 cap-c1r4" data-capteur="c10" data-mode="FACE"><i>10</i></button>
+            <button class="cap cap-c1 cap-c1r5" data-capteur="c13" data-mode="FACE"><i>13</i></button>
+
+            <!-- colonne 2 -->
+            <button class="cap cap-c2 cap-c2r1" data-capteur="c2" data-mode="FACE"><d>2</d></button>
+            <button class="cap cap-c2 cap-c2r2" data-capteur="c5" data-mode="FACE"><d>5</d></button>
+            <button class="cap cap-c2 cap-c2r3" data-capteur="c8" data-mode="FACE"><d>8</d></button>
+            <button class="cap cap-c2 cap-c2r4" data-capteur="c11" data-mode="FACE"><d>11</d></button>
+            <button class="cap cap-c2 cap-c2r5" data-capteur="c14" data-mode="FACE"><d>14</d></button>
+
+            <!-- colonne 3 -->
+            <button class="cap cap-c3 cap-c3r1" data-capteur="c3" data-mode="FACE"><i>3</i></button>
+            <button class="cap cap-c3 cap-c3r2" data-capteur="c6" data-mode="FACE"><i>6</i></button>
+            <button class="cap cap-c3 cap-c3r3" data-capteur="c9" data-mode="FACE"><i>9</i></button>
+            <button class="cap cap-c3 cap-c3r4" data-capteur="c12" data-mode="FACE"><i>12</i></button>
+            <button class="cap cap-c3 cap-c3r5" data-capteur="c15" data-mode="FACE"><i>15</i></button>
+
+            <!-- PETITE COLONNE DE 3 (verte au centre) -->
+            <button class="cap cap-colS-r1" data-capteur="c16" data-mode="FACE"><d>16</d></button>
+            <button class="cap cap-colS-r2" data-capteur="c17" data-mode="FACE"><d>17</d></button>
+            <button class="cap cap-colS-r3" data-capteur="c18" data-mode="FACE"><d>18</d></button>
+
+            <!-- TRIANGLE DE 3 (marron à droite) -->
+            <button class="cap cap-tri-top" data-capteur="c19" data-mode="FACE"><i>19</i></button>
+            <button class="cap cap-tri-left" data-capteur="c20" data-mode="FACE"><i>20</i></button>
+            <button class="cap cap-tri-right" data-capteur="c21" data-mode="FACE"><i>21</i></button>
+
+            <!-- CAPTEURS DOS (cachés par défaut) -->
+            <!-- COLONNE 3x5 à gauche -->
+            <!-- colonne 1 -->
+            <button class="cap cap-c1 cap-c1r1 hidden-mode" data-capteur="dos1" data-mode="DOS"><i>1</i></button>
+            <button class="cap cap-c1 cap-c1r2 hidden-mode" data-capteur="dos4" data-mode="DOS"><i>4</i></button>
+            <button class="cap cap-c1 cap-c1r3 hidden-mode" data-capteur="dos7" data-mode="DOS"><i>7</i></button>
+            <button class="cap cap-c1 cap-c1r4 hidden-mode" data-capteur="dos10" data-mode="DOS"><i>10</i></button>
+            <button class="cap cap-c1 cap-c1r5 hidden-mode" data-capteur="dos13" data-mode="DOS"><i>13</i></button>
+
+            <!-- colonne 2 -->
+            <button class="cap cap-c2 cap-c2r1 hidden-mode" data-capteur="dos2" data-mode="DOS"><d>2</d></button>
+            <button class="cap cap-c2 cap-c2r2 hidden-mode" data-capteur="dos5" data-mode="DOS"><d>5</d></button>
+            <button class="cap cap-c2 cap-c2r3 hidden-mode" data-capteur="dos8" data-mode="DOS"><d>8</d></button>
+            <button class="cap cap-c2 cap-c2r4 hidden-mode" data-capteur="dos11" data-mode="DOS"><d>11</d></button>
+            <button class="cap cap-c2 cap-c2r5 hidden-mode" data-capteur="dos14" data-mode="DOS"><d>14</d></button>
+
+            <!-- colonne 3 -->
+            <button class="cap cap-c3 cap-c3r1 hidden-mode" data-capteur="dos3" data-mode="DOS"><i>3</i></button>
+            <button class="cap cap-c3 cap-c3r2 hidden-mode" data-capteur="dos6" data-mode="DOS"><i>6</i></button>
+            <button class="cap cap-c3 cap-c3r3 hidden-mode" data-capteur="dos9" data-mode="DOS"><i>9</i></button>
+            <button class="cap cap-c3 cap-c3r4 hidden-mode" data-capteur="dos12" data-mode="DOS"><i>12</i></button>
+            <button class="cap cap-c3 cap-c3r5 hidden-mode" data-capteur="dos15" data-mode="DOS"><i>15</i></button>
+
+            <!-- PETITE COLONNE DE 3 (verte au centre) -->
+            <button class="cap cap-colS-r1 hidden-mode" data-capteur="dos16" data-mode="DOS"><d>16</d></button>
+            <button class="cap cap-colS-r2 hidden-mode" data-capteur="dos17" data-mode="DOS"><d>17</d></button>
+            <button class="cap cap-colS-r3 hidden-mode" data-capteur="dos18" data-mode="DOS"><d>18</d></button>
+
+            <!-- TRIANGLE DE 3 (marron à droite) -->
+            <button class="cap cap-tri-top hidden-mode" data-capteur="dos19" data-mode="DOS"><i>19</i></button>
+            <button class="cap cap-tri-left hidden-mode" data-capteur="dos20" data-mode="DOS"><i>20</i></button>
+            <button class="cap cap-tri-right hidden-mode" data-capteur="dos21" data-mode="DOS"><i>21</i></button>
+        </div>
+
+        <!-- Image / silhouette du corps à droite -->
+        <div class="body-container">
+            <img src="../static/img/homme_face_blanc.png" class="body-img body-img-face" alt="corps face">
+            <img src="../static/img/homme_dos_blanc.png" class="body-img body-img-dos hidden-mode" alt="corps dos">
+
+            <!-- zones cliquables -->
+            <button class="body-zone zone-tete"    data-group="tete"></button>
+            <button class="body-zone zone-bras"  data-group="bras"></button>
+            <button class="body-zone zone-buste"   data-group="buste"></button>
+            <button class="body-zone zone-jambes"  data-group="jambes"></button>
+        </div>
+    </div>
+</div>
+<footer>
+    <div class="control-group">
+        <label></label>
+        <button class="control-btn" data-mode="FACE">FACE</button>
+        <button class="control-btn" data-mode="DOS">DOS</button>
+    </div>
+</footer>
+
+<script src="../static/script.js"></script>
+</body>
+</html>
+
