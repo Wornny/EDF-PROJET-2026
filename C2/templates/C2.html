@@ -5,19 +5,19 @@
     <title>C2 - Capteurs</title>
     <link rel="stylesheet" href="../static/C2.css">
 </head>
-<body>
+<body data-c2-id="C2_{{ c2_id }}">
 <!-- DRAWER GAUCHE -->
 <div class="drawer" id="drawer">
     <div class="drawer-content">
         <h2>Panneau de Contrôle</h2>
         <div class="drawer-section">
-            <h3>Informations</h3>
-            <p>C2 ID: C2_1</p>
-            <p>Mode: <span id="drawerMode">FACE</span></p>
+            <div class="cm-list">
+                <a class="cm-btn" href="/C2/1">C2 ID 1</a>
+                <a class="cm-btn" href="/C2/2">C2 ID 2</a>
+                <button class="cm-btn cm-add">+</button>
+            </div>
         </div>
         <div class="drawer-section">
-            <h3>Capteurs Actifs</h3>
-            <div id="drawerCapteurs">Aucun capteur activé</div>
         </div>
     </div>
 </div>
@@ -27,7 +27,7 @@
 
 <div class="banner">
     <div class="banner-text"></div>
-    <p class="c2-id-display">C2 ID : C2_1</p>
+    <p class="c2-id-display">C2 ID : C2_{{ c2_id }}</p>
 </div>
 <div class="c2-wrapper">
     <div class="c2-container">

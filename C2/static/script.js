@@ -1,5 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const C2_ID = 'C2_1';
+    const C2_ID = document.body.dataset.c2Id || 'C2_1';
+
+    function setC2Id(newId) {
+        C2_ID = newId;
+        const bannerText = document.querySelector('.c2-id-display');
+        if (bannerText) {
+            bannerText.textContent = `C2 ID : ${newId}`;
+        }
+        // On renvoie l'état actuel avec le nouveau C2_ID
+        publishFullState();
+    }
 
     // état global: garder l'état de chaque mode séparément
     const stateCapteurs = {
@@ -53,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 capteurs: stateCapteurs[currentMode]
             })
         }).catch(err => console.error('Erreur fetch MQTT:', err));
-    }
+    }    
 
     // clic individuel sur un capteur
     caps.forEach(btn => {
@@ -95,14 +105,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetState = !allActive;
 
             capteursGroup.forEach(id => {
-                const btn = document.querySelector(`.cap[data-capteur="${id}"]`);
-                if (!btn) return;
+            const btn = document.querySelector(`.cap[data-capteur="${id}"]`);
+            if (!btn) return;
 
-                btn.classList.toggle('active', targetState);
-                stateCapteurs[id] = targetState;
+            btn.classList.toggle('active', targetState);
+
+            // ✅ on met à jour l'état dans le bon sous-objet (FACE ou DOS)
+            stateCapteurs[currentMode][id] = targetState;
             });
 
             publishFullState();
+
 
             const container = document.querySelector('.c2-container');
 
@@ -234,5 +247,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Exemple: setC2Id('C2_2');
 
+    const c2Buttons = document.querySelectorAll('.cm-btn[href^="/C2 ID/"]');
+
+    c2Buttons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();  // on évite la navigation pour le moment
+
+            // Récupère l'ID depuis le href → "/C2 ID/1" => "C2_1"
+            const href = btn.getAttribute('href');   // "/C2 ID/1"
+            const parts = href.split('/');
+            const num = parts[parts.length - 1];     // "1"
+            const newId = `C2_${num}`;
+
+            setC2Id(newId);
+
+            // optionnel: classe active sur le bouton sélectionné
+            c2Buttons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+    });
 });
 
