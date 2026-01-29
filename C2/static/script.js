@@ -198,19 +198,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const drawerMode = document.getElementById('drawerMode');
     const drawerCapteurs = document.getElementById('drawerCapteurs');
 
-    // Ouvrir/Fermer le drawer
+    // lire l'état sauvegardé
+    const savedState = localStorage.getItem('drawerOpen');
+    const isOpen = savedState === 'true';
+
+    // appliquer l'état au chargement
+    if (isOpen) {
+    drawer.classList.add('open');
+    drawerToggle.classList.add('open');
+    }
+
+    // toggle + sauvegarde
     drawerToggle.addEventListener('click', () => {
-        drawer.classList.toggle('open');
+    const nowOpen = !drawer.classList.contains('open');
+    drawer.classList.toggle('open', nowOpen);
+    drawerToggle.classList.toggle('open', nowOpen);
+    localStorage.setItem('drawerOpen', String(nowOpen));
     });
 
-    // Fermer en cliquant en dehors du drawer
-    document.addEventListener('click', (e) => {
-        if (!drawer.contains(e.target) && !drawerToggle.contains(e.target)) {
-            if (drawer.classList.contains('open')) {
-                drawer.classList.remove('open');
-            }
-        }
-    });
 
     // Mettre à jour le drawer quand on change de mode
     function updateDrawer() {
