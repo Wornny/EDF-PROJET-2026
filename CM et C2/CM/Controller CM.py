@@ -1,149 +1,127 @@
 from flask import Flask, request, render_template, redirect
 import logging
 
-
-
-# ===================== RÉGLAGES =====================
-# Permet d'activer ou non MQTT
-# (False chez moi, True au lycée)
 USE_MQTT = True
-
 if USE_MQTT:
     import paho.mqtt.client as mqtt
 
-    # Adresse du broker MQTT
-    BROKER_HOST = "192.168.190.31"
-    BROKER_PORT = 1883
+# ===================== MQTT =====================
+BROKER_HOST = "192.168.190.31"
+BROKER_PORT = 1883
 
-    # Nouveau format de topic MQTT
-    # CM_01, CM_02, ..., CM_11 (pour qu'ils soient bien rangés)
-    TOPIC_TEMPLATE_NEW = "FormaReaEDF/CapteurMobile/CM_{cm_id:02d}/NivContamination"
+def get_topic_contamination(cm_id: int) -> str:
+    return f"FormaReaEDF/ControllerMobile/CM_{cm_id:02d}/NivContamination"
 
-    # Ancien format de topic (utilisé pour supprimer les anciens)
-    TOPIC_TEMPLATE_OLD = "FormaReaEDF/CapteurMobile/CM_{cm_id}/NivContamination"
-
-
-
+def get_topic_bdf(cm_id: int) -> str:
+    return f"FormaReaEDF/ControllerMobile/CM_{cm_id:02d}/BruitDeFond"
 
 # ===================== FLASK =====================
-# Création de l'application Flask
 app = Flask(__name__)
-
-# Désactive les messages Flask inutiles dans la console
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
-# Dictionnaire qui stocke la dernière valeur
-# pour chaque capteur mobile (CM 1 à CM 11)
-last_values = {i: "0.00" for i in range(1, 12)}
+# Topics avec CM_ID => valeurs indépendantes pour chaque CM
+last_values = {}
+for i in range(1, 12):
+    last_values[i] = {
+        "NivContamination": "1",
+        "BruitDeFond": "0.50",
+    }
 
-
-
-
-# ===================== MQTT =====================
 mqtt_client = None
-if USE_MQTT:
-    # Création du client MQTT
-    mqtt_client = mqtt.Client(client_id="IHM_CM")
 
-    # Connexion au broker MQTT
+def _clean_payload(payload: str) -> str:
+    p = (payload or "").strip()
+    return p.replace("Bq/cm²", "").strip()
+
+def on_message(client, userdata, msg):
+    try:
+        payload = _clean_payload(msg.payload.decode("utf-8", errors="ignore"))
+        
+        # Extraire CM_ID du topic (format: FormaReaEDF/ControllerMobile/CM_XX/...)
+        parts = msg.topic.split("/")
+        if len(parts) < 4 or not parts[2].startswith("CM_"):
+            return
+            
+        try:
+            cm_id = int(parts[2][3:])  # Extraire XX de CM_XX
+        except ValueError:
+            return
+        
+        if cm_id < 1 or cm_id > 11:
+            return
+
+        if "NivContamination" in msg.topic:
+            last_values[cm_id]["NivContamination"] = payload
+        elif "BruitDeFond" in msg.topic:
+            last_values[cm_id]["BruitDeFond"] = payload
+
+    except Exception as e:
+        print("MQTT on_message error:", e)
+
+if USE_MQTT:
+    mqtt_client = mqtt.Client(client_id="IHM_ControllerMobile")
+    mqtt_client.on_message = on_message
     mqtt_client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
 
-    # Démarrage de MQTT en arrière-plan
+    # S'abonner à tous les topics ControllerMobile/CM_XX
+    for cm_id in range(1, 12):
+        mqtt_client.subscribe(get_topic_contamination(cm_id))
+        mqtt_client.subscribe(get_topic_bdf(cm_id))
+
+    # Publier les valeurs initiales pour tous les CM
+    for cm_id in range(1, 12):
+        mqtt_client.publish(get_topic_contamination(cm_id), f"{last_values[cm_id]['NivContamination']} Bq/cm²", retain=True)
+        mqtt_client.publish(get_topic_bdf(cm_id), f"{last_values[cm_id]['BruitDeFond']} Bq/cm²", retain=True)
+
     mqtt_client.loop_start()
 
-    # 1) Supprime les anciens topics MQTT (CM_1, CM_2, ...)
-    # Envoyer un message vide avec retain=True les efface
-    for cm_id in range(1, 12):
-        old_topic = TOPIC_TEMPLATE_OLD.format(cm_id=cm_id)
-        mqtt_client.publish(old_topic, payload="", retain=True)
-
-    # 2) Envoie les valeurs avec le nouveau format (CM_01 à CM_11)
-    # et avec l’unité Bq/cm²
-    for cm_id, value in last_values.items():
-        new_topic = TOPIC_TEMPLATE_NEW.format(cm_id=cm_id)
-        mqtt_client.publish(new_topic, f"{value} Bq/cm²", retain=True)
-
-
-
-
-# ===================== PAGES =====================
-
+# ===================== ROUTES (✅ ControllerMobile) =====================
 @app.route("/")
 def root():
-    """
-    Quand on arrive sur le site,
-    on va automatiquement sur le CM 1
-    """
-    return redirect("/CapteurMobile/1")
+    return redirect("/ControllerMobile/1")
 
+@app.route("/ControllerMobile")
+def controllermobile_root():
+    return redirect("/ControllerMobile/1")
 
-@app.route("/CapteurMobile")
-def capteurmobile():
-    """
-    Si quelqu’un va sur /CapteurMobile,
-    on l’envoie aussi vers le CM 1
-    """
-    return redirect("/CapteurMobile/1")
-
-
-@app.route("/CapteurMobile/<int:cm_id>")   # Affiche bien la pa ge CM ID demandée
+@app.route("/ControllerMobile/<int:cm_id>")
 def page_cm(cm_id: int):
-    """
-
-    cm_id vient directement de l’URL
-    Exemple : /CapteurMobile/3 → cm_id = 3
-    """
-    # Si le CM n’existe pas, on revient au CM 1
-    if cm_id not in last_values:
+    if cm_id < 1 or cm_id > 11:
         cm_id = 1
 
-    # On envoie au HTML :
-    # - le numéro du CM
-    # - la dernière valeur enregistrée
     return render_template(
         "InterfaceGraphique_CM.html",
         cm_id=cm_id,
-        valeur_init=last_values[cm_id]
+        valeur_conta=last_values[cm_id]["NivContamination"],
+        valeur_bdf=last_values[cm_id]["BruitDeFond"],
     )
-
 
 @app.route("/slider/<int:cm_id>", methods=["POST"])
 def slider(cm_id: int):
-    """
-    Reçoit la valeur envoyée par la jauge
-
-    Cette fonction est appelée quand
-    on bouge ou clique sur la jauge
-    """
-    # Vérifie que le CM existe
-    if cm_id not in last_values:
+    if cm_id < 1 or cm_id > 11:
         return "unknown cm_id", 400
 
-    # Récupération des données envoyées par le JavaScript
     value = request.form.get("value")
-    type_ = request.form.get("type")
+    type_ = request.form.get("type")   # contamination | bruitdefond
     equip = request.form.get("equip")
 
-    # On sauvegarde la nouvelle valeur
-    if value is not None:
-        last_values[cm_id] = value
+    if value is None:
+        return "missing value", 400
 
-    # Affiche la valeur dans la console
-    print(equip, "=", value, "Bq/cm²")
+    if type_ == "bruitdefond":
+        last_values[cm_id]["BruitDeFond"] = value
+        topic = get_topic_bdf(cm_id)
+    else:
+        last_values[cm_id]["NivContamination"] = value
+        topic = get_topic_contamination(cm_id)
 
-    # Envoie la valeur sur MQTT
+    print(equip, type_, "=", value, "Bq/cm²")
+
     if USE_MQTT and mqtt_client:
-        topic = TOPIC_TEMPLATE_NEW.format(cm_id=cm_id)
         mqtt_client.publish(topic, f"{value} Bq/cm²", retain=True)
 
     return "ok"
 
-
-
 # ===================== LANCEMENT =====================
 if __name__ == "__main__":
-    """
-    Lance le serveur Flask
-    Accessible sur le réseau en port 5000
-    """
     app.run(host="0.0.0.0", port=5000, debug=True)

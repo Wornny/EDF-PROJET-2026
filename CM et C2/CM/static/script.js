@@ -1,10 +1,20 @@
-// ================== RÉFÉRENCES DOM ==================
+// ================== CONTAMINATION DOM ==================
 const jauge     = document.getElementById("jauge");
 const valeur    = document.getElementById("valeur");
 const valueBox  = document.getElementById("valueBox");
 const mask      = document.getElementById("gaugeMask");
 const triangle  = document.getElementById("gaugeTriangle");
 const overlay   = document.querySelector(".gauge-overlay");
+const gaugeBg   = document.getElementById("gaugeBg");
+
+// ================== BRUIT DE FOND DOM ==================
+const jauge_bdf     = document.getElementById("jauge_bdf");
+const valeur_bdf    = document.getElementById("valeur_bdf");
+const valueBox_bdf  = document.getElementById("valueBox_bdf");
+const mask_bdf      = document.getElementById("gaugeMask_bdf");
+const triangle_bdf  = document.getElementById("gaugeTriangle_bdf");
+const overlay_bdf   = document.getElementById("gaugeOverlay_bdf");
+const gaugeBg_bdf   = document.getElementById("gaugeBg_bdf");
 
 // CM ID courant
 const cmId = Number(document.body.dataset.cmId || "1");
@@ -17,8 +27,6 @@ const P100   = 600;
 const P1000  = 800;
 const P10000 = 1000;
 
-// ✅ seuils couleur (sur la valeur réelle)
-// Vert < 10, Orange >= 10, Rouge >= 100
 const TH_GREEN  = 10;
 const TH_ORANGE = 100;
 
@@ -64,75 +72,50 @@ function formatValue(v) {
   return v.toExponential(1);
 }
 
-// ================== COULEUR VALUE-BOX ==================
-function setValueBoxColor(valNum) {
-  if (!valueBox) return;
-
-  valueBox.classList.remove("value-green", "value-orange", "value-red");
-
-  if (valNum < TH_GREEN) valueBox.classList.add("value-green");
-  else if (valNum < TH_ORANGE) valueBox.classList.add("value-orange");
-  else valueBox.classList.add("value-red");
-}
-
-// ================== UPDATE VISUEL ==================
-function updateGaugeFromSlider() {
-  if (!jauge || !valeur || !mask) return;
-
-  let raw = Number(jauge.value);
-
-  // snap positions clés
+function snap(raw) {
   if (Math.abs(raw - P1)     < 3) raw = P1;
   if (Math.abs(raw - P10)    < 3) raw = P10;
   if (Math.abs(raw - P100)   < 3) raw = P100;
   if (Math.abs(raw - P1000)  < 3) raw = P1000;
   if (Math.abs(raw - P10000) < 3) raw = P10000;
+  return raw;
+}
 
-  jauge.value = raw;
+// ================== COULEURS ==================
+function setValueBoxColor(boxEl, valNum) {
+  if (!boxEl) return;
 
+  boxEl.classList.remove("value-green", "value-orange", "value-red");
+  if (valNum < TH_GREEN) boxEl.classList.add("value-green");
+  else if (valNum < TH_ORANGE) boxEl.classList.add("value-orange");
+  else boxEl.classList.add("value-red");
+}
+
+// ================== UPDATE JAUGE ==================
+function updateGauge(raw, valeurEl, boxEl, maskEl, triangleEl, overlayEl) {
   const valNum = sliderToValue(raw);
   const valTxt = formatValue(valNum);
 
-  valeur.textContent = valTxt;
-  setValueBoxColor(valNum);
+  if (valeurEl) valeurEl.textContent = valTxt;
+  setValueBoxColor(boxEl, valNum);
 
-  // masque 0..1000
   const percent = (raw / 1000) * 100;
-  mask.style.width = (100 - percent) + "%";
+  if (maskEl) maskEl.style.width = (100 - percent) + "%";
+  if (triangleEl) triangleEl.style.left = percent + "%";
+  if (overlayEl) overlayEl.style.setProperty("--tri-left", percent + "%");
 
-  // triangle position
-  if (triangle) triangle.style.left = percent + "%";
-
-  // tige position (via variable css)
-  if (overlay) overlay.style.setProperty("--tri-left", percent + "%");
+  return valTxt;
 }
 
-// ================== ENVOI SERVEUR ==================
-function sendValue() {
-  if (!jauge) return;
+// ================== RESTORE ==================
+function restoreSliderFromDisplayedValue(sliderEl, valeurEl) {
+  if (!sliderEl || !valeurEl) return;
 
-  const v = formatValue(sliderToValue(jauge.value));
-
-  const data = new FormData();
-  data.append("value", v);
-  data.append("equip", "Capteur Mobile N°" + cmId);
-  data.append("type", "contamination");
-
-  fetch(`/slider/${cmId}`, {
-    method: "POST",
-    body: data
-  });
-}
-
-// ================== RESTAURATION VALEUR AU CHARGEMENT ==================
-function restoreSliderFromDisplayedValue() {
-  if (!jauge || !valeur) return;
-
-  const txt = (valeur.textContent || "").trim().replace(",", ".");
+  const txt = (valeurEl.textContent || "").trim().replace(",", ".");
   const target = Number(txt);
 
   if (!isFinite(target) || target < 0) {
-    jauge.value = 0;
+    sliderEl.value = 0;
     return;
   }
 
@@ -148,61 +131,104 @@ function restoreSliderFromDisplayedValue() {
     }
   }
 
-  jauge.value = bestPos;
+  sliderEl.value = bestPos;
+}
+
+// ================== ENVOI SERVEUR ==================
+function sendValue(type, vTxt) {
+  const data = new FormData();
+  data.append("value", vTxt);
+  data.append("equip", "Controller Mobile N°" + cmId);
+  data.append("type", type);
+
+  fetch(`/slider/${cmId}`, {
+    method: "POST",
+    body: data
+  });
+}
+
+// ================== CLIC SUR BARRE ==================
+function enableGaugeClick(gaugeBgEl, sliderEl, updateFn) {
+  if (!gaugeBgEl || !sliderEl) return;
+
+  gaugeBgEl.addEventListener("click", (e) => {
+    const rect = gaugeBgEl.getBoundingClientRect();
+    const ratio = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
+    sliderEl.value = Math.round(ratio * 1000);
+    updateFn(false);
+  });
 }
 
 // ================== DRAWER ==================
 function initDrawer() {
-  const sidePanel = document.getElementById("sidePanel");
+  const drawer = document.getElementById("drawer");
   const drawerToggle = document.getElementById("drawerToggle");
-  if (!sidePanel || !drawerToggle) return;
+  
+  if (!drawer || !drawerToggle) return;
 
-  let open = true;
+  // Restaurer l'état du drawer depuis localStorage
+  const drawerOpen = localStorage.getItem("drawerOpen") === "true";
+  if (drawerOpen) {
+    drawer.classList.add("open");
+  }
 
   drawerToggle.addEventListener("click", () => {
-    open = !open;
-    sidePanel.classList.toggle("collapsed", !open);
-    drawerToggle.textContent = open ? "◀" : "▶";
-  });
-}
-
-// ================== ✅ CLIC SUR LA JAUGE (même zone blanche) ==================
-function enableGaugeClick() {
-  const gaugeBg = document.querySelector(".gauge-bg");
-  if (!gaugeBg || !jauge) return;
-
-  gaugeBg.addEventListener("click", (e) => {
-    const rect = gaugeBg.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const ratio = Math.min(Math.max(clickX / rect.width, 0), 1);
-
-    // 0 → 1000 (même échelle que le slider)
-    const newValue = Math.round(ratio * 1000);
-
-    jauge.value = newValue;
-
-    // met à jour visuellement
-    updateGaugeFromSlider();
-
-    // envoie au serveur (comme un vrai changement)
-    sendValue();
+    drawer.classList.toggle("open");
+    localStorage.setItem("drawerOpen", drawer.classList.contains("open"));
   });
 }
 
 // ================== INIT ==================
 document.addEventListener("DOMContentLoaded", () => {
-  if (!jauge) return;
-
-  restoreSliderFromDisplayedValue();
-  updateGaugeFromSlider();
-
-  jauge.addEventListener("input", updateGaugeFromSlider);
-  jauge.addEventListener("change", sendValue);
-
   initDrawer();
 
-  // ✅ active le clic sur la barre
-  enableGaugeClick();
+  // --- Contamination
+  if (jauge) {
+    restoreSliderFromDisplayedValue(jauge, valeur);
+
+    const updateCont = (doSend=false) => {
+      let raw = snap(Number(jauge.value));
+      jauge.value = raw;
+      const vTxt = updateGauge(raw, valeur, valueBox, mask, triangle, overlay);
+      if (doSend) sendValue("contamination", vTxt);
+    };
+
+    updateCont(false);
+
+    jauge.addEventListener("input", () => updateCont(false));
+    jauge.addEventListener("change", () => updateCont(false));
+    enableGaugeClick(gaugeBg, jauge, updateCont);
+  }
+
+  // --- Bruit de Fond
+  if (jauge_bdf) {
+    restoreSliderFromDisplayedValue(jauge_bdf, valeur_bdf);
+
+    const updateBdf = (doSend=false) => {
+      let raw = snap(Number(jauge_bdf.value));
+      jauge_bdf.value = raw;
+      const vTxt = updateGauge(raw, valeur_bdf, valueBox_bdf, mask_bdf, triangle_bdf, overlay_bdf);
+      if (doSend) sendValue("bruitdefond", vTxt);
+    };
+
+    updateBdf(false);
+
+    jauge_bdf.addEventListener("input", () => updateBdf(false));
+    jauge_bdf.addEventListener("change", () => updateBdf(false));
+    enableGaugeClick(gaugeBg_bdf, jauge_bdf, updateBdf);
+  }
+
+  // --- Bouton Envoyer
+  const sendBtn = document.getElementById("sendBtn");
+  if (sendBtn) {
+    sendBtn.addEventListener("click", () => {
+      const rawCont = snap(Number(jauge?.value || 0));
+      const vTxtCont = formatValue(sliderToValue(rawCont));
+      sendValue("contamination", vTxtCont);
+
+      const rawBdf = snap(Number(jauge_bdf?.value || 0));
+      const vTxtBdf = formatValue(sliderToValue(rawBdf));
+      sendValue("bruitdefond", vTxtBdf);
+    });
+  }
 });
-
-
