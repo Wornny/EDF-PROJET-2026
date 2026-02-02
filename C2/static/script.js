@@ -117,27 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
             publishFullState();
 
 
-            const container = document.querySelector('.c2-container');
-
-            if (container) {
-                const BASE_WIDTH = 1280;
-                const BASE_HEIGHT = 720;
-
-                function resize() {
-                    const vw = window.innerWidth;
-                    const vh = window.innerHeight;
-
-                    const scale = Math.min(vw / BASE_WIDTH, vh / BASE_HEIGHT);
-
-                    container.style.transform = `scale(${scale})`;
-                    container.style.transformOrigin = 'center center';
-                }
-
-                window.addEventListener('resize', resize);
-                resize();  // appel initial
-            }
-
-            
+            // removed per-click resize to avoid shifting the layout
         });
     });
 
@@ -192,6 +172,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // initialiser l'affichage du bouton FACE par défaut
     document.querySelector('.control-btn[data-mode="FACE"]')?.classList.add('active');
 
+    // ===== GLOBAL SCALING (one-time) =====
+    (function setupScaling(){
+        const wrapper = document.querySelector('.c2-wrapper');
+        if (!wrapper) return;
+
+        const BASE_WIDTH = 1280;
+        const BASE_HEIGHT = 720;
+
+        function applyScale() {
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const scale = Math.min(vw / BASE_WIDTH, vh / BASE_HEIGHT);
+            // keep horizontal centering (translateX) and apply scale
+            wrapper.style.transform = `translateX(-50%) scale(${scale})`;
+            wrapper.style.transformOrigin = 'center center';
+        }
+
+        window.addEventListener('resize', applyScale);
+        applyScale();
+    })();
+
     // ===== GESTION DU DRAWER =====
     const drawer = document.getElementById('drawer');
     const drawerToggle = document.getElementById('drawerToggle');
@@ -215,6 +216,26 @@ document.addEventListener('DOMContentLoaded', () => {
     drawerToggle.classList.toggle('open', nowOpen);
     localStorage.setItem('drawerOpen', String(nowOpen));
     });
+
+    // ===== DRAWER DROIT : toggle + persistence =====
+    const drawerRight = document.getElementById('drawerRight');
+    const drawerToggleRight = document.getElementById('drawerToggleRight');
+
+    const savedRight = localStorage.getItem('drawerRightOpen');
+    const isRightOpen = savedRight === 'true';
+    if (isRightOpen && drawerRight && drawerToggleRight) {
+        drawerRight.classList.add('open');
+        drawerToggleRight.classList.add('open');
+    }
+
+    if (drawerToggleRight) {
+        drawerToggleRight.addEventListener('click', () => {
+            const nowOpen = !drawerRight.classList.contains('open');
+            drawerRight.classList.toggle('open', nowOpen);
+            drawerToggleRight.classList.toggle('open', nowOpen);
+            localStorage.setItem('drawerRightOpen', String(nowOpen));
+        });
+    }
 
 
     // Mettre à jour le drawer quand on change de mode

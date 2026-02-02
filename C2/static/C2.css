@@ -55,8 +55,9 @@ body > *{ position: relative; z-index: 0; }
 */
 .c2-wrapper{
   position: relative;
-  left: 5%;
-  top: 15%;
+  left: 50%;
+  top: 12%;
+  transform: translateX(-50%);
 
   width: min(100vw, calc(100dvh * (16/9)));
   height: min(75dvh, calc(100vw * (9/16)));
@@ -71,9 +72,11 @@ body > *{ position: relative; z-index: 0; }
 */
 .c2-container{
   position: absolute;
-  width: 85%;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: 82%;
   height: 95%;
-  inset: 0;
   overflow: hidden;
   border-radius: var(--ui-radius);
 }
@@ -125,7 +128,7 @@ button{
    Garder des variables en % OK car la zone est maintenant toujours 16/9.
 */
 :root{
-  --grid-left: 12%;
+  --grid-left: 11%;
   --grid-top:  7%;
   --grid-x-gap: 8%;
   --grid-y-gap: 16%;
@@ -164,9 +167,9 @@ button{
 */
 .body-container{
   position: absolute;
-  right: 10%;
-  top: -1.5%;
-  width: 25%;
+  right: 7%;
+  top: 0;
+  width: 22%;
   height: 100%;
 }
 
@@ -428,6 +431,67 @@ button{
 }
 
 .drawer.open ~ .drawer-toggle-btn::before {
+  transform: scaleX(-1);
+}
+
+/* ===== DRAWER DROIT ===== */
+.drawer-right {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 220px;
+  height: 100vh;
+  background: linear-gradient(135deg, rgba(16, 25, 47, .50) 0%, rgba(31, 51, 91, .50) 100%);
+  border-left: 2px solid var(--ui-border);
+  box-shadow: 0 5px 0 5px rgba(16, 25, 47, .100);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.drawer-right.open {
+  transform: translateX(0);
+}
+
+.drawer-toggle-btn-right {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 35px;
+  height: 80px;
+  background: linear-gradient(90deg, rgba(16, 25, 47,.75) 0%, rgba(31, 51, 91,.75) 100%);
+  box-shadow: 0 5px 0 5px rgba(16, 25, 47,.05);
+  border-top: 2px solid var(--ui-border);
+  border-left: 2px solid var(--ui-border);
+  border-bottom: 2px solid var(--ui-border);
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  cursor: pointer;
+  transition: right 0.3s ease;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.drawer-toggle-btn-right::before {
+  content: '';
+  width: 0;
+  height: 0;
+  border-right: 12px solid rgb(127, 134, 158);
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  transition: transform 0.3s ease;
+}
+
+.drawer-right.open ~ .drawer-toggle-btn-right {
+  right: 220px;
+}
+
+.drawer-right.open ~ .drawer-toggle-btn-right::before {
   transform: scaleX(-1);
 }
 
