@@ -134,6 +134,43 @@ button{
   --grid-y-gap: 16%;
 }
 
+.cm-btn {
+  height: 40px;
+  width: 180px;
+  padding: 0;
+  background: linear-gradient(#ffdd99, #ffb466);
+  box-shadow: 0 10px 0 5px rgba(16, 25, 47,.100);
+  border-radius: 10px;
+  border: 1px solid #c87a30;
+  font-size: 16px;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.cm-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 0 5px rgba(16, 25, 47, .150);
+}
+
+.cm-btn.active {
+  background: linear-gradient(#ffcc66, #ff9933);
+  font-weight: 700;
+}
+
+.cm-list {
+    display: flex;
+    flex-direction: column;      /* ou row si tu veux en ligne */
+    gap: 10px;                   /* ← distance réglable entre les boutons */
+    align-items: center;         /* centre dans le drawer */
+}
+
+
 .cap-c1r1 { left: calc(var(--grid-left) + 0 * var(--grid-x-gap)); top: calc(var(--grid-top) + 0 * var(--grid-y-gap)); }
 .cap-c1r2 { left: calc(var(--grid-left) + 0 * var(--grid-x-gap)); top: calc(var(--grid-top) + 1 * var(--grid-y-gap)); }
 .cap-c1r3 { left: calc(var(--grid-left) + 0 * var(--grid-x-gap)); top: calc(var(--grid-top) + 2 * var(--grid-y-gap)); }
@@ -493,28 +530,4 @@ button{
 
 .drawer-right.open ~ .drawer-toggle-btn-right::before {
   transform: scaleX(-1);
-}
-
-.cm-btn {
-  height: 40px;
-  width: 180px;
-  padding: 0;
-  background: linear-gradient(#ffdd99, #ffb466);
-  box-shadow: 0 10px 0 5px rgba(16, 25, 47,.100);
-  border-radius: 10px;
-  border: 1px solid #c87a30;
-  font-size: 16px;
-  color: #333;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-}
-
-.cm-list {
-    display: flex;
-    flex-direction: column;      /* ou row si tu veux en ligne */
-    gap: 10px;                   /* ← distance réglable entre les boutons */
-    align-items: center;         /* centre dans le drawer */
 }
