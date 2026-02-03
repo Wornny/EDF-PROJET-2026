@@ -82,24 +82,47 @@ body > * {
 }
 
 .drawer-content {
-  padding: 20px;
+  padding: 8px 20px; /* réduit pour remonter la liste */
   color: var(--ui-text);
 }
 
+/* Dropdown list wrapper */
+.cm-list-wrap {
+  overflow: hidden;
+  transition: max-height 220ms ease, padding 220ms ease;
+  max-height: 1000px;
+}
+.cm-list-wrap.collapsed {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.cm-list-toggle {
+  background: transparent;
+  border: none;
+  color: var(--ui-text);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+}
+.cm-list-toggle[aria-expanded="false"] { transform: rotate(-90deg); opacity: 0.9; }
+
 .drawer h2 {
-  margin: 0 0 20px 0;
+  margin: 0 0 9px 0; /* réduit pour remonter le contenu */
   font-size: 1.3em;
   color: rgb(127, 134, 158);
   border-bottom: 2px solid rgb(127, 134, 158);
-  padding-bottom: 10px;
+  padding-bottom: 9px;
 }
 
 .drawer-section {
-  margin-bottom: 25px;
+  margin-bottom: 9px; /* réduit pour remonter */
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
 }
 
 .drawer-section h3 {
@@ -209,7 +232,7 @@ body > * {
   position: relative;
   width: 100vw;
   height: 100vh;
-  padding: 120px 40px 40px 40px;
+  padding: 60px 40px 40px 40px; /* encore relevé pour remonter les jauges */
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -232,8 +255,8 @@ body > * {
   position: absolute;
   left: 266px;
   right: 40px;
-  top: 140px;
-  bottom: 40px;
+  top: 40px; /* remonté davantage pour remonter les panneaux */
+  bottom: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -251,6 +274,7 @@ body > * {
   min-height: 160px;
   border: 2px solid rgba(127, 134, 158, 0.3);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  transform: translateY(-8px); /* légère remontée */
 }
 
 .detector-title {
@@ -296,6 +320,8 @@ body > * {
   font-size: 32px;
   font-weight: bold;
   flex-shrink: 0;
+  align-self: center;
+  transform: translateY(-10px); /* aligner le glyph β avec la jauge */
 }
 
 /* ===== BOUTON ENVOYER ===== */
@@ -353,6 +379,7 @@ body > * {
   min-width: 0;
   display: flex;
   flex-direction: column;
+  transform: translateY(10px); /* remonter légèrement la jauge */
 }
 
 .gauge-overlay {
@@ -472,7 +499,7 @@ body > * {
 
 /* ===== ESPACEMENT PANNEAUX ===== */
 .detector-panel + .detector-panel {
-  margin-top: 80px;
+  margin-top: 40px; /* réduit pour rapprocher les panneaux */
 }
 
 .cm-id-display {
@@ -490,3 +517,5 @@ body > * {
     border-radius: 100px;
     text-align: center;
 }
+
+

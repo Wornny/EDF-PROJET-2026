@@ -163,6 +163,8 @@ function enableGaugeClick(gaugeBgEl, sliderEl, updateFn) {
 function initDrawer() {
   const drawer = document.getElementById("drawer");
   const drawerToggle = document.getElementById("drawerToggle");
+  const cmListToggle = document.getElementById("cm-list-toggle");
+  const cmListWrap = document.getElementById("cm-list-wrap");
   
   if (!drawer || !drawerToggle) return;
 
@@ -197,6 +199,26 @@ function initDrawer() {
       document.documentElement.style.setProperty('--arrow-initial', 'scaleX(1)');
     }
   });
+
+  // Gestion de la liste déroulante des CM
+  if (cmListToggle && cmListWrap) {
+    const stored = localStorage.getItem('cmListOpen');
+    const open = (stored === null) ? true : (stored === 'true');
+    if (!open) {
+      cmListWrap.classList.add('collapsed');
+      cmListToggle.setAttribute('aria-expanded', 'false');
+    } else {
+      cmListWrap.classList.remove('collapsed');
+      cmListToggle.setAttribute('aria-expanded', 'true');
+    }
+
+    cmListToggle.addEventListener('click', () => {
+      const collapsed = cmListWrap.classList.toggle('collapsed');
+      const nowOpen = !collapsed;
+      cmListToggle.setAttribute('aria-expanded', String(nowOpen));
+      localStorage.setItem('cmListOpen', String(nowOpen));
+    });
+  }
 }
 
 // ================== INIT ==================
