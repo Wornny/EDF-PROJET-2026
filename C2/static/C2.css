@@ -58,6 +58,7 @@ body > *{ position: relative; z-index: 0; }
   left: 50%;
   top: 12%;
   transform: translateX(-50%);
+  max-height: 600px;
 
   width: min(100vw, calc(100dvh * (16/9)));
   height: min(75dvh, calc(100vw * (9/16)));
@@ -531,3 +532,98 @@ button{
 .drawer-right.open ~ .drawer-toggle-btn-right::before {
   transform: scaleX(-1);
 }
+
+/* ==========================
+   Responsive: Tablette & Téléphone
+   - Tablette (<= 1024px) : adapts layout & sizes
+   - Mobile  (<= 480px)  : compact layout, drawer from top
+   ========================== */
+
+@media (max-width: 1024px) {
+  /* Wrapper & container */
+  .c2-wrapper{
+    top: 8%;
+    width: 95vw;
+    height: 53.4375dvh;  /* 95 * 9 /16 */
+  }
+  .c2-container{ width: 90%; }
+
+  /* Caps légèrement plus grands pour toucher à l'écran */
+  .cap{ width: 7%; height: 13%; }
+
+  /* Boutons dans le drawer */
+  .cm-btn{ width: 150px; height: 36px; font-size: 14px; }
+  .cm-list{ gap: 8px; }
+
+  /* Contrôles face/dos */
+  .control-btn{ height: 44px; width: 120px; min-width: 120px; font-size: 16px; }
+
+  /* Banner & ID */
+  .banner{ height: 80px; }
+  .c2-id-display{ width: 18%; font-size: clamp(18px, 1.3vw, 16px); }
+
+  /* Drawer */
+  .drawer{ width: 200px; }
+  .drawer.open ~ .drawer-toggle-btn{ left: 200px; }
+  .drawer-toggle-btn{ width: 32px; height: 70px; }
+
+  /* Body/silhouette */
+  .body-container{ width: 24%; }
+}
+
+@media (max-width: 480px) {
+  /* Compact wrapper for phones */
+  .c2-wrapper{
+    top: 5%;
+    width: 98vw;
+    height: 50dvh;
+  }
+  .c2-container{ width: 96%; }
+
+  /* Caps easier to tap */
+  .cap{ width: 9%; height: 11%; border-width: 2px; }
+
+  /* Drawer becomes an overlay from the top */
+  .drawer{
+    width: 100%;
+    height: 55vh;
+    transform: translateY(-100%);
+    left: 0;
+    top: 0;
+    border-right: none;
+    border-bottom: 2px solid var(--ui-border);
+    border-left: none;
+    border-top: none;
+  }
+  .drawer.open{ transform: translateY(0); }
+
+  /* Toggle button moves to top-left and indicates open state with rotation */
+  .drawer-toggle-btn{
+    left: 10px;
+    top: 10px;
+    transform: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+  }
+  .drawer.open ~ .drawer-toggle-btn::before{ transform: rotate(180deg); }
+
+  /* Drawer content spacing */
+  .drawer-content{ padding: 12px; }
+  .cm-btn{ width: 140px; height: 34px; font-size: 14px; }
+  .cm-list{ flex-direction: row; flex-wrap: wrap; gap: 8px; justify-content: center; }
+
+  /* Body silhouette hidden on small phones to save space */
+  .body-container{ display: none; }
+
+  /* Controls */
+  .control-group{ bottom: 8px; gap: 8px; }
+  .control-btn{ width: 110px; min-width: 100px; height: 42px; font-size: 15px; }
+
+  /* Banner tighter */
+  .banner{ height: 64px; }
+
+  /* Reduce some font sizes */
+  button{ font-size: clamp(12px, 2.5vw, 18px); }
+}
+
