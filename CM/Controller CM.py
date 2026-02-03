@@ -3,7 +3,7 @@ import logging
 import json
 import os
 
-USE_MQTT = True    # False chez moi sans MQTT et True au lycée
+USE_MQTT = False    # False chez moi sans MQTT et True au lycée
 if USE_MQTT:
     import paho.mqtt.client as mqtt
 
@@ -142,9 +142,6 @@ def slider(cm_id: int):
     else:
         last_values[cm_id]["NivContamination"] = value
         topic = get_topic_contamination(cm_id)
-
-    # Sauvegarder les valeurs dans le fichier JSON
-    save_values(last_values)
 
     print(equip, type_, "=", value, "Bq/cm²")
 
