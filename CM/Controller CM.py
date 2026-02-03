@@ -1,9 +1,42 @@
 from flask import Flask, request, render_template, redirect
 import logging
+import json
+import os
 
-USE_MQTT = True
+USE_MQTT = True    # False chez moi sans MQTT et True au lycée
 if USE_MQTT:
     import paho.mqtt.client as mqtt
+
+# ===================== PERSISTANCE =====================
+VALUES_FILE = "cm_values.json"
+
+def load_values():
+    """Charge les valeurs depuis le fichier JSON ou retourne les valeurs par défaut"""
+    if os.path.exists(VALUES_FILE):
+        try:
+            with open(VALUES_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                # Convertir les clés string en int
+                return {int(k): v for k, v in data.items()}
+        except Exception as e:
+            print(f"Erreur lors du chargement des valeurs: {e}")
+    
+    # Valeurs par défaut
+    default_values = {}
+    for i in range(1, 12):
+        default_values[i] = {
+            "NivContamination": "1",
+            "BruitDeFond": "0.50",
+        }
+    return default_values
+
+def save_values(values_dict):
+    """Sauvegarde les valeurs dans le fichier JSON"""
+    try:
+        with open(VALUES_FILE, 'w', encoding='utf-8') as f:
+            json.dump(values_dict, f, indent=2)
+    except Exception as e:
+        print(f"Erreur lors de la sauvegarde des valeurs: {e}")
 
 # ===================== MQTT =====================
 BROKER_HOST = "192.168.190.31"
@@ -19,13 +52,8 @@ def get_topic_bdf(cm_id: int) -> str:
 app = Flask(__name__)
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
-# Topics avec CM_ID => valeurs indépendantes pour chaque CM
-last_values = {}
-for i in range(1, 12):
-    last_values[i] = {
-        "NivContamination": "1",
-        "BruitDeFond": "0.50",
-    }
+# Charger les valeurs sauvegardées ou valeurs par défaut
+last_values = load_values()
 
 mqtt_client = None
 
@@ -114,6 +142,9 @@ def slider(cm_id: int):
     else:
         last_values[cm_id]["NivContamination"] = value
         topic = get_topic_contamination(cm_id)
+
+    # Sauvegarder les valeurs dans le fichier JSON
+    save_values(last_values)
 
     print(equip, type_, "=", value, "Bq/cm²")
 
