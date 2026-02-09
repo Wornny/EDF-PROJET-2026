@@ -274,4 +274,104 @@ document.addEventListener("DOMContentLoaded", () => {
       sendValue("Bruit de fond", vTxtBdf);
     });
   }
+
+  // --- BOUTON + POUR AJOUTER UN APPAREIL
+  const addBtn = document.getElementById("cm-add");
+  const modal = document.getElementById("cm-modal");
+  const modalClose = document.getElementById("cm-modal-close");
+  const modalSubmit = document.getElementById("cm-modal-submit");
+  const modalInput = document.getElementById("cm-modal-input");
+  const modalType = document.getElementById("cm-modal-type");
+  const modalError = document.getElementById("cm-modal-error");
+
+  const updatePlaceholder = () => {
+    if (!modalInput || !modalType) return;
+    const type = modalType.value || "CM";
+    modalInput.placeholder = "Ex: " + type + " 3";
+  };
+
+  const setError = (message) => {
+    if (!modalError) return;
+    modalError.textContent = message || "";
+  };
+
+  const openModal = () => {
+    if (!modal || !modalInput) return;
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    modalInput.value = "";
+    setError("");
+    updatePlaceholder();
+    modalInput.focus();
+  };
+
+  const closeModal = () => {
+    if (!modal) return;
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+  };
+
+  if (addBtn) {
+    addBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      openModal();
+    });
+  }
+
+  if (modalClose) {
+    modalClose.addEventListener("click", closeModal);
+  }
+
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeModal();
+    });
+  }
+
+  if (modalSubmit) {
+    modalSubmit.addEventListener("click", () => {
+      const name = (modalInput?.value || "").trim();
+      const type = (modalType?.value || "CM").trim();
+      if (!name) {
+        setError("Le nom est obligatoire.");
+        modalInput?.focus();
+        return;
+      }
+      setError("");
+
+      const data = new FormData();
+      data.append("name", name);
+      data.append("type", type);
+
+      fetch("/ajouter-appareil", {
+        method: "POST",
+        body: data
+      })
+        .then((res) => res.json().then((json) => ({ ok: res.ok, json })))
+        .then(({ ok, json }) => {
+          if (!ok || !json?.ok) {
+            setError(json?.error || "Nom invalide.");
+            modalInput?.focus();
+            return;
+          }
+          closeModal();
+        })
+        .catch(() => {
+          setError("Erreur serveur, reessaie.");
+          modalInput?.focus();
+        });
+    });
+  }
+
+  if (modalType) {
+    modalType.addEventListener("change", updatePlaceholder);
+  }
+
+  if (modalInput) {
+    modalInput.addEventListener("input", () => setError(""));
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeModal();
+  });
 });

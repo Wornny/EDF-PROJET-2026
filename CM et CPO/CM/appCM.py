@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect
+from flask import Flask, request, render_template, redirect, jsonify
 import logging
 
 USE_MQTT = True    # False chez moi sans MQTT et True au lycée
@@ -36,6 +36,28 @@ mqtt_client = None
 def _clean_payload(payload: str) -> str:
     p = (payload or "").strip()
     return p.replace("Bq/cm²", "").strip()
+
+def _validate_device_name(name: str, device_type: str):
+    n = (name or "").strip()
+    t = (device_type or "").strip()
+    if not n:
+        return False, "Le nom est obligatoire."
+    if t not in ("CPO", "CM", "C2", "Initialisateur"):
+        return False, "Type invalide."
+
+    n_upper = n.upper()
+    t_upper = t.upper()
+    if not n_upper.startswith(t_upper):
+        return False, f"Le nom doit commencer par {t}."
+
+    if len(n_upper) == len(t_upper):
+        return True, ""
+
+    next_char = n_upper[len(t_upper)]
+    if next_char in (" ", "-", "_") or next_char.isdigit():
+        return True, ""
+
+    return False, f"Le nom doit commencer par {t}."
 
 def on_message(client, userdata, msg):
     try:
@@ -129,6 +151,17 @@ def slider(cm_id: int):
         mqtt_client.publish(topic, f"{value} Bq/cm²", retain=True)
 
     return "ok"
+
+@app.route("/ajouter-appareil", methods=["POST"])
+def add_device():
+    name = request.form.get("name", "")
+    device_type = request.form.get("type", "")
+
+    ok, error = _validate_device_name(name, device_type)
+    if not ok:
+        return jsonify(ok=False, error=error), 400
+
+    return jsonify(ok=True)
 
 # ===================== LANCEMENT =====================
 if __name__ == "__main__":

@@ -154,6 +154,29 @@
 
   </div>
 
+  </div>
+
+  <!-- AJOUTER UN APPAREIL -->
+  <div class="cm-modal" id="cm-modal" aria-hidden="true">
+    <div class="cm-modal-card" role="dialog" aria-modal="true" aria-labelledby="cm-modal-title">
+      <button class="cm-modal-close" id="cm-modal-close" aria-label="Fermer">X</button>
+      <h3 class="cm-modal-title" id="cm-modal-title">Ajouter un appareil</h3>
+      <div class="cm-modal-row">
+        <label class="cm-modal-label" for="cm-modal-input">Nom du nouvel appareil :</label>
+        <input class="cm-modal-input" id="cm-modal-input" type="text" placeholder="Ex: CPO 3">
+        <div class="cm-modal-error" id="cm-modal-error" aria-live="polite"></div>
+      </div>
+      <div class="cm-modal-row">
+        <label class="cm-modal-label" for="cm-modal-type">Type :</label>
+        <select class="cm-modal-select" id="cm-modal-type">
+          <option value="CPO" selected>CPO</option>
+          <option value="CM">CM</option>
+          <option value="C2">C2</option>
+          <option value="Initialisateur">Initialisateur</option>
+        </select>
+      </div>
+      <button class="cm-modal-submit" id="cm-modal-submit">valider</button>
+    </div>
 </div>
 
 </body>
