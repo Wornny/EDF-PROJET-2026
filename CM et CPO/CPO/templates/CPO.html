@@ -23,8 +23,12 @@
     <h2>Panneau de Contrôle</h2>
     <div class="drawer-section">
       <div class="cm-list">
-        <a class="cm-btn {% if cpo_id == 1 %}active{% endif %}" href="/CPO/1">CPO ID 1</a>
-        <a class="cm-btn {% if cpo_id == 2 %}active{% endif %}" href="/CPO/2">CPO ID 2</a>
+        {% for i in cpo_ids %}
+          <div class="cm-item">
+            <a class="cm-btn {% if cpo_id == i %}active{% endif %}" href="/CPO/{{ i }}">{{ cpo_names[i] }}</a>
+            <button class="cm-delete" type="button" data-id="{{ i }}" title="Supprimer"><span class="cm-delete-mark">-</span></button>
+          </div>
+        {% endfor %}
         <a class="cm-btn cm-add" id="cm-add" href="#" title="Ajouter un appareil">+</a>
       </div>
     </div>

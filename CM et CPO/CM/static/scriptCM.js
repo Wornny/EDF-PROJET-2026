@@ -355,6 +355,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
           closeModal();
+          window.location.reload();
         })
         .catch(() => {
           setError("Erreur serveur, reessaie.");
@@ -370,6 +371,49 @@ document.addEventListener("DOMContentLoaded", () => {
   if (modalInput) {
     modalInput.addEventListener("input", () => setError(""));
   }
+
+  if (modal) {
+    modal.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        modalSubmit?.click();
+      }
+    });
+  }
+
+  const deleteButtons = document.querySelectorAll(".cm-delete");
+  deleteButtons.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const id = btn.getAttribute("data-id");
+      if (!id) return;
+
+      const data = new FormData();
+      data.append("id", id);
+
+      fetch("/supprimer-appareil", {
+        method: "POST",
+        body: data
+      })
+        .then((res) => res.json().then((json) => ({ ok: res.ok, json })))
+        .then(({ ok, json }) => {
+          if (!ok || !json?.ok) {
+            alert(json?.error || "Suppression impossible.");
+            return;
+          }
+          const deletedId = Number(id);
+          if (deletedId === cmId) {
+            window.location.href = "/ControllerMobile/1";
+          } else {
+            window.location.reload();
+          }
+        })
+        .catch(() => {
+          alert("Erreur serveur, reessaie.");
+        });
+    });
+  });
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeModal();

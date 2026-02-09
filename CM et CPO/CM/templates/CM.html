@@ -24,17 +24,12 @@
     <h2>Panneau de Contrôle</h2>
     <div class="drawer-section">
       <div class="cm-list">
-        <a class="cm-btn {% if cm_id == 1 %}active{% endif %}" href="/ControllerMobile/1">CM ID 1</a>
-        <a class="cm-btn {% if cm_id == 2 %}active{% endif %}" href="/ControllerMobile/2">CM ID 2</a>
-        <a class="cm-btn {% if cm_id == 3 %}active{% endif %}" href="/ControllerMobile/3">CM ID 3</a>
-        <a class="cm-btn {% if cm_id == 4 %}active{% endif %}" href="/ControllerMobile/4">CM ID 4</a>
-        <a class="cm-btn {% if cm_id == 5 %}active{% endif %}" href="/ControllerMobile/5">CM ID 5</a>
-        <a class="cm-btn {% if cm_id == 6 %}active{% endif %}" href="/ControllerMobile/6">CM ID 6</a>
-        <a class="cm-btn {% if cm_id == 7 %}active{% endif %}" href="/ControllerMobile/7">CM ID 7</a>
-        <a class="cm-btn {% if cm_id == 8 %}active{% endif %}" href="/ControllerMobile/8">CM ID 8</a>
-        <a class="cm-btn {% if cm_id == 9 %}active{% endif %}" href="/ControllerMobile/9">CM ID 9</a>
-        <a class="cm-btn {% if cm_id == 10 %}active{% endif %}" href="/ControllerMobile/10">CM ID 10</a>
-        <a class="cm-btn {% if cm_id == 11 %}active{% endif %}" href="/ControllerMobile/11">CM ID 11</a>
+        {% for i in cm_ids %}
+          <div class="cm-item">
+            <a class="cm-btn {% if cm_id == i %}active{% endif %}" href="/ControllerMobile/{{ i }}">{{ cm_names[i] }}</a>
+            <button class="cm-delete" type="button" data-id="{{ i }}" title="Supprimer"><span class="cm-delete-mark">-</span></button>
+          </div>
+        {% endfor %}
         <a class="cm-btn cm-add" id="cm-add" href="#" title="Ajouter un appareil">+</a>
       </div>
     </div>

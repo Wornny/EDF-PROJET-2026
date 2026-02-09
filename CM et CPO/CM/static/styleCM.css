@@ -191,9 +191,14 @@ body > * {
   align-items: center;
 }
 
+.cm-item {
+  position: relative;
+  width: 180px;
+}
+
 .cm-btn {
   height: 40px;
-  width: 180px;
+  width: 100%;
   padding: 0;
   background: linear-gradient(#ffdd99, #ffb466);
   box-shadow: 0 10px 0 5px rgba(16, 25, 47, .100);
@@ -208,6 +213,35 @@ body > * {
   text-decoration: none;
   font-weight: 600;
   transition: all 0.2s ease;
+}
+
+.cm-delete {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  background: #b91c1c;
+  color: #fff;
+  font-weight: 800;
+  font-size: 12px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
+}
+
+.cm-delete-mark {
+  display: block;
+  transform: translateY(-1px);
+}
+
+.cm-delete:hover {
+  filter: brightness(1.1);
 }
 
 .cm-btn:hover {
