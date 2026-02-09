@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>C2 - Capteurs</title>
+    <link rel="stylesheet" href="../static/C2.css">
+</head>
+<body data-c2-id="C2_{{ c2_id }}">
+<!-- DRAWER GAUCHE -->
+<div class="drawer" id="drawer">
+    <div class="drawer-content">
+        <h2>Panneau de Contrôle</h2>
+        <div class="drawer-section">
+            <div class="cm-list">
+                <a class="cm-btn {% if c2_id == 1 %}active{% endif %}" href="/C2/1">C2 ID 1</a>
+                <a class="cm-btn {% if c2_id == 2 %}active{% endif %}" href="/C2/2">C2 ID 2</a>
+                <button class="cm-btn cm-add">+</button>
+            </div>
+        </div>
+        <div class="drawer-section">
+        </div>
+    </div>
+</div>
+
+<!-- TOGGLE BUTTON (Rectangle avec triangle) -->
+<button class="drawer-toggle-btn" id="drawerToggle"></button>
+
+<!-- DRAWER DROIT (vide pour l'instant) -->
+<div class="drawer-right" id="drawerRight">
+    <div class="drawer-content">
+        <!-- vide pour l'instant -->
+    </div>
+</div>
+
+<!-- TOGGLE BUTTON DROIT (Rectangle avec triangle) -->
+<button class="drawer-toggle-btn-right" id="drawerToggleRight"></button>
+
+<div class="banner">
+    <div class="banner-text"></div>
+    <p class="c2-id-display">C2 ID : C2_{{ c2_id }}</p>
+</div>
+<div class="c2-wrapper">
+    <div class="c2-container">
+        <div id="page"></div>
+
+        <div class="c2-container">
+            <!-- fond : ton image / animation -->
+            <!-- <img src="" class="c2-bg" alt="C2 fond"> -->
+
+            <!-- CAPTEURS FACE (SVG) -->
+            <!-- COLONNE 3x5 à gauche -->
+            <!-- colonne 1 -->
+            <svg class="cap cap-c1 cap-c1r1" data-capteur="c1" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">1</text></svg>
+            <svg class="cap cap-c1 cap-c1r2" data-capteur="c4" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">4</text></svg>
+            <svg class="cap cap-c1 cap-c1r3" data-capteur="c7" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">7</text></svg>
+            <svg class="cap cap-c1 cap-c1r4" data-capteur="c10" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">10</text></svg>
+            <svg class="cap cap-c1 cap-c1r5" data-capteur="c13" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">13</text></svg>
+
+            <!-- colonne 2 -->
+            <svg class="cap cap-c2 cap-c2r1" data-capteur="c2" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">2</text></svg>
+            <svg class="cap cap-c2 cap-c2r2" data-capteur="c5" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">5</text></svg>
+            <svg class="cap cap-c2 cap-c2r3" data-capteur="c8" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">8</text></svg>
+            <svg class="cap cap-c2 cap-c2r4" data-capteur="c11" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">11</text></svg>
+            <svg class="cap cap-c2 cap-c2r5" data-capteur="c14" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">14</text></svg>
+
+            <!-- colonne 3 -->
+            <svg class="cap cap-c3 cap-c3r1" data-capteur="c3" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">3</text></svg>
+            <svg class="cap cap-c3 cap-c3r2" data-capteur="c6" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">6</text></svg>
+            <svg class="cap cap-c3 cap-c3r3" data-capteur="c9" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">9</text></svg>
+            <svg class="cap cap-c3 cap-c3r4" data-capteur="c12" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">12</text></svg>
+            <svg class="cap cap-c3 cap-c3r5" data-capteur="c15" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">15</text></svg>
+
+            <!-- PETITE COLONNE DE 3 (verte au centre) -->
+            <svg class="cap cap-colS-r1" data-capteur="c16" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">16</text></svg>
+            <svg class="cap cap-colS-r2" data-capteur="c17" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">17</text></svg>
+            <svg class="cap cap-colS-r3" data-capteur="c18" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">18</text></svg>
+
+            <!-- LOSANGES À DROITE (3 capteurs) -->
+            <svg class="cap cap-tri-top" data-capteur="c19" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="50" height="130" rx="8" class="cap-rect"/><text x="38" y="80" class="cap-text">19</text></svg>
+            <svg class="cap cap-tri-left" data-capteur="c20" data-mode="FACE" viewBox="130 60 50 190"><path class="cap-rect" d="M 134.963 66.95 L 136.025 179.596 L 163.124 233.262 L 205.632 233.794 L 155.154 66.95 L 134.963 66.95 Z"></path><text x="160" y="165" class="cap-text">20</text></svg>
+            <svg class="cap cap-tri-right" data-capteur="c21" data-mode="FACE" viewBox="130 60 90 190"><path class="cap-rect" d="M 179.065 73.858 L 230.074 73.858 L 231.668 214.134 L 180.128 125.93 L 179.065 73.858 Z"></path><text x="205" y="120" class="cap-text">21</text></svg>
+
+            
+
+            <!-- COLONNE DE GAUCHE (3 capteurs) -->
+            <svg class="cap cap-left-r1" data-capteur="c25" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">25</text></svg>
+            <svg class="cap cap-left-r2" data-capteur="c26" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">26</text></svg>
+            <svg class="cap cap-left-r3" data-capteur="c27" data-mode="FACE" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">27</text></svg>
+
+            <!-- RANGÉE DU HAUT (1 capteur au centre) -->
+            <svg class="cap cap-top-center" data-capteur="c28" data-mode="FACE" viewBox="0 0 100 150"><polygon points="50,15 85,50 50,85 15,50" class="cap-hexagon"/><text x="50" y="55" class="cap-text">28</text></svg>
+
+            <!-- RANGÉE DU BAS (3 capteurs) -->
+            <svg class="cap cap-bottom-c1" data-capteur="c22" data-mode="FACE" viewBox="0 0 100 150"><polygon points="50,10 90,50 50,90 10,50" class="cap-diamond"/><text x="50" y="55" class="cap-text">22</text></svg>
+            <svg class="cap cap-bottom-c2" data-capteur="c23" data-mode="FACE" viewBox="0 0 100 150"><polygon points="50,10 90,50 50,90 10,50" class="cap-diamond"/><text x="50" y="55" class="cap-text">23</text></svg>
+            <svg class="cap cap-bottom-c3" data-capteur="c24" data-mode="FACE" viewBox="0 0 100 150"><polygon points="50,10 90,50 50,90 10,50" class="cap-diamond"/><text x="50" y="55" class="cap-text">24</text></svg>
+
+            <!-- CAPTEURS DOS (cachés par défaut) (SVG) -->
+            <!-- COLONNE 3x5 à gauche -->
+            <!-- colonne 1 -->
+            <svg class="cap cap-c1 cap-c1r1 hidden-mode" data-capteur="dos1" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">1</text></svg>
+            <svg class="cap cap-c1 cap-c1r2 hidden-mode" data-capteur="dos4" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">4</text></svg>
+            <svg class="cap cap-c1 cap-c1r3 hidden-mode" data-capteur="dos7" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">7</text></svg>
+            <svg class="cap cap-c1 cap-c1r4 hidden-mode" data-capteur="dos10" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">10</text></svg>
+            <svg class="cap cap-c1 cap-c1r5 hidden-mode" data-capteur="dos13" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">13</text></svg>
+
+            <!-- colonne 2 -->
+            <svg class="cap cap-c2 cap-c2r1 hidden-mode" data-capteur="dos2" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">2</text></svg>
+            <svg class="cap cap-c2 cap-c2r2 hidden-mode" data-capteur="dos5" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">5</text></svg>
+            <svg class="cap cap-c2 cap-c2r3 hidden-mode" data-capteur="dos8" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">8</text></svg>
+            <svg class="cap cap-c2 cap-c2r4 hidden-mode" data-capteur="dos11" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">11</text></svg>
+            <svg class="cap cap-c2 cap-c2r5 hidden-mode" data-capteur="dos14" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">14</text></svg>
+
+            <!-- colonne 3 -->
+            <svg class="cap cap-c3 cap-c3r1 hidden-mode" data-capteur="dos3" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">3</text></svg>
+            <svg class="cap cap-c3 cap-c3r2 hidden-mode" data-capteur="dos6" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">6</text></svg>
+            <svg class="cap cap-c3 cap-c3r3 hidden-mode" data-capteur="dos9" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">9</text></svg>
+            <svg class="cap cap-c3 cap-c3r4 hidden-mode" data-capteur="dos12" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">12</text></svg>
+            <svg class="cap cap-c3 cap-c3r5 hidden-mode" data-capteur="dos15" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">15</text></svg>
+
+            <!-- PETITE COLONNE DE 3 (verte au centre) -->
+            <svg class="cap cap-colS-r1 hidden-mode" data-capteur="dos16" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">16</text></svg>
+            <svg class="cap cap-colS-r2 hidden-mode" data-capteur="dos17" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">17</text></svg>
+            <svg class="cap cap-colS-r3 hidden-mode" data-capteur="dos18" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">18</text></svg>
+
+            <!-- LOSANGES À DROITE (3 capteurs) DOS -->
+            <svg class="cap cap-tri-top hidden-mode" data-capteur="dos19" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">19</text></svg>
+            <svg class="cap cap-tri-left hidden-mode" data-capteur="dos20" data-mode="DOS" viewBox="130 60 50 190"><path class="cap-rect" d="M 134.963 66.95 L 136.025 179.596 L 163.124 233.262 L 205.632 233.794 L 155.154 66.95 L 134.963 66.95 Z"></path><text x="160" y="165" class="cap-text">20</text></svg>
+            <svg class="cap cap-tri-right hidden-mode" data-capteur="dos21" data-mode="DOS" viewBox="130 60 90 190"><path class="cap-rect" d="M 179.065 73.858 L 230.074 73.858 L 231.668 214.134 L 180.128 125.93 L 179.065 73.858 Z"></path><text x="205" y="120" class="cap-text">21</text></svg>
+
+
+            <!-- COLONNE DE GAUCHE (3 capteurs) DOS -->
+            <svg class="cap cap-left-r1 hidden-mode" data-capteur="dos25" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">25</text></svg>
+            <svg class="cap cap-left-r2 hidden-mode" data-capteur="dos26" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">26</text></svg>
+            <svg class="cap cap-left-r3 hidden-mode" data-capteur="dos27" data-mode="DOS" viewBox="0 0 100 150"><rect x="10" y="10" width="80" height="130" rx="8" class="cap-rect"/><text x="50" y="80" class="cap-text">27</text></svg>
+
+            <!-- RANGÉE DU HAUT (1 capteur au centre) DOS -->
+            <svg class="cap cap-top-center hidden-mode" data-capteur="dos28" data-mode="DOS" viewBox="0 0 100 150"><polygon points="50,15 85,50 50,85 15,50" class="cap-hexagon"/><text x="50" y="55" class="cap-text">28</text></svg>
+
+            <!-- RANGÉE DU BAS (3 capteurs) DOS -->
+            <svg class="cap cap-bottom-c1 hidden-mode" data-capteur="dos22" data-mode="DOS" viewBox="0 0 100 150"><polygon points="50,10 90,50 50,90 10,50" class="cap-diamond"/><text x="50" y="55" class="cap-text">22</text></svg>
+            <svg class="cap cap-bottom-c2 hidden-mode" data-capteur="dos23" data-mode="DOS" viewBox="0 0 100 150"><polygon points="50,10 90,50 50,90 10,50" class="cap-diamond"/><text x="50" y="55" class="cap-text">23</text></svg>
+            <svg class="cap cap-bottom-c3 hidden-mode" data-capteur="dos24" data-mode="DOS" viewBox="0 0 100 150"><polygon points="50,10 90,50 50,90 10,50" class="cap-diamond"/><text x="50" y="55" class="cap-text">24</text></svg>
+        </div>
+
+        <!-- Image / silhouette du corps à droite -->
+        <div class="body-container">
+            <img src="../static/img/homme_face_blanc.png" class="body-img body-img-face" alt="corps face">
+            <img src="../static/img/homme_dos_blanc.png" class="body-img body-img-dos hidden-mode" alt="corps dos">
+
+            <!-- zones cliquables -->
+            <button class="body-zone zone-tete"    data-group="tete"></button>
+            <button class="body-zone zone-bras"  data-group="bras"></button>
+            <button class="body-zone zone-buste"   data-group="buste"></button>
+            <button class="body-zone zone-jambes"  data-group="jambes"></button>
+        </div>
+    </div>
+</div>
+<footer>
+    <div class="banner-footer">
+        <div class="control-group">
+        <button class="control-btn" data-mode="FACE">FACE</button>
+        <button class="control-btn" data-mode="DOS">DOS</button>
+    </div>
+</footer>
+
+<script src="../static/script.js"></script>
+</body>
+</html>
+
