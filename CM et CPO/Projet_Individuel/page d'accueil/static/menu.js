@@ -92,3 +92,17 @@ dragTarget.addEventListener('touchend', (e) => {
 
 updateCarousel();
 
+// Gestion du bouton plein écran
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+if (fullscreenBtn) {
+  fullscreenBtn.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.warn('Erreur plein écran:', err);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  });
+}
+

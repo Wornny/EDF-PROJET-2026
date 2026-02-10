@@ -10,7 +10,7 @@
   --choice-min-width:220px; 
   --carousel-height:520px; /* augmenté pour plus de confort */
   --logo-size:160px; 
-  --title-pill-font-size:18px 
+  --title-pill-font-size:18px;
   --circle-y: 50%;
   --circle-left-x: 20%;
   --circle-center-x: 50%;
@@ -27,6 +27,40 @@ body{
   justify-content:center;
   padding:0;
   overflow:hidden;
+  position: relative;
+}
+
+.fullscreen-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  background: linear-gradient(145deg, rgba(11, 103, 178, 0.95), rgba(7, 70, 120, 0.95));
+  color: white;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  transition: all 150ms ease;
+  z-index: 10000;
+}
+
+.fullscreen-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+  background: linear-gradient(145deg, rgba(13, 120, 200, 0.95), rgba(9, 85, 140, 0.95));
+}
+
+.fullscreen-btn:active {
+  transform: scale(0.98);
+}
+
+.fullscreen-btn svg {
+  width: 24px;
+  height: 24px;
 }
 
 .container{
@@ -59,7 +93,7 @@ body{
 .logo{
   width: var(--logo-size);
   height: var(--logo-size);
-  margin: 0 auto 24px; /* plus d'espace sous le logo */
+  margin: 10px auto 35px;
   border-radius: 50%;
   background: #fff;
   padding: 10px;
@@ -83,6 +117,7 @@ body{
   color:#0b2e4a;
   border:2px solid rgba(0,0,0,0.08);
   box-shadow: 0 8px 20px rgba(2,6,23,0.06);
+  margin-bottom: 30px;
 }
 
 .subtitle{
@@ -101,7 +136,7 @@ body{
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 8px;
+  margin: -20px auto 8px;
 }
 
 /* Carousel */
