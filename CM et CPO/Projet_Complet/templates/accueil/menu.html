@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Page d'accueil</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='accueil/menu.css') }}" />
+</head>
+<body>
+  <div class="container">
+    <img class="logo" src="{{ url_for('static', filename='accueil/EDF Logo.png') }}" alt="EDF Logo" />
+
+    <h2 class="title-pill">SELECTIONNER UN APPAREIL</h2>
+
+    <div class="carousel-wrapper">
+      <div class="carousel">
+        <div class="device" data-label="Controleur mobile">
+          <img src="{{ url_for('static', filename='accueil/Mip10_color.png') }}" alt="Controleur mobile" />
+          <div class="label">Controleur mobile</div>
+        </div>
+        <div class="device" data-label="CPO">
+          <img src="{{ url_for('static', filename='accueil/CP0Color.png') }}" alt="CPO" />
+          <div class="label">CPO</div>
+        </div>
+        <div class="device" data-label="Initialisateur">
+          <img src="{{ url_for('static', filename='accueil/Initialisateur.png') }}" alt="Initialisateur" />
+          <div class="label">Initialisateur</div>
+        </div>
+        <div class="device" data-label="C2">
+          <img src="{{ url_for('static', filename='accueil/C2capteurColor.png') }}" alt="C2" />
+          <div class="label">C2</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="footer-text" id="selected-label">CPO</div>
+    </div>
+  </div>
+
+  <script defer src="{{ url_for('static', filename='accueil/menu.js') }}"></script>
+
+</body>
+</html>
