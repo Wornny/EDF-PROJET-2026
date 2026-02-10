@@ -56,7 +56,7 @@ body > *{ position: relative; z-index: 0; }
 .c2-wrapper{
   position: relative;
   left: 50%;
-  top: 12%;
+  top: 13.5%;
   transform: translateX(-50%);
   max-height: 600px;
 
@@ -77,8 +77,8 @@ body > *{ position: relative; z-index: 0; }
   top: 0;
   transform: translateX(-50%);
   width: 82%;
-  height: 95%;
-  overflow: hidden;
+  height: 100%;
+  overflow: visible;
   border-radius: var(--ui-radius);
 }
 
@@ -110,6 +110,12 @@ button{
   cursor: pointer;
   transition: background .15s, border-color .15s;
   box-shadow: 0 5px 0 3px rgba(16, 25, 47,.20);
+}
+
+.cap-horizontal {
+  width: 15%;
+  height: 8%;
+  transform: skewX(-12deg);
 }
 
 .cap.active{
@@ -190,16 +196,40 @@ button{
 .cap-c3r4 { left: calc(var(--grid-left) + 2 * var(--grid-x-gap)); top: calc(var(--grid-top) + 3 * var(--grid-y-gap)); }
 .cap-c3r5 { left: calc(var(--grid-left) + 2 * var(--grid-x-gap)); top: calc(var(--grid-top) + 4 * var(--grid-y-gap)); }
 
-/* ===== COLONNE VERTE ===== */
-.cap-colS-r1 { left: 40%; top: 41%; }
-.cap-colS-r2 { left: 40%; top: 58%; }
-.cap-colS-r3 { left: 40%; top: 75%; }
+/* ===== COLONNE DE DROITE ===== */
+.cap-colS-r1 { left: 36%; top: 41%; }
+.cap-colS-r2 { left: 36%; top: 58%; }
+.cap-colS-r3 { left: 36%; top: 75%; }
 
-/* ===== TRIANGLE MARRON ===== */
-.cap-tri-top   { left: 56%; top: 25%; transform: rotate(-15deg); transform-origin: center; }
-.cap-tri-left  { left: 50%; top: 45%; transform: rotate(-15deg); transform-origin: center; }
-.cap-tri-right { left: 60%; top: 47%; transform: rotate(10deg);  transform-origin: center; }
+/* ===== GROUPE MAINS ===== */
+.cap-tri-top   { left: 50%; top: 25%; transform: rotate(-10deg) skewX(15deg); transform-origin: center; }
+.cap-tri-left  { left: 45%; top: 45%; transform: rotate(-10deg) skewX(-4deg); transform-origin: center; }
+.cap-tri-right { left: 54%; top: 44%; transform: rotate(-2deg) skewX(8deg);  transform-origin: center; }
+/* ===== COLONNE DE GAUCHE  ===== */
+.cap-left-r1 { left: 2%; top: 9.5%; }
+.cap-left-r2 { left: 2%; top: 26%; height: 30%;}
+.cap-left-r3 { left: 2%; top: 58%; height: 30%;}
 
+/* ===== RANGÉE DU HAUT TÊTE ===== */
+.cap-top-center { left: 14.5%; top: -2%; }
+
+/* ===== RANGÉE DU BAS PIEDS ===== */
+.cap-bottom-c1 { 
+  left: 16%;
+  top: 99%; 
+  transform: skewX(35deg);
+  height: 7%;
+}
+.cap-bottom-c2 { 
+  left: 14.5%;
+  top: 89%; 
+}
+.cap-bottom-c3 { 
+  left: 24%;
+  top: 99%; 
+  transform: skewX(35deg);
+  height: 7%;
+}
 /* ===== SILHOUETTE =====
    Ici aussi % OK car la zone parent ne se déforme pas.
 */

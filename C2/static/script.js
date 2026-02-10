@@ -114,23 +114,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // envoi de l'état complet au backend (Flask -> MQTT)
-    function publishFullState() {
+	// envoi de l'état compact au backend (Flask -> MQTT)
+	// Format souhaité dans MQTT : { "F": [..], "D": [..] }
+	// avec uniquement les numéros des capteurs actifs, sans le "c" ou "dos".
+	function publishFullState() {
+		// transforme un objet { id: bool } en tableau de numéros actifs
+		const toNums = (capsById) => {
+			return Object.entries(capsById || {})
+				.filter(([, active]) => active)
+				.map(([id]) => {
+					const n = parseInt(id.replace(/\D/g, ''), 10);
+					return Number.isNaN(n) ? null : n;
+				})
+				.filter(n => n !== null);
+		};
+
+		const payloadCapteurs = {
+			F: toNums(stateCapteurs.FACE),
+			D: toNums(stateCapteurs.DOS)
+		};
+
 		fetch('/publish_capteurs_full', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
+			// on envoie { c2_id, F, D } au backend,
+			// mais côté MQTT seul {F,D} sera publié.
 			body: JSON.stringify({
-			c2_id: C2_ID,
-			mode: currentMode,
-			capteurs: {
-				FACE: stateCapteurs.FACE,
-				DOS: stateCapteurs.DOS
-			}
+				c2_id: C2_ID,
+				F: payloadCapteurs.F,
+				D: payloadCapteurs.D
 			})
 		}).catch(err => console.error('Erreur fetch MQTT:', err));
-		}
-		 
-
+	}
 
     // clic individuel sur un capteur
     caps.forEach(btn => {
