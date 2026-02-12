@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  # MQTT
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"   
+      - "9001:9001"   
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+
+
+  mysql_login:
+    image: mysql:8.0
+    container_name: mysql_login
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: EDF
+    ports:
+      - "3307:3306"       # Le port externe est 3307, interne MySQL 3306
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password --bind-address=0.0.0.0
+
+volumes:
+  mysql_data:
