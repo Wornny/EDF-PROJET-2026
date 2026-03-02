@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>CPO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../static/styleCPO.css">
+  <script>
+    if (localStorage.getItem("drawerOpen") === "true") {
+      document.documentElement.style.setProperty('--drawer-initial', 'translateX(0)');
+      document.documentElement.style.setProperty('--toggle-initial', '220px');
+      document.documentElement.style.setProperty('--arrow-initial', 'scaleX(-1)');
+    }
+  </script>
+  <script defer src="../static/scriptCPO.js"></script>
+</head>
+
+<body data-cm-id="{{ cpo_id }}">
+
+<!-- DRAWER GAUCHE -->
+<div class="drawer" id="drawer">
+  <div class="drawer-content">
+    <h2>Panneau de Contrôle</h2>
+    <div class="drawer-section">
+      <div class="cm-list">
+        {% for i in cpo_ids %}
+          <div class="cm-item">
+            <a class="cm-btn {% if cpo_id == i %}active{% endif %}" href="/CPO/{{ i }}">{{ cpo_names[i] }}</a>
+            <button class="cm-delete" type="button" data-id="{{ i }}" title="Supprimer"><span class="cm-delete-mark">-</span></button>
+          </div>
+        {% endfor %}
+        <a class="cm-btn cm-add" id="cm-add" href="#" title="Ajouter un appareil">+</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOGGLE BUTTON -->
+<button class="drawer-toggle-btn" id="drawerToggle"></button>
+
+<!-- BANNER -->
+<div class="banner">
+  <p class="cm-id-display">CPO ID : {{ cpo_id }}</p>
+</div>
+
+<div class="tablet">
+
+  <!-- ================== ZONE DROITE ================== -->
+  <div class="right-area">
+
+    <!-- ===== PANEL NIVEAU CONTAMINATION ===== -->
+    <div class="detector-panel">
+
+      <div class="detector-title">
+        <span>Niveau Contamination</span>
+
+        <span class="value-box value-green" id="valueBox">
+          <span id="valeur">{{ valeur_conta }}</span> Bq/cm²
+        </span>
+      </div>
+
+      <div class="detector-content">
+        <div class="beta-icon">β</div>
+
+        <div class="gauge-zone">
+
+          <!-- overlay triangle -->
+          <div class="gauge-overlay">
+            <div class="gauge-triangle" id="gaugeTriangle"></div>
+          </div>
+
+          <!-- barre -->
+          <div class="gauge-bg" id="gaugeBg">
+            <div class="gauge-mask" id="gaugeMask"></div>
+
+            <div class="gauge-separators">
+              <span style="left:0%"></span>
+              <span style="left:20%"></span>
+              <span style="left:40%"></span>
+              <span style="left:60%"></span>
+              <span style="left:80%"></span>
+              <span style="left:100%"></span>
+            </div>
+          </div>
+
+          <!-- échelle -->
+          <div class="scale">
+            <span style="left:0%">0</span>
+            <span style="left:20%">1</span>
+            <span style="left:40%">10</span>
+            <span style="left:60%">100</span>
+            <span style="left:80%">1000</span>
+            <span style="left:100%">C/S</span>
+          </div>
+
+          <!-- slider invisible -->
+          <input type="range" id="jauge" min="0" max="1000" step="1" value="0">
+        </div>
+
+        <!-- bouton envoyer -->
+        <button class="send-btn" id="sendBtn" title="Envoyer les valeurs au MQTT"></button>
+      </div>
+    </div>
+
+    <!-- ===== PANEL BRUIT DE FOND ===== -->
+    <div class="detector-panel">
+
+      <div class="detector-title">
+        <span>Bruit de Fond</span>
+
+        <span class="value-box value-green" id="valueBox_bdf">
+          <span id="valeur_bdf">{{ valeur_bdf }}</span> Bq/cm²
+        </span>
+      </div>
+
+      <div class="detector-content">
+        <div class="beta-icon">β</div>
+
+        <div class="gauge-zone">
+
+          <!-- overlay triangle -->
+          <div class="gauge-overlay" id="gaugeOverlay_bdf">
+            <div class="gauge-triangle" id="gaugeTriangle_bdf"></div>
+          </div>
+
+          <!-- barre -->
+          <div class="gauge-bg" id="gaugeBg_bdf">
+            <div class="gauge-mask" id="gaugeMask_bdf"></div>
+
+            <div class="gauge-separators">
+              <span style="left:0%"></span>
+              <span style="left:20%"></span>
+              <span style="left:40%"></span>
+              <span style="left:60%"></span>
+              <span style="left:80%"></span>
+              <span style="left:100%"></span>
+            </div>
+          </div>
+
+          <!-- échelle -->
+          <div class="scale">
+            <span style="left:0%">0</span>
+            <span style="left:20%">1</span>
+            <span style="left:40%">10</span>
+            <span style="left:60%">100</span>
+            <span style="left:80%">1000</span>
+            <span style="left:100%">C/S</span>
+          </div>
+
+          <!-- slider invisible -->
+          <input type="range" id="jauge_bdf" min="0" max="1000" step="1" value="0">
+        </div>
+
+        <!-- placeholder pour aligner avec le bouton du haut -->
+        <div style="width: 76px; height: 76px;"></div>
+      </div>
+    </div>
+
+  </div>
+
+  </div>
+
+  <!-- AJOUTER UN APPAREIL -->
+  <div class="cm-modal" id="cm-modal" aria-hidden="true">
+    <div class="cm-modal-card" role="dialog" aria-modal="true" aria-labelledby="cm-modal-title">
+      <button class="cm-modal-close" id="cm-modal-close" aria-label="Fermer">X</button>
+      <h3 class="cm-modal-title" id="cm-modal-title">Ajouter un appareil</h3>
+      <div class="cm-modal-row">
+        <label class="cm-modal-label" for="cm-modal-input">Nom du nouvel appareil :</label>
+        <input class="cm-modal-input" id="cm-modal-input" type="text" placeholder="Ex: CPO 3">
+        <div class="cm-modal-error" id="cm-modal-error" aria-live="polite"></div>
+      </div>
+      <div class="cm-modal-row">
+        <label class="cm-modal-label" for="cm-modal-type">Type :</label>
+        <input class="cm-modal-select" id="cm-modal-type" type="text" value="CPO" readonly>
+      </div>
+      <button class="cm-modal-submit" id="cm-modal-submit">valider</button>
+    </div>
+</div>
+
+</body>
+</html>
