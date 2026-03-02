@@ -10,6 +10,7 @@ BROKER_HOST = "192.168.190.31"
 BROKER_PORT = 1883
 
 mqtt_client = None
+c2_names = {1: "C2 ID 1", 2: "C2 ID 2"}
 
 
 def _normalize_numeric_list(values):
@@ -53,6 +54,29 @@ def _format_array(values):
 	return f"[{joined}]"
 
 
+def _validate_device_name(name: str, device_type: str):
+	n = (name or "").strip()
+	t = (device_type or "").strip()
+	if not n:
+		return False, "Le nom est obligatoire."
+	if t != "C2":
+		return False, "Type invalide pour cette page."
+
+	n_upper = n.upper()
+	t_upper = t.upper()
+	if not n_upper.startswith(t_upper):
+		return False, f"Le nom doit commencer par {t}."
+
+	if len(n_upper) == len(t_upper):
+		return True, ""
+
+	next_char = n_upper[len(t_upper)]
+	if next_char in (" ", "-", "_") or next_char.isdigit():
+		return True, ""
+
+	return False, f"Le nom doit commencer par {t}."
+
+
 if USE_MQTT:
 	mqtt_client = mqtt.Client(client_id="IHM_C2")
 	mqtt_client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
@@ -68,7 +92,16 @@ def c2_root():
 def c2_page(c2_id: int):
 	if c2_id < 1:
 		c2_id = 1
-	return render_template("c2/C2.html", c2_id=c2_id)
+
+	if c2_id not in c2_names:
+		c2_names[c2_id] = f"C2 ID {c2_id}"
+
+	return render_template(
+		"c2/C2.html",
+		c2_id=c2_id,
+		c2_names=c2_names,
+		c2_ids=sorted(c2_names.keys()),
+	)
 
 
 @c2_bp.route("/publish_capteurs_full", methods=["POST"])
@@ -104,3 +137,47 @@ def publish_capteurs_full():
 		mqtt_client.loop(0.1)
 
 	return jsonify({"status": "ok"}), 200
+
+
+@c2_bp.route("/ajouter-appareil", methods=["POST"])
+def add_device():
+	name = request.form.get("name", "")
+	device_type = request.form.get("type", "")
+
+	ok, error = _validate_device_name(name, device_type)
+	if not ok:
+		return jsonify(ok=False, error=error), 400
+
+	digits = "".join(ch for ch in name if ch.isdigit())
+	if not digits:
+		return jsonify(ok=False, error="Numero manquant dans le nom."), 400
+	if len(digits) > 2:
+		return jsonify(ok=False, error="Maximum 2 chiffres (1 a 99)."), 400
+
+	c2_id = int(digits)
+	if c2_id < 1 or c2_id > 99:
+		return jsonify(ok=False, error="ID C2 invalide (1 a 99)."), 400
+
+	c2_names[c2_id] = f"C2 ID {c2_id}"
+
+	print(f"C2 N°{c2_id} a ete cree")
+
+	return jsonify(ok=True)
+
+
+@c2_bp.route("/supprimer-appareil", methods=["POST"])
+def delete_device():
+	c2_id_raw = request.form.get("id", "")
+	try:
+		c2_id = int(c2_id_raw)
+	except ValueError:
+		return jsonify(ok=False, error="ID invalide."), 400
+
+	if c2_id < 1:
+		return jsonify(ok=False, error="ID invalide."), 400
+
+	c2_names.pop(c2_id, None)
+
+	print(f"C2 N°{c2_id} a ete supprime")
+
+	return jsonify(ok=True)

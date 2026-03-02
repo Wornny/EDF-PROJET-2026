@@ -5,6 +5,7 @@
   <title>CPO</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="{{ url_for('static', filename='cpo/styleCPO.css') }}">
+  <script defer src="{{ url_for('static', filename='common/fullscreen.js') }}"></script>
   <script>
     if (localStorage.getItem("drawerOpen") === "true") {
       document.documentElement.style.setProperty('--drawer-initial', 'translateX(0)');
@@ -41,7 +42,7 @@
 <!-- BANNER -->
 <div class="banner">
   <p class="cm-id-display">CPO ID : {{ cpo_id }}</p>
-  <a class="home-link" href="{{ url_for('accueil.accueil') }}" title="Accueil" aria-label="Accueil">
+  <a class="home-link" href="{{ url_for('accueil.menu') }}" title="Accueil" aria-label="Accueil">
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="M3 10.5L12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5v-9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
       <path d="M9 20v-6h6v6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
