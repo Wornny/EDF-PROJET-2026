@@ -595,7 +595,7 @@ const c2Buttons = document.querySelectorAll('.id-btn[href^="/C2/"]');
 		});
 	}
 
-	const deleteButtons = document.querySelectorAll('.cm-delete');
+	const deleteButtons = document.querySelectorAll('.id-delete, .cm-delete');
 	deleteButtons.forEach((btn) => {
 		btn.addEventListener('click', (e) => {
 			e.preventDefault();
