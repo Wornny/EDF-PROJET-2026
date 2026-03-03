@@ -1,4 +1,4 @@
-﻿﻿document.addEventListener('DOMContentLoaded', () => {
+﻿document.addEventListener('DOMContentLoaded', () => {
     let C2_ID = document.body.dataset.c2Id || 'C2_1';
 	const apiBase = '/C2';
 

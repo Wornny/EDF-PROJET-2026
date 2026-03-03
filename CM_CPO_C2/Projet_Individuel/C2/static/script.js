@@ -1,4 +1,5 @@
-﻿﻿document.addEventListener('DOMContentLoaded', () => {
+<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/static/C2/script.js
+﻿document.addEventListener('DOMContentLoaded', () => {
     let C2_ID = document.body.dataset.c2Id || 'C2_1';
 	const apiBase = '/C2';
 
@@ -71,15 +72,26 @@
 			})
 			.catch(() => {});
 	}
+========
+document.addEventListener('DOMContentLoaded', () => {
+    let C2_ID = document.body.dataset.c2Id || 'C2_1';
+>>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/static/script.js
 
 
     function setC2Id(newId) {
         C2_ID = newId;
         const bannerText = document.querySelector('.c2-id-display');
         if (bannerText) {
+<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/static/C2/script.js
 	           bannerText.textContent = `C2 Id : ${formatC2DisplayId(newId)}`;
         }
 	       pollServerState();
+========
+            bannerText.textContent = `C2 ID : ${newId}`;
+        }
+        // On renvoie l'état actuel avec le nouveau C2_ID
+        publishFullState();
+>>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/static/script.js
     }
 
 
@@ -96,21 +108,35 @@
 
     // mapping zones du corps → liste d'ID de capteurs (FACE)
     const GROUPS_FACE = {
+<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/static/C2/script.js
         tete:  ['c1', 'c2', 'c3','c25','c28'],
         buste: ['c4', 'c5', 'c6', 'c7', 'c8', 'c9','c16','c26'],
         jambes:['c10', 'c11', 'c12', 'c13', 'c14', 'c15','c17', 'c18','c27'],
         bras: ['c19', 'c20', 'c21'],
 		pieds: ['c22', 'c23', 'c24']
+========
+        tete:  ['c1', 'c2', 'c3'],
+        buste: ['c4', 'c5', 'c6', 'c7', 'c8', 'c9'],
+        jambes:['c10', 'c11', 'c12', 'c13', 'c14', 'c15', "c16", "c17", "c18"],
+        bras: ['c19', 'c20', 'c21'],
+>>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/static/script.js
     };
 
 
     // mapping zones du corps → liste d'ID de capteurs (DOS)
     const GROUPS_DOS = {
+<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/static/C2/script.js
         tete:  ['dos1', 'dos2', 'dos3','dos25','dos28'],
         buste: ['dos4', 'dos5', 'dos6', 'dos7', 'dos8', 'dos9','dos16','dos26'],
         jambes:['dos10', 'dos11', 'dos12', 'dos13', 'dos14', 'dos15', 'dos17', 'dos18','dos27'],
         bras: ['dos19', 'dos20', 'dos21'],
 		pieds: ['dos22', 'dos23', 'dos24']
+========
+        tete:  ['dos1', 'dos2', 'dos3'],
+        buste: ['dos4', 'dos5', 'dos6', 'dos7', 'dos8', 'dos9'],
+        jambes:['dos10', 'dos11', 'dos12', 'dos13', 'dos14', 'dos15', 'dos16', 'dos17', 'dos18'],
+        bras: ['dos19', 'dos20', 'dos21'],
+>>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/static/script.js
     };
 
 
@@ -123,6 +149,7 @@
     // tous les boutons capteurs
     const caps = document.querySelectorAll('.cap');
 
+<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/static/C2/script.js
 	function applyModeUI(mode) {
 		// capteurs visibles selon le mode
 		document.querySelectorAll('.cap').forEach(cap => {
@@ -149,6 +176,8 @@
 		});
 	}
 
+========
+>>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/static/script.js
 
     // init de l'état à partir du DOM
     caps.forEach(btn => {
@@ -195,7 +224,18 @@
                 btn.classList.toggle('active', active);
             });
 
+<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/static/C2/script.js
 			applyModeUI(currentMode);
+========
+            // make sure only caps for current mode are visible
+            document.querySelectorAll('.cap').forEach(cap => {
+                if (cap.dataset.mode === currentMode) cap.classList.remove('hidden-mode');
+                else cap.classList.add('hidden-mode');
+            });
+
+            // control buttons state
+            document.querySelectorAll('.control-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === currentMode));
+>>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/static/script.js
 
             updateDrawer();
             return true;
@@ -225,7 +265,11 @@
 			D: toNums(stateCapteurs.DOS)
 		};
 
+<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/static/C2/script.js
 		fetch('/C2/publish_capteurs_full', {
+========
+		fetch('/publish_capteurs_full', {
+>>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/static/script.js
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			// on envoie { c2_id, F, D } au backend,
@@ -314,9 +358,47 @@
             if (mode === currentMode) return; // déjà en ce mode
 
 
+<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/static/C2/script.js
             // basculer le mode (SANS réinitialiser l'état)
             currentMode = mode;
 			applyModeUI(currentMode);
+========
+            // basculer la classe hidden-mode pour afficher/masquer les capteurs
+            const allCaps = document.querySelectorAll('.cap');
+            allCaps.forEach(cap => {
+                const capMode = cap.dataset.mode;
+                if (capMode === mode) {
+                    // afficher les capteurs du nouveau mode
+                    cap.classList.remove('hidden-mode');
+                } else {
+                    // masquer les capteurs de l'ancien mode
+                    cap.classList.add('hidden-mode');
+                }
+            });
+
+
+            // basculer l'image du corps
+            const bodyImgFace = document.querySelector('.body-img-face');
+            const bodyImgDos = document.querySelector('.body-img-dos');
+            
+            if (mode === 'FACE') {
+                bodyImgFace.classList.remove('hide-mode');
+                bodyImgDos.classList.remove('show-mode');
+            } else {
+                bodyImgFace.classList.add('hide-mode');
+                bodyImgDos.classList.add('show-mode');
+            }
+
+
+            // basculer le mode (SANS réinitialiser l'état)
+            currentMode = mode;
+
+
+            // mettre à jour l'affichage des boutons de contrôle
+            controlBtns.forEach(b => {
+                b.classList.toggle('active', b.dataset.mode === currentMode);
+            });
+>>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/static/script.js
 
 
             // persist mode and send
@@ -329,8 +411,13 @@
     });
 
 
+<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/static/C2/script.js
 	// appliquer l'UI du mode courant (FACE par défaut au premier chargement)
 	applyModeUI(currentMode);
+========
+    // initialiser l'affichage du bouton FACE par défaut
+    document.querySelector('.control-btn[data-mode="FACE"]')?.classList.add('active');
+>>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/static/script.js
 
 
     // ===== GLOBAL SCALING (one-time) =====
@@ -412,12 +499,17 @@
 
     // Mettre à jour le drawer quand on change de mode
     function updateDrawer() {
+<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/static/C2/script.js
 		if (drawerMode) drawerMode.textContent = currentMode;
+========
+        drawerMode.textContent = currentMode;
+>>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/static/script.js
         
         const activeCapteurs = Object.keys(stateCapteurs[currentMode]).filter(
             id => stateCapteurs[currentMode][id]
         );
         
+<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/static/C2/script.js
 		if (drawerCapteurs) {
 			if (activeCapteurs.length === 0) {
 				drawerCapteurs.innerHTML = 'Aucun capteur activé';
@@ -427,6 +519,15 @@
 				).join('');
 			}
 		}
+========
+        if (activeCapteurs.length === 0) {
+            drawerCapteurs.innerHTML = 'Aucun capteur activé';
+        } else {
+            drawerCapteurs.innerHTML = activeCapteurs.map(id => 
+                `<div>• ${id}</div>`
+            ).join('');
+        }
+>>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/static/script.js
     }
 
 
@@ -444,25 +545,42 @@
     // Mettre à jour au chargement
     updateDrawer();
 
+<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/static/C2/script.js
 	// synchroniser depuis MQTT/backend (source de vérité)
 	pollServerState();
 	setInterval(pollServerState, 1000);
+========
+    // envoyer état restauré pour synchroniser backend
+    publishFullState();
+>>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/static/script.js
 
 
         function setC2Id(id) {
 			C2_ID = id;
 			const banner = document.querySelector('.c2-id-display');
+<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/static/C2/script.js
 			if (banner) banner.textContent = `C2 Id : ${formatC2DisplayId(id)}`;
 			try { loadStateForId(id); } catch(e) {}
 			updateDrawer();
 			pollServerState();
+========
+			if (banner) banner.textContent = `C2 ID : ${id}`;
+			try { loadStateForId(id); } catch(e) {}
+			updateDrawer();
+			// notifier backend pour que l'état soit pris en compte
+			publishFullState();
+>>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/static/script.js
 			console.log('C2 changé:', id);
 		}
 
     // Exemple: setC2Id('C2_2');
 
 
+<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/static/C2/script.js
 const c2Buttons = document.querySelectorAll('.id-btn[href^="/C2/"]');
+========
+const c2Buttons = document.querySelectorAll('.cm-btn[href^="/C2/"]');
+>>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/static/script.js
 
 
     c2Buttons.forEach(btn => {
@@ -485,6 +603,7 @@ const c2Buttons = document.querySelectorAll('.id-btn[href^="/C2/"]');
     window.addEventListener('beforeunload', () => {
         try { saveStateForId(C2_ID); } catch(e) {}
     });
+<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/static/C2/script.js
 
 	// --- BOUTON + POUR AJOUTER UN APPAREIL
 	const addBtn = document.getElementById('id-add');
@@ -630,4 +749,6 @@ const c2Buttons = document.querySelectorAll('.id-btn[href^="/C2/"]');
 	document.addEventListener('keydown', (e) => {
 		if (e.key === 'Escape') closeModal();
 	});
+========
+>>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/static/script.js
 });
