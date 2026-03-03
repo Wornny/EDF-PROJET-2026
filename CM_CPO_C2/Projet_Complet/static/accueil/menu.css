@@ -5,13 +5,13 @@
   --accent:#ff7a00; 
   --muted:#6b7280; 
   --text:#0b2e4a; 
-  --device-size:200px; 
-  --device-image:100px; 
+  --device-size:180px; 
+  --device-image:90px; 
   --choice-min-width:220px; 
-  --carousel-height:520px; /* augmenté pour plus de confort */
-  --logo-size:160px; 
-  --title-pill-font-size:18px;
-  --circle-y: 50%;
+  --carousel-height:468px; /* réduit de 10% */
+  --logo-size:144px; 
+  --title-pill-font-size:16px;
+  --circle-y: 26%;
   --circle-left-x: 20%;
   --circle-center-x: 50%;
   --circle-right-x: 80%;
@@ -61,6 +61,7 @@ body{
   width: var(--logo-size);
   height: var(--logo-size);
   margin: 45px auto 8px;
+  transform: translateY(-20px);
   border-radius: 50%;
   background: #fff;
   padding: 10px;
@@ -78,8 +79,10 @@ body{
 
 .title-pill{
   display:inline-block;
-  padding:10px 22px;
-  border-radius:10px;
+  padding:9px 20px;
+  border-radius:9px;
+  font-size: var(--title-pill-font-size);
+  transform: translateY(-20px);
   background: linear-gradient(90deg,#ffdfc3,#ffd6a6);
   color:#0b2e4a;
   border:2px solid rgba(0,0,0,0.08);
@@ -104,7 +107,7 @@ body{
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: -20px auto 8px;
+  margin: -120px auto 8px;
 }
 
 /* Carousel */
@@ -113,8 +116,8 @@ body{
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: min(780px, 92vw);
-  height: 300px;
+  width: min(600px, 92vw);
+  height: 180px;
   perspective: none;
   display: flex;
   align-items: center;
@@ -133,8 +136,8 @@ body{
   --circle-scale: 1;
   --circle-z: 0px;
   --circle-tilt: 0deg;
-  width: 190px;
-  height: 190px;
+  width: 120px;
+  height: 120px;
   background: #fff;
   border-radius: 50%;
   display: flex;
@@ -222,8 +225,8 @@ body{
 
 
 .device img {
-  width: 130px;
-  height: 130px;
+  width: 117px;
+  height: 117px;
   margin-bottom: 0;
   object-fit: contain;
 }
@@ -316,8 +319,9 @@ body{
 /* Responsive */
 @media (min-width: 541px) and (max-width: 1024px){
   :root{
-    --carousel-height: 460px;
-    --logo-size: 140px;
+    --carousel-height: 414px;
+    --logo-size: 126px;
+    --circle-y: 20%;
   }
 
   .container{
@@ -335,18 +339,18 @@ body{
   }
 
   .carousel-wrapper{
-    margin: -10px auto 6px;
+    margin: -140px auto 6px;
   }
 }
 
 @media(max-width:540px){
   :root{ 
-    --device-size:120px; 
-    --device-image:60px; 
+    --device-size:108px; 
+    --device-image:54px; 
     --choice-min-width:130px; 
-    --carousel-height:320px; 
-    --logo-size:96px; 
-    --title-pill-font-size:14px 
+    --carousel-height:288px; 
+    --logo-size:86px; 
+    --title-pill-font-size:13px 
   }
   
   .container{padding:18px}
