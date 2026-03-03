@@ -297,10 +297,27 @@ document.addEventListener("DOMContentLoaded", () => {
       if (doSend) sendValue("Bruit de fond", vTxt);
     };
 
+    let isBdfDragging = false;
+    const commitBdf = () => updateBdf(true);
+
     updateBdf(false);
 
-    jauge_bdf.addEventListener("input", () => updateBdf(true));
-    jauge_bdf.addEventListener("change", () => updateBdf(true));
+    jauge_bdf.addEventListener("pointerdown", () => { isBdfDragging = true; });
+    jauge_bdf.addEventListener("pointerup", () => {
+      if (!isBdfDragging) return;
+      isBdfDragging = false;
+      commitBdf();
+    });
+    jauge_bdf.addEventListener("touchstart", () => { isBdfDragging = true; }, { passive: true });
+    jauge_bdf.addEventListener("touchend", () => {
+      if (!isBdfDragging) return;
+      isBdfDragging = false;
+      commitBdf();
+    });
+    jauge_bdf.addEventListener("change", () => {
+      if (isBdfDragging) return;
+      commitBdf();
+    });
     enableGaugeClick(gaugeBg_bdf, jauge_bdf, () => updateBdf(true));
   }
 
