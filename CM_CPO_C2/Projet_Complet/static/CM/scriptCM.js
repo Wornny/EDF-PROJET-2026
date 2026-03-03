@@ -299,9 +299,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateBdf(false);
 
-    jauge_bdf.addEventListener("input", () => updateBdf(false));
-    jauge_bdf.addEventListener("change", () => updateBdf(false));
-    enableGaugeClick(gaugeBg_bdf, jauge_bdf, updateBdf);
+    jauge_bdf.addEventListener("input", () => updateBdf(true));
+    jauge_bdf.addEventListener("change", () => updateBdf(true));
+    enableGaugeClick(gaugeBg_bdf, jauge_bdf, () => updateBdf(true));
   }
 
   // --- Bouton Envoyer

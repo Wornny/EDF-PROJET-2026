@@ -225,7 +225,7 @@ def slider(cm_id: int):
         topic = get_topic_contamination(cm_id)
         display_type = "Contamination"
 
-    print(equip, display_type, "=", value, "Bq/cm²")
+    print(equip, display_type, "=", value, "Bq/cm²", flush=True)
 
     if USE_MQTT and mqtt_client:
         mqtt_client.publish(topic, f"{value} Bq/cm²", retain=True)

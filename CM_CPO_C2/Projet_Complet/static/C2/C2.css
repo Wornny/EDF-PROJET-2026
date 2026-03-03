@@ -450,16 +450,17 @@ button{
 }
 
 .c2-id-display {
+    margin: 0;
     padding: var(--ui-pad);
     width: 15%;
     height: 20%;
     background: radial-gradient(circle, rgb(28, 53, 98) 10%, rgb(20, 38, 79)  100%);
     border: 2px solid var(--ui-border);
-    box-shadow: inset 0 0 0 2.5px  #10192f;
-    box-shadow: 0 5px 0 5px rgba(16, 25, 47,.20);
+    box-shadow: 0 5px 0 5px rgba(16, 25, 47, .20);
     color: var(--ui-text);
     font-weight: 750;
     font-size: clamp(20px, 1.5vw, 18px);
+    line-height: 1;
     border-radius: 100px;
     text-align: center;
 }

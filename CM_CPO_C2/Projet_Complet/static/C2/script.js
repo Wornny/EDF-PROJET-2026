@@ -49,7 +49,10 @@
 		const currentId = extractC2NumericId(C2_ID);
 		if (!Number.isFinite(currentId) || currentId < 1) return;
 
-		fetch(`${apiBase}/state/${currentId}`)
+		fetch(`${apiBase}/state/${currentId}?_=${Date.now()}`, {
+			cache: 'no-store',
+			headers: { 'Cache-Control': 'no-cache' }
+		})
 			.then((res) => res.json().then((json) => ({ ok: res.ok, json })))
 			.then(({ ok, json }) => {
 				if (!ok || !json?.ok) return;

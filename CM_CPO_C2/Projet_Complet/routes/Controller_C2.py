@@ -1,5 +1,6 @@
 import re
 import json
+import uuid
 from flask import Blueprint, jsonify, redirect, render_template, request, url_for
 
 USE_MQTT = True  # False chez moi sans MQTT et True au lycee
@@ -179,7 +180,14 @@ def _extract_device_id(name: str, device_type: str):
 
 
 if USE_MQTT:
-	mqtt_client = mqtt.Client(client_id="IHM_C2")
+	mqtt_client = mqtt.Client(client_id=f"IHM_C2_{uuid.uuid4().hex[:8]}")
+
+	def on_connect(client, userdata, flags, rc):
+		try:
+			client.subscribe("FormaReaEDF/C2/+/Capteurs")
+			print(f"C2 MQTT connected (rc={rc}) and subscribed", flush=True)
+		except Exception as exc:
+			print("MQTT on_connect subscribe error:", exc)
 
 	def on_message(client, userdata, msg):
 		try:
@@ -199,10 +207,14 @@ if USE_MQTT:
 		except Exception as exc:
 			print("MQTT on_message error:", exc)
 
+	mqtt_client.on_connect = on_connect
 	mqtt_client.on_message = on_message
-	mqtt_client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
-	mqtt_client.subscribe("FormaReaEDF/C2/+/Capteurs")
-	mqtt_client.loop_start()
+	mqtt_client.reconnect_delay_set(min_delay=1, max_delay=30)
+	try:
+		mqtt_client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
+		mqtt_client.loop_start()
+	except Exception as exc:
+		print("MQTT connect error:", exc)
 
 
 @c2_bp.route("/")
@@ -253,11 +265,14 @@ def publish_capteurs_full():
 		f_list = _normalize_numeric_list(f_list)
 		d_list = _normalize_numeric_list(d_list)
 
+	c2_numeric_id = _extract_c2_numeric_id(str(c2_id))
+	if c2_numeric_id is not None and c2_numeric_id >= 1:
+		c2_values[c2_numeric_id] = {"F": f_list, "D": d_list}
+		if c2_numeric_id not in c2_names:
+			c2_names[c2_numeric_id] = f"C2 ID {c2_numeric_id}"
+
 	topic = f"FormaReaEDF/C2/{c2_id}/Capteurs"
-	payload = f'{{"F": {_format_array(f_list)}, "D": {_format_array(d_list)}}}'
-	c2_numeric = _extract_c2_numeric_id(c2_id)
-	if c2_numeric:
-		c2_values[c2_numeric] = {"F": f_list, "D": d_list}
+	payload = json.dumps({"F": f_list, "D": d_list}, ensure_ascii=False)
 
 	if USE_MQTT and mqtt_client:
 		mqtt_client.publish(topic, payload, qos=1, retain=True)
@@ -321,9 +336,13 @@ def get_state(c2_id: int):
 		entry = _default_c2_entry()
 		c2_values[c2_id] = entry
 
-	return jsonify(
+	response = jsonify(
 		ok=True,
 		c2_id=f"C2_{c2_id}",
 		F=_normalize_numeric_list(entry.get("F", [])),
 		D=_normalize_numeric_list(entry.get("D", [])),
 	)
+	response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+	response.headers["Pragma"] = "no-cache"
+	response.headers["Expires"] = "0"
+	return response
