@@ -132,6 +132,8 @@ def publish_capteurs_full():
 	topic = f"FormaReaEDF/C2/{c2_id}/Capteurs"
 	payload = f'{{"F": {_format_array(f_list)}, "D": {_format_array(d_list)}}}'
 
+	print(f"{c2_id} Capteurs = {payload}", flush=True)
+
 	if USE_MQTT and mqtt_client:
 		mqtt_client.publish(topic, payload, qos=1, retain=True)
 		mqtt_client.loop(0.1)
