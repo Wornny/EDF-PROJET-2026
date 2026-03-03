@@ -350,8 +350,8 @@
             const vw = window.innerWidth;
             const vh = window.innerHeight;
             const scale = Math.min(vw / BASE_WIDTH, vh / BASE_HEIGHT);
-            // keep horizontal centering (translateX) and apply scale
-            wrapper.style.transform = `translateX(-50%) scale(${scale})`;
+			// keep full centering and apply uniform scale
+			wrapper.style.transform = `translate(-50%, -50%) scale(${scale})`;
             wrapper.style.transformOrigin = 'center center';
         }
 
