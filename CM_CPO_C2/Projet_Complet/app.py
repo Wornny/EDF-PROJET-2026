@@ -9,6 +9,23 @@ from routes.Controller_login import login_bp
 from routes.accueil import accueil_bp
 
 
+def print_startup_banner(host: str, port: int, debug: bool) -> None:
+    reset = "\033[0m"
+    yellow = "\033[33m"
+    red = "\033[31m"
+
+    print(f"{yellow} * Serving Flask app 'app'{reset}")
+    print(f"{yellow} * Debug mode: {'on' if debug else 'off'}{reset}")
+    print(
+        f"{red}WARNING: This is a development server. "
+        f"Do not use it in a production deployment.{reset}"
+    )
+    print(f"{yellow} * Running on http://127.0.0.1:{port}{reset}")
+    if host == "0.0.0.0":
+        print(f"{yellow} * Running on all addresses ({host}){reset}")
+    print(f"{yellow}Press CTRL+C to quit{reset}")
+
+
 def create_app() -> Flask:
     app = Flask(__name__, template_folder="templates", static_folder="static")
     app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", "dev-secret-change-me")
@@ -34,4 +51,9 @@ def create_app() -> Flask:
 
 
 if __name__ == "__main__":
-    create_app().run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)
+    host = "0.0.0.0"
+    port = 5000
+    debug = True
+
+    print_startup_banner(host=host, port=port, debug=debug)
+    create_app().run(host=host, port=port, debug=debug, use_reloader=False)
