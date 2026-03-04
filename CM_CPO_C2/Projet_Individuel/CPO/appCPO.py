@@ -41,7 +41,7 @@ mqtt_client = None
 
 def _clean_payload(payload: str) -> str:
     p = (payload or "").strip()
-    return p.replace("Bq/cm²", "").strip()
+    return p.replace("Bq/cm²", "").replace("Bq", "").strip()
 
 def _validate_device_name(name: str, device_type: str):
     n = (name or "").strip()
@@ -73,12 +73,12 @@ def _ensure_cpo_mqtt(cpo_id: int):
     mqtt_client.subscribe(get_topic_bdf(cpo_id))
     mqtt_client.publish(
         get_topic_contamination(cpo_id),
-        f"{last_values[cpo_id]['NivContamination']} Bq/cm²",
+        f"{last_values[cpo_id]['NivContamination']} Bq",
         retain=True,
     )
     mqtt_client.publish(
         get_topic_bdf(cpo_id),
-        f"{last_values[cpo_id]['BruitDeFond']} Bq/cm²",
+        f"{last_values[cpo_id]['BruitDeFond']} Bq",
         retain=True,
     )
 
@@ -184,10 +184,10 @@ def slider(cpo_id: int):
         topic = get_topic_contamination(cpo_id)
         display_type = "Contamination"
 
-    print(equip, display_type, "=", value, "Bq/cm²")
+    print(equip, display_type, "=", value, "Bq")
 
     if USE_MQTT and mqtt_client:
-        mqtt_client.publish(topic, f"{value} Bq/cm²", retain=True)
+        mqtt_client.publish(topic, f"{value} Bq", retain=True)
 
     return "ok"
 

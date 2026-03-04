@@ -27,16 +27,47 @@ def default_names():
     return {i: f"CM ID {i}" for i in range(1, 12)}
 
 
+def _sorted_ids(values) -> list[int]:
+    def _key(identifier):
+        text = str(identifier).strip()
+        if text.isdigit():
+            return (0, int(text))
+        return (1, text)
+
+    return sorted(values, key=_key)
+
+
 BROKER_HOST = "192.168.190.31"
 BROKER_PORT = 1883
 
 
 def get_topic_contamination(cm_id: int) -> str:
-    return f"FormaReaEDF/ControllerMobile/CM_{cm_id:02d}/NivContamination"
+    return f"FormaReaEDF/ControllerMobile/CM_{cm_id}/NivContamination"
 
 
 def get_topic_bdf(cm_id: int) -> str:
+    return f"FormaReaEDF/ControllerMobile/CM_{cm_id}/BruitDeFond"
+
+
+def _get_legacy_topic_contamination(cm_id: int) -> str:
+    return f"FormaReaEDF/ControllerMobile/CM_{cm_id:02d}/NivContamination"
+
+
+def _get_legacy_topic_bdf(cm_id: int) -> str:
     return f"FormaReaEDF/ControllerMobile/CM_{cm_id:02d}/BruitDeFond"
+
+
+def _clear_legacy_cm_topics() -> None:
+    if not (USE_MQTT and mqtt_client):
+        return
+
+    for cm_id in range(1, 10):
+        legacy_conta = _get_legacy_topic_contamination(cm_id)
+        legacy_bdf = _get_legacy_topic_bdf(cm_id)
+        mqtt_client.publish(legacy_conta, "", retain=True)
+        mqtt_client.publish(legacy_bdf, "", retain=True)
+        mqtt_client.unsubscribe(legacy_conta)
+        mqtt_client.unsubscribe(legacy_bdf)
 
 
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
@@ -49,7 +80,7 @@ mqtt_client = None
 
 def _clean_payload(payload: str) -> str:
     p = (payload or "").strip()
-    return p.replace("Bq/cm²", "").strip()
+    return p.replace("Bq/cm²", "").replace("Bq/cm²", "").strip()
 
 
 def _validate_device_name(name: str, device_type: str):
@@ -79,28 +110,52 @@ def _ensure_cm_mqtt(cm_id: int):
     if not (USE_MQTT and mqtt_client):
         return
 
-    mqtt_client.subscribe(get_topic_contamination(cm_id))
-    mqtt_client.subscribe(get_topic_bdf(cm_id))
+    topic_conta = get_topic_contamination(cm_id)
+    topic_bdf = get_topic_bdf(cm_id)
+    legacy_conta = _get_legacy_topic_contamination(cm_id)
+    legacy_bdf = _get_legacy_topic_bdf(cm_id)
+
+    mqtt_client.subscribe(topic_conta)
+    mqtt_client.subscribe(topic_bdf)
     mqtt_client.publish(
-        get_topic_contamination(cm_id),
+        topic_conta,
         f"{last_values[cm_id]['NivContamination']} Bq/cm²",
         retain=True,
     )
     mqtt_client.publish(
-        get_topic_bdf(cm_id),
+        topic_bdf,
         f"{last_values[cm_id]['BruitDeFond']} Bq/cm²",
         retain=True,
     )
+
+    if legacy_conta != topic_conta:
+        mqtt_client.publish(legacy_conta, "", retain=True)
+        mqtt_client.unsubscribe(legacy_conta)
+    if legacy_bdf != topic_bdf:
+        mqtt_client.publish(legacy_bdf, "", retain=True)
+        mqtt_client.unsubscribe(legacy_bdf)
 
 
 def _remove_cm_mqtt(cm_id: int):
     if not (USE_MQTT and mqtt_client):
         return
 
-    mqtt_client.publish(get_topic_contamination(cm_id), "", retain=True)
-    mqtt_client.publish(get_topic_bdf(cm_id), "", retain=True)
-    mqtt_client.unsubscribe(get_topic_contamination(cm_id))
-    mqtt_client.unsubscribe(get_topic_bdf(cm_id))
+    topic_conta = get_topic_contamination(cm_id)
+    topic_bdf = get_topic_bdf(cm_id)
+    legacy_conta = _get_legacy_topic_contamination(cm_id)
+    legacy_bdf = _get_legacy_topic_bdf(cm_id)
+
+    mqtt_client.publish(topic_conta, "", retain=True)
+    mqtt_client.publish(topic_bdf, "", retain=True)
+    mqtt_client.unsubscribe(topic_conta)
+    mqtt_client.unsubscribe(topic_bdf)
+
+    if legacy_conta != topic_conta:
+        mqtt_client.publish(legacy_conta, "", retain=True)
+        mqtt_client.unsubscribe(legacy_conta)
+    if legacy_bdf != topic_bdf:
+        mqtt_client.publish(legacy_bdf, "", retain=True)
+        mqtt_client.unsubscribe(legacy_bdf)
 
 
 def on_message(client, userdata, msg):
@@ -112,7 +167,10 @@ def on_message(client, userdata, msg):
             return
 
         try:
-            cm_id = int(parts[2][3:])
+            cm_token = parts[2][3:]
+            if len(cm_token) > 1 and cm_token.startswith("0"):
+                return
+            cm_id = int(cm_token)
         except ValueError:
             return
 
@@ -137,6 +195,8 @@ if USE_MQTT:
     mqtt_client = mqtt.Client(client_id="IHM_ControllerMobile")
     mqtt_client.on_message = on_message
     mqtt_client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
+
+    _clear_legacy_cm_topics()
 
     for cm_id in range(1, 12):
         _ensure_cm_mqtt(cm_id)
@@ -167,7 +227,7 @@ def page_cm(cm_id: int):
         valeur_conta=last_values[cm_id]["NivContamination"],
         valeur_bdf=last_values[cm_id]["BruitDeFond"],
         cm_names=cm_names,
-        cm_ids=sorted(cm_names.keys()),
+        cm_ids=_sorted_ids(cm_names.keys()),
     )
 
 
@@ -199,10 +259,10 @@ def slider(cm_id: int):
         topic = get_topic_contamination(cm_id)
         display_type = "Contamination"
 
-    print(equip, display_type, "=", value, "Bq/cm²", flush=True)
+    print(equip, display_type, "=", value, "Bq", flush=True)
 
     if USE_MQTT and mqtt_client:
-        mqtt_client.publish(topic, f"{value} Bq/cm²", retain=True)
+        mqtt_client.publish(topic, f"{value} Bq", retain=True)
 
     return "ok"
 

@@ -20,6 +20,9 @@ const gaugeBg_bdf   = document.getElementById("gaugeBg_bdf");
 const cmId = Number(document.body.dataset.cmId || "1");
 const apiBase = document.body.dataset.apiBase || "";
 
+let hasPendingContamination = false;
+let hasPendingBdf = false;
+
 // ================== CONSTANTES JAUGE ==================
 const P0     = 0;
 const P1     = 200;
@@ -142,14 +145,20 @@ function sendValue(type, vTxt) {
   data.append("equip", "Controller Mobile N°" + cmId);
   data.append("type", type);
 
-  fetch(`${apiBase}/slider/${cmId}`, {
+  return fetch(`${apiBase}/slider/${cmId}`, {
     method: "POST",
     body: data
-  });
+  })
+    .then(() => {
+      const typeNorm = String(type || "").toLowerCase();
+      if (typeNorm.includes("bruit")) hasPendingBdf = false;
+      else hasPendingContamination = false;
+    })
+    .catch(() => {});
 }
 
 function applyServerValues(contamination, bruitDeFond) {
-  if (typeof contamination === "string" && valeur) {
+  if (!hasPendingContamination && typeof contamination === "string" && valeur) {
     valeur.textContent = contamination;
     if (jauge) {
       restoreSliderFromDisplayedValue(jauge, valeur);
@@ -159,7 +168,7 @@ function applyServerValues(contamination, bruitDeFond) {
     }
   }
 
-  if (typeof bruitDeFond === "string" && valeur_bdf) {
+  if (!hasPendingBdf && typeof bruitDeFond === "string" && valeur_bdf) {
     valeur_bdf.textContent = bruitDeFond;
     if (jauge_bdf) {
       restoreSliderFromDisplayedValue(jauge_bdf, valeur_bdf);
@@ -192,12 +201,40 @@ function pollServerState() {
 function enableGaugeClick(gaugeBgEl, sliderEl, updateFn) {
   if (!gaugeBgEl || !sliderEl) return;
 
-  gaugeBgEl.addEventListener("click", (e) => {
+  let activePointerId = null;
+  sliderEl.style.touchAction = "none";
+  gaugeBgEl.style.touchAction = "none";
+
+  const setFromClientX = (clientX) => {
     const rect = gaugeBgEl.getBoundingClientRect();
-    const ratio = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
+    const ratio = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
     sliderEl.value = Math.round(ratio * 1000);
     updateFn(false);
-  });
+  };
+
+  const onPointerDown = (e) => {
+    activePointerId = e.pointerId;
+    setFromClientX(e.clientX);
+    e.preventDefault();
+  };
+
+  const onPointerMove = (e) => {
+    if (activePointerId !== e.pointerId) return;
+    setFromClientX(e.clientX);
+    e.preventDefault();
+  };
+
+  const onPointerUpOrCancel = (e) => {
+    if (activePointerId !== e.pointerId) return;
+    setFromClientX(e.clientX);
+    activePointerId = null;
+  };
+
+  gaugeBgEl.addEventListener("pointerdown", onPointerDown);
+  sliderEl.addEventListener("pointerdown", onPointerDown);
+  window.addEventListener("pointermove", onPointerMove, { passive: false });
+  window.addEventListener("pointerup", onPointerUpOrCancel);
+  window.addEventListener("pointercancel", onPointerUpOrCancel);
 }
 
 // ================== DRAWER ==================
@@ -281,9 +318,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateCont(false);
 
-    jauge.addEventListener("input", () => updateCont(false));
-    jauge.addEventListener("change", () => updateCont(false));
-    enableGaugeClick(gaugeBg, jauge, updateCont);
+    jauge.addEventListener("input", () => {
+      hasPendingContamination = true;
+      updateCont(false);
+    });
+    jauge.addEventListener("change", () => {
+      hasPendingContamination = true;
+      updateCont(false);
+    });
+    enableGaugeClick(gaugeBg, jauge, () => {
+      hasPendingContamination = true;
+      updateCont(false);
+    });
   }
 
   // --- Bruit de Fond
@@ -297,28 +343,20 @@ document.addEventListener("DOMContentLoaded", () => {
       if (doSend) sendValue("Bruit de fond", vTxt);
     };
 
-    let isBdfDragging = false;
-    const commitBdf = () => updateBdf(true);
-
     updateBdf(false);
 
-    jauge_bdf.addEventListener("pointerdown", () => { isBdfDragging = true; });
-    jauge_bdf.addEventListener("pointerup", () => {
-      if (!isBdfDragging) return;
-      isBdfDragging = false;
-      commitBdf();
-    });
-    jauge_bdf.addEventListener("touchstart", () => { isBdfDragging = true; }, { passive: true });
-    jauge_bdf.addEventListener("touchend", () => {
-      if (!isBdfDragging) return;
-      isBdfDragging = false;
-      commitBdf();
+    jauge_bdf.addEventListener("input", () => {
+      hasPendingBdf = true;
+      updateBdf(false);
     });
     jauge_bdf.addEventListener("change", () => {
-      if (isBdfDragging) return;
-      commitBdf();
+      hasPendingBdf = true;
+      updateBdf(false);
     });
-    enableGaugeClick(gaugeBg_bdf, jauge_bdf, () => updateBdf(true));
+    enableGaugeClick(gaugeBg_bdf, jauge_bdf, () => {
+      hasPendingBdf = true;
+      updateBdf(false);
+    });
   }
 
   // --- Bouton Envoyer

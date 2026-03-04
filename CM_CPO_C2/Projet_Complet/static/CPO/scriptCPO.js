@@ -192,12 +192,40 @@ function pollServerState() {
 function enableGaugeClick(gaugeBgEl, sliderEl, updateFn) {
   if (!gaugeBgEl || !sliderEl) return;
 
-  gaugeBgEl.addEventListener("click", (e) => {
+  let activePointerId = null;
+  sliderEl.style.touchAction = "none";
+  gaugeBgEl.style.touchAction = "none";
+
+  const setFromClientX = (clientX) => {
     const rect = gaugeBgEl.getBoundingClientRect();
-    const ratio = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
+    const ratio = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
     sliderEl.value = Math.round(ratio * 1000);
     updateFn(false);
-  });
+  };
+
+  const onPointerDown = (e) => {
+    activePointerId = e.pointerId;
+    setFromClientX(e.clientX);
+    e.preventDefault();
+  };
+
+  const onPointerMove = (e) => {
+    if (activePointerId !== e.pointerId) return;
+    setFromClientX(e.clientX);
+    e.preventDefault();
+  };
+
+  const onPointerUpOrCancel = (e) => {
+    if (activePointerId !== e.pointerId) return;
+    setFromClientX(e.clientX);
+    activePointerId = null;
+  };
+
+  gaugeBgEl.addEventListener("pointerdown", onPointerDown);
+  sliderEl.addEventListener("pointerdown", onPointerDown);
+  window.addEventListener("pointermove", onPointerMove, { passive: false });
+  window.addEventListener("pointerup", onPointerUpOrCancel);
+  window.addEventListener("pointercancel", onPointerUpOrCancel);
 }
 
 // ================== DRAWER ==================

@@ -27,16 +27,47 @@ def default_names():
     return {i: f"CPO ID {i}" for i in range(1, 3)}
 
 
+def _sorted_ids(values) -> list[int]:
+    def _key(identifier):
+        text = str(identifier).strip()
+        if text.isdigit():
+            return (0, int(text))
+        return (1, text)
+
+    return sorted(values, key=_key)
+
+
 BROKER_HOST = "192.168.190.31"
 BROKER_PORT = 1883
 
 
 def get_topic_contamination(cpo_id: int) -> str:
-    return f"FormaReaEDF/CPO/CPO_{cpo_id:02d}/NivContamination"
+    return f"FormaReaEDF/CPO/CPO_{cpo_id}/NivContamination"
 
 
 def get_topic_bdf(cpo_id: int) -> str:
+    return f"FormaReaEDF/CPO/CPO_{cpo_id}/BruitDeFond"
+
+
+def _get_legacy_topic_contamination(cpo_id: int) -> str:
+    return f"FormaReaEDF/CPO/CPO_{cpo_id:02d}/NivContamination"
+
+
+def _get_legacy_topic_bdf(cpo_id: int) -> str:
     return f"FormaReaEDF/CPO/CPO_{cpo_id:02d}/BruitDeFond"
+
+
+def _clear_legacy_cpo_topics() -> None:
+    if not (USE_MQTT and mqtt_client):
+        return
+
+    for cpo_id in range(1, 10):
+        legacy_conta = _get_legacy_topic_contamination(cpo_id)
+        legacy_bdf = _get_legacy_topic_bdf(cpo_id)
+        mqtt_client.publish(legacy_conta, "", retain=True)
+        mqtt_client.publish(legacy_bdf, "", retain=True)
+        mqtt_client.unsubscribe(legacy_conta)
+        mqtt_client.unsubscribe(legacy_bdf)
 
 
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
@@ -49,7 +80,7 @@ mqtt_client = None
 
 def _clean_payload(payload: str) -> str:
     p = (payload or "").strip()
-    return p.replace("Bq/cm²", "").strip()
+    return p.replace("Bq/cm²", "").replace("Bq", "").strip()
 
 
 def _validate_device_name(name: str, device_type: str):
@@ -79,28 +110,52 @@ def _ensure_cpo_mqtt(cpo_id: int):
     if not (USE_MQTT and mqtt_client):
         return
 
-    mqtt_client.subscribe(get_topic_contamination(cpo_id))
-    mqtt_client.subscribe(get_topic_bdf(cpo_id))
+    topic_conta = get_topic_contamination(cpo_id)
+    topic_bdf = get_topic_bdf(cpo_id)
+    legacy_conta = _get_legacy_topic_contamination(cpo_id)
+    legacy_bdf = _get_legacy_topic_bdf(cpo_id)
+
+    mqtt_client.subscribe(topic_conta)
+    mqtt_client.subscribe(topic_bdf)
     mqtt_client.publish(
-        get_topic_contamination(cpo_id),
-        f"{last_values[cpo_id]['NivContamination']} Bq/cm²",
+        topic_conta,
+        f"{last_values[cpo_id]['NivContamination']} Bq",
         retain=True,
     )
     mqtt_client.publish(
-        get_topic_bdf(cpo_id),
-        f"{last_values[cpo_id]['BruitDeFond']} Bq/cm²",
+        topic_bdf,
+        f"{last_values[cpo_id]['BruitDeFond']} Bq",
         retain=True,
     )
+
+    if legacy_conta != topic_conta:
+        mqtt_client.publish(legacy_conta, "", retain=True)
+        mqtt_client.unsubscribe(legacy_conta)
+    if legacy_bdf != topic_bdf:
+        mqtt_client.publish(legacy_bdf, "", retain=True)
+        mqtt_client.unsubscribe(legacy_bdf)
 
 
 def _remove_cpo_mqtt(cpo_id: int):
     if not (USE_MQTT and mqtt_client):
         return
 
-    mqtt_client.publish(get_topic_contamination(cpo_id), "", retain=True)
-    mqtt_client.publish(get_topic_bdf(cpo_id), "", retain=True)
-    mqtt_client.unsubscribe(get_topic_contamination(cpo_id))
-    mqtt_client.unsubscribe(get_topic_bdf(cpo_id))
+    topic_conta = get_topic_contamination(cpo_id)
+    topic_bdf = get_topic_bdf(cpo_id)
+    legacy_conta = _get_legacy_topic_contamination(cpo_id)
+    legacy_bdf = _get_legacy_topic_bdf(cpo_id)
+
+    mqtt_client.publish(topic_conta, "", retain=True)
+    mqtt_client.publish(topic_bdf, "", retain=True)
+    mqtt_client.unsubscribe(topic_conta)
+    mqtt_client.unsubscribe(topic_bdf)
+
+    if legacy_conta != topic_conta:
+        mqtt_client.publish(legacy_conta, "", retain=True)
+        mqtt_client.unsubscribe(legacy_conta)
+    if legacy_bdf != topic_bdf:
+        mqtt_client.publish(legacy_bdf, "", retain=True)
+        mqtt_client.unsubscribe(legacy_bdf)
 
 
 def on_message(client, userdata, msg):
@@ -112,7 +167,10 @@ def on_message(client, userdata, msg):
 
         try:
             cpo_part = msg.topic.split("/")[2]
-            cpo_id = int(cpo_part.replace("CPO_", ""))
+            cpo_token = cpo_part.replace("CPO_", "")
+            if len(cpo_token) > 1 and cpo_token.startswith("0"):
+                return
+            cpo_id = int(cpo_token)
         except Exception:
             return
 
@@ -133,7 +191,9 @@ if USE_MQTT:
     mqtt_client.on_message = on_message
     mqtt_client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
 
-    for cpo_id in (2, 1):
+    _clear_legacy_cpo_topics()
+
+    for cpo_id in _sorted_ids(cpo_names.keys()):
         _ensure_cpo_mqtt(cpo_id)
 
     mqtt_client.loop_start()
@@ -162,7 +222,7 @@ def page_cpo(cpo_id: int):
         valeur_conta=last_values[cpo_id]["NivContamination"],
         valeur_bdf=last_values[cpo_id]["BruitDeFond"],
         cpo_names=cpo_names,
-        cpo_ids=sorted(cpo_names.keys()),
+        cpo_ids=_sorted_ids(cpo_names.keys()),
     )
 
 
@@ -194,10 +254,10 @@ def slider(cpo_id: int):
         topic = get_topic_contamination(cpo_id)
         display_type = "Contamination"
 
-    print(equip, display_type, "=", value, "Bq/cm²", flush=True)
+    print(equip, display_type, "=", value, "Bq", flush=True)
 
     if USE_MQTT and mqtt_client:
-        mqtt_client.publish(topic, f"{value} Bq/cm²", retain=True)
+        mqtt_client.publish(topic, f"{value} Bq", retain=True)
 
     return "ok"
 
