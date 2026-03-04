@@ -58,7 +58,7 @@ body > *{ position: relative; z-index: 0; }
 .c2-wrapper{
   position: relative;
   left: 50%;
-  top: 60%;
+  top: 65%;
   transform: translate(-50%, -50%);
   max-height: none;
 
@@ -478,14 +478,14 @@ button{
   left: 0;
   top: 0;
   width: 220px;
-  height: 100vh;    /* ou 100vh si tu veux rester classique */
+  height: 100vh;
   background: linear-gradient(135deg, rgba(16, 25, 47, .50) 0%, rgba(31, 51, 91, .50) 100%);
   border-right: 2px solid var(--ui-border);
   box-shadow: 0 5px 0 5px rgba(16, 25, 47, .100);
   transform: var(--drawer-initial, translateX(-100%));
   transition: transform 0.3s ease;
   z-index: 1000;
-  overflow-y: auto;  /* scrollbar interne si contenu > écran */
+  overflow-y: auto;
 }
 
 .drawer.open {
@@ -493,12 +493,12 @@ button{
 }
 
 .drawer-content {
-  padding: 8px 20px;
-  color: var(--ui-text);        
+  padding: 8px 20px; /* réduit pour remonter la liste */
+  color: var(--ui-text);
 }
 
 .drawer h2 {
-  margin: 0 0 9px 0;
+  margin: 0 0 9px 0; /* réduit pour remonter le contenu */
   font-size: 1.3em;
   color: rgb(127, 134, 158);
   border-bottom: 2px solid rgb(127, 134, 158);
@@ -506,7 +506,11 @@ button{
 }
 
 .drawer-section {
-  margin-bottom: 9px;
+  margin-bottom: 9px; /* réduit pour remonter */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
 }
 
 .drawer-section h3 {
@@ -544,8 +548,8 @@ button{
   transform: translateY(-50%);
   width: 35px;
   height: 80px;
-  background: linear-gradient(90deg, rgba(16, 25, 47,.75) 0%, rgba(31, 51, 91,.75) 100%);
-  box-shadow: 0 5px 0 5px rgba(16, 25, 47,.05);
+  background: linear-gradient(90deg, rgba(16, 25, 47, .75) 0%, rgba(31, 51, 91, .75) 100%);
+  box-shadow: 0 5px 0 5px rgba(16, 25, 47, .05);
   border-top: 2px solid var(--ui-border);
   border-right: 2px solid var(--ui-border);
   border-bottom: 2px solid var(--ui-border);
@@ -558,14 +562,6 @@ button{
   align-items: center;
   justify-content: center;
   padding: 0;
-}
-
-.drawer-section {
-  margin-bottom: 25px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;   /* centre les cm-btn dans la section */
-  gap: 10px;
 }
 
 .drawer-toggle-btn::before {
