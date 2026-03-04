@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>C2 - Capteurs</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='C2/C2.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='C2/styleC2.css') }}">
 </head>
 <body data-c2-id="C2_{{ c2_id }}">
 <!-- DRAWER GAUCHE -->
@@ -42,7 +42,7 @@
 <div class="banner">
     <div class="banner-text"></div>
     <p class="c2-id-display">C2 Id : {{ c2_id }}</p>
-    <a class="home-link" href="{{ url_for('accueil.menu') }}" title="Accueil" aria-label="Accueil">
+    <a class="home-link" href="{{ url_for('accueil.accueil') }}" title="Accueil" aria-label="Accueil">
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="M3 10.5L12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5v-9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
       <path d="M9 20v-6h6v6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
@@ -173,7 +173,7 @@
     </div>
 </footer>
 
-<script src="{{ url_for('static', filename='C2/script.js') }}"></script>
+<script src="{{ url_for('static', filename='C2/scriptC2.js') }}"></script>
 
 <!-- BOUTON + POUR AJOUTER UN APPAREIL -->
 <div class="cm-modal" id="cm-modal" aria-hidden="true">
