@@ -2,8 +2,21 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>C2 - Capteurs</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='C2/styleC2.css') }}">
+    <script>
+        if (localStorage.getItem("drawerOpen") === "true") {
+            document.documentElement.style.setProperty('--drawer-initial', 'translateX(0)');
+            document.documentElement.style.setProperty('--toggle-initial', '220px');
+            document.documentElement.style.setProperty('--arrow-initial', 'scaleX(-1)');
+        }
+        if (localStorage.getItem("drawerRightOpen") === "true") {
+            document.documentElement.style.setProperty('--drawer-right-initial', 'translateX(0)');
+            document.documentElement.style.setProperty('--toggle-right-initial', '220px');
+            document.documentElement.style.setProperty('--arrow-right-initial', 'scaleX(-1)');
+        }
+    </script>
 </head>
 <body data-c2-id="C2_{{ c2_id }}">
 <!-- DRAWER GAUCHE -->

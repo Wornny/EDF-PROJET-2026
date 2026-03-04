@@ -367,49 +367,60 @@
     const drawerMode = document.getElementById('drawerMode');
     const drawerCapteurs = document.getElementById('drawerCapteurs');
 
+	    function applyLeftDrawerVisualState(isOpen) {
+	    	if (isOpen) {
+	    		document.documentElement.style.setProperty('--drawer-initial', 'translateX(0)');
+	    		document.documentElement.style.setProperty('--toggle-initial', '220px');
+	    		document.documentElement.style.setProperty('--arrow-initial', 'scaleX(-1)');
+	    	} else {
+	    		document.documentElement.style.removeProperty('--drawer-initial');
+	    		document.documentElement.style.setProperty('--toggle-initial', '0');
+	    		document.documentElement.style.setProperty('--arrow-initial', 'scaleX(1)');
+	    	}
+	    }
 
-    // lire l'état sauvegardé
-    const savedState = localStorage.getItem('drawerOpen');
-    const isOpen = savedState === 'true';
+	    if (drawer && drawerToggle) {
+	    	const isOpen = localStorage.getItem('drawerOpen') === 'true';
+	    	drawer.classList.toggle('open', isOpen);
+	    	applyLeftDrawerVisualState(isOpen);
 
-
-    // appliquer l'état au chargement
-    if (isOpen) {
-    drawer.classList.add('open');
-    drawerToggle.classList.add('open');
-    }
-
-
-    // toggle + sauvegarde
-    drawerToggle.addEventListener('click', () => {
-    const nowOpen = !drawer.classList.contains('open');
-    drawer.classList.toggle('open', nowOpen);
-    drawerToggle.classList.toggle('open', nowOpen);
-    localStorage.setItem('drawerOpen', String(nowOpen));
-    });
+	    	drawerToggle.addEventListener('click', () => {
+	    		const nowOpen = !drawer.classList.contains('open');
+	    		drawer.classList.toggle('open', nowOpen);
+	    		localStorage.setItem('drawerOpen', String(nowOpen));
+	    		applyLeftDrawerVisualState(nowOpen);
+	    	});
+	    }
 
 
     // ===== DRAWER DROIT : toggle + persistence =====
     const drawerRight = document.getElementById('drawerRight');
     const drawerToggleRight = document.getElementById('drawerToggleRight');
 
+	    function applyRightDrawerVisualState(isOpen) {
+	    	if (isOpen) {
+	    		document.documentElement.style.setProperty('--drawer-right-initial', 'translateX(0)');
+	    		document.documentElement.style.setProperty('--toggle-right-initial', '220px');
+	    		document.documentElement.style.setProperty('--arrow-right-initial', 'scaleX(-1)');
+	    	} else {
+	    		document.documentElement.style.removeProperty('--drawer-right-initial');
+	    		document.documentElement.style.setProperty('--toggle-right-initial', '0');
+	    		document.documentElement.style.setProperty('--arrow-right-initial', 'scaleX(1)');
+	    	}
+	    }
 
-    const savedRight = localStorage.getItem('drawerRightOpen');
-    const isRightOpen = savedRight === 'true';
-    if (isRightOpen && drawerRight && drawerToggleRight) {
-        drawerRight.classList.add('open');
-        drawerToggleRight.classList.add('open');
-    }
+	    if (drawerRight && drawerToggleRight) {
+	        const isRightOpen = localStorage.getItem('drawerRightOpen') === 'true';
+	        drawerRight.classList.toggle('open', isRightOpen);
+	        applyRightDrawerVisualState(isRightOpen);
 
-
-    if (drawerToggleRight) {
-        drawerToggleRight.addEventListener('click', () => {
-            const nowOpen = !drawerRight.classList.contains('open');
-            drawerRight.classList.toggle('open', nowOpen);
-            drawerToggleRight.classList.toggle('open', nowOpen);
-            localStorage.setItem('drawerRightOpen', String(nowOpen));
-        });
-    }
+	        drawerToggleRight.addEventListener('click', () => {
+	            const nowOpen = !drawerRight.classList.contains('open');
+	            drawerRight.classList.toggle('open', nowOpen);
+	            localStorage.setItem('drawerRightOpen', String(nowOpen));
+	            applyRightDrawerVisualState(nowOpen);
+	        });
+	    }
 
 
 
