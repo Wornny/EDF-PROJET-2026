@@ -328,10 +328,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const rawCont = snap(Number(jauge?.value || 0));
       const vTxtCont = formatValue(sliderToValue(rawCont));
       sendValue("Contamination", vTxtCont);
-
-      const rawBdf = snap(Number(jauge_bdf?.value || 0));
-      const vTxtBdf = formatValue(sliderToValue(rawBdf));
-      sendValue("Bruit de fond", vTxtBdf);
     });
   }
 

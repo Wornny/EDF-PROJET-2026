@@ -1,5 +1,4 @@
 import logging
-import re
 
 from flask import Blueprint, jsonify, redirect, render_template, request, url_for
 
@@ -74,31 +73,6 @@ def _validate_device_name(name: str, device_type: str):
         return True, ""
 
     return False, f"Le nom doit commencer par {t}."
-
-
-def _extract_device_id(name: str, device_type: str):
-    n = (name or "").strip()
-    t = (device_type or "").strip()
-    if not n or not t:
-        return None
-
-    n_upper = n.upper()
-    t_upper = t.upper()
-    if not n_upper.startswith(t_upper):
-        return None
-
-    remainder = n[len(t):].strip()
-    if remainder.startswith(("-", "_")):
-        remainder = remainder[1:].strip()
-
-    match = re.search(r"\d+", remainder)
-    if not match:
-        return None
-
-    try:
-        return int(match.group(0))
-    except ValueError:
-        return None
 
 
 def _ensure_cpo_mqtt(cpo_id: int):
@@ -237,11 +211,13 @@ def add_device():
     if not ok:
         return jsonify(ok=False, error=error), 400
 
-    cpo_id = _extract_device_id(name, device_type)
-    if cpo_id is None:
+    digits = "".join(ch for ch in name if ch.isdigit())
+    if not digits:
         return jsonify(ok=False, error="Il manque le numero du nouvel appareil"), 400
-    if cpo_id > 99:
+    if len(digits) > 2:
         return jsonify(ok=False, error="Maximum 2 chiffres (1 a 99)."), 400
+
+    cpo_id = int(digits)
     if cpo_id < 1 or cpo_id > 99:
         return jsonify(ok=False, error="ID CPO invalide (1 a 99)."), 400
 
@@ -277,19 +253,3 @@ def delete_device():
     print(f"CPO N°{cpo_id} a ete supprime")
 
     return jsonify(ok=True)
-
-
-@cpo_bp.route("/state/<int:cpo_id>")
-def get_state(cpo_id: int):
-    if cpo_id < 1:
-        return jsonify(ok=False, error="ID invalide."), 400
-
-    if cpo_id not in last_values:
-        last_values[cpo_id] = default_entry()
-
-    return jsonify(
-        ok=True,
-        cpo_id=cpo_id,
-        NivContamination=last_values[cpo_id]["NivContamination"],
-        BruitDeFond=last_values[cpo_id]["BruitDeFond"],
-    )

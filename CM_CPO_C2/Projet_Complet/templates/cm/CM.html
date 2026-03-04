@@ -23,14 +23,14 @@
   <div class="drawer-content">
     <h2>Panneau de Contrôle</h2>
     <div class="drawer-section">
-      <div class="id-list">
+      <div class="cm-list">
         {% for i in cm_ids %}
-          <div class="id-item">
-            <a class="id-btn {% if cm_id == i %}active{% endif %}" href="/ControllerMobile/{{ i }}">{{ cm_names[i] }}</a>
+          <div class="cm-item">
+            <a class="cm-btn {% if cm_id == i %}active{% endif %}" href="/ControllerMobile/{{ i }}">{{ cm_names[i] }}</a>
             <button class="cm-delete" type="button" data-id="{{ i }}" title="Supprimer"><span class="cm-delete-mark">-</span></button>
           </div>
         {% endfor %}
-        <a class="id-btn id-add" id="id-add" href="#" title="Ajouter un appareil">+</a>
+        <a class="cm-btn cm-add" id="cm-add" href="#" title="Ajouter un appareil">+</a>
       </div>
     </div>
   </div>

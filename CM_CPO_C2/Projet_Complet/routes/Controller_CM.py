@@ -1,5 +1,4 @@
 import logging
-import re
 
 from flask import Blueprint, jsonify, redirect, render_template, request, url_for
 
@@ -74,31 +73,6 @@ def _validate_device_name(name: str, device_type: str):
         return True, ""
 
     return False, f"Le nom doit commencer par {t}."
-
-
-def _extract_device_id(name: str, device_type: str):
-    n = (name or "").strip()
-    t = (device_type or "").strip()
-    if not n or not t:
-        return None
-
-    n_upper = n.upper()
-    t_upper = t.upper()
-    if not n_upper.startswith(t_upper):
-        return None
-
-    remainder = n[len(t):].strip()
-    if remainder.startswith(("-", "_")):
-        remainder = remainder[1:].strip()
-
-    match = re.search(r"\d+", remainder)
-    if not match:
-        return None
-
-    try:
-        return int(match.group(0))
-    except ValueError:
-        return None
 
 
 def _ensure_cm_mqtt(cm_id: int):
@@ -242,11 +216,13 @@ def add_device():
     if not ok:
         return jsonify(ok=False, error=error), 400
 
-    cm_id = _extract_device_id(name, device_type)
-    if cm_id is None:
+    digits = "".join(ch for ch in name if ch.isdigit())
+    if not digits:
         return jsonify(ok=False, error="Numero manquant dans le nom."), 400
-    if cm_id > 99:
+    if len(digits) > 2:
         return jsonify(ok=False, error="Maximum 2 chiffres (1 a 99)."), 400
+
+    cm_id = int(digits)
     if cm_id < 1 or cm_id > 99:
         return jsonify(ok=False, error="ID CM invalide (1 a 99)."), 400
 
@@ -282,19 +258,3 @@ def delete_device():
     print(f"Controller Mobile N°{cm_id} a ete supprime")
 
     return jsonify(ok=True)
-
-
-@cm_bp.route("/state/<int:cm_id>")
-def get_state(cm_id: int):
-    if cm_id < 1:
-        return jsonify(ok=False, error="ID invalide."), 400
-
-    if cm_id not in last_values:
-        last_values[cm_id] = default_entry()
-
-    return jsonify(
-        ok=True,
-        cm_id=cm_id,
-        NivContamination=last_values[cm_id]["NivContamination"],
-        BruitDeFond=last_values[cm_id]["BruitDeFond"],
-    )
