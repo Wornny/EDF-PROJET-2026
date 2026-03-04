@@ -325,8 +325,8 @@
     });
 
 
-    // gestion des boutons de contrôle FACE/DOS
-    const controlBtns = document.querySelectorAll('.control-btn');
+	    // gestion des boutons de contrôle FACE/DOS
+	    const controlBtns = document.querySelectorAll('.control-btn[data-mode]');
     controlBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const mode = btn.dataset.mode;
@@ -346,6 +346,23 @@
             updateDrawer();
         });
     });
+
+	const resetCapsBtn = document.getElementById('resetCapsBtn');
+	if (resetCapsBtn) {
+		resetCapsBtn.addEventListener('click', () => {
+			caps.forEach(btn => {
+				const id = btn.dataset.capteur;
+				const mode = btn.dataset.mode;
+				if (!id || !mode || !stateCapteurs[mode]) return;
+				stateCapteurs[mode][id] = false;
+				btn.classList.remove('active');
+			});
+
+			try { saveStateForId(C2_ID); } catch (e) {}
+			publishFullState();
+			updateDrawer();
+		});
+	}
 
 
 	// appliquer l'UI du mode courant (FACE par défaut au premier chargement)
