@@ -15,7 +15,7 @@
                 {% for i in c2_ids %}
                 <div class="id-item">
                     <a class="id-btn {% if c2_id == i %}active{% endif %}" href="/C2/{{ i }}">{{ c2_names[i] }}</a>
-                    <button class="id-delete" type="button" data-id="{{ i }}" title="Supprimer"><span class="cm-delete-mark">-</span></button>
+                    <button class="id-delete" type="button" data-id="{{ i }}" title="Supprimer"><span class="id-delete-mark">-</span></button>
                 </div>
                 {% endfor %}
                 <a class="id-btn id-add" id="id-add" href="#" title="Ajouter un appareil">+</a>
@@ -42,7 +42,7 @@
 <div class="banner">
     <div class="banner-text"></div>
     <p class="c2-id-display">C2 Id : {{ c2_id }}</p>
-    <a class="home-link" href="{{ url_for('accueil.accueil') }}" title="Accueil" aria-label="Accueil">
+    <a class="home-link" href="{{ url_for('accueil.menu') }}" title="Accueil" aria-label="Accueil">
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="M3 10.5L12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5v-9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
       <path d="M9 20v-6h6v6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />

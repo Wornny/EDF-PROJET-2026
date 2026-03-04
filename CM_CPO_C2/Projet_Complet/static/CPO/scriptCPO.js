@@ -420,7 +420,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const deleteButtons = document.querySelectorAll(".cm-delete");
+  const deleteButtons = document.querySelectorAll(".id-delete");
   deleteButtons.forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
