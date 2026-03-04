@@ -1,6 +1,3 @@
-import re
-import json
-import uuid
 from flask import Blueprint, jsonify, redirect, render_template, request, url_for
 
 USE_MQTT = True  # False chez moi sans MQTT et True au lycee
@@ -180,41 +177,9 @@ def _extract_device_id(name: str, device_type: str):
 
 
 if USE_MQTT:
-	mqtt_client = mqtt.Client(client_id=f"IHM_C2_{uuid.uuid4().hex[:8]}")
-
-	def on_connect(client, userdata, flags, rc):
-		try:
-			client.subscribe("FormaReaEDF/C2/+/Capteurs")
-			print(f"C2 MQTT connected (rc={rc}) and subscribed", flush=True)
-		except Exception as exc:
-			print("MQTT on_connect subscribe error:", exc)
-
-	def on_message(client, userdata, msg):
-		try:
-			parts = msg.topic.split("/")
-			if len(parts) < 4:
-				return
-			c2_id = _extract_c2_numeric_id(parts[2])
-			if c2_id is None or c2_id < 1:
-				return
-
-			payload = msg.payload.decode("utf-8", errors="ignore")
-			f_values, d_values = _parse_capteurs_payload(payload)
-			c2_values[c2_id] = {"F": f_values, "D": d_values}
-
-			if c2_id not in c2_names:
-				c2_names[c2_id] = f"C2 ID {c2_id}"
-		except Exception as exc:
-			print("MQTT on_message error:", exc)
-
-	mqtt_client.on_connect = on_connect
-	mqtt_client.on_message = on_message
-	mqtt_client.reconnect_delay_set(min_delay=1, max_delay=30)
-	try:
-		mqtt_client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
-		mqtt_client.loop_start()
-	except Exception as exc:
-		print("MQTT connect error:", exc)
+	mqtt_client = mqtt.Client(client_id="IHM_C2")
+	mqtt_client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
+	mqtt_client.loop_start()
 
 
 @c2_bp.route("/")
@@ -272,7 +237,9 @@ def publish_capteurs_full():
 			c2_names[c2_numeric_id] = f"C2 ID {c2_numeric_id}"
 
 	topic = f"FormaReaEDF/C2/{c2_id}/Capteurs"
-	payload = json.dumps({"F": f_list, "D": d_list}, ensure_ascii=False)
+	payload = f'{{"F": {_format_array(f_list)}, "D": {_format_array(d_list)}}}'
+
+	print(f"{c2_id} Capteurs = {payload}", flush=True)
 
 	if USE_MQTT and mqtt_client:
 		mqtt_client.publish(topic, payload, qos=1, retain=True)
@@ -323,25 +290,3 @@ def delete_device():
 	print(f"C2 N°{c2_id} a ete supprime")
 
 	return jsonify(ok=True)
-
-
-@c2_bp.route("/state/<int:c2_id>")
-def get_state(c2_id: int):
-	if c2_id < 1:
-		return jsonify(ok=False, error="ID invalide."), 400
-
-	entry = c2_values.get(c2_id)
-	if entry is None:
-		entry = _default_c2_entry()
-		c2_values[c2_id] = entry
-
-	response = jsonify(
-		ok=True,
-		c2_id=f"C2_{c2_id}",
-		F=_normalize_numeric_list(entry.get("F", [])),
-		D=_normalize_numeric_list(entry.get("D", [])),
-	)
-	response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-	response.headers["Pragma"] = "no-cache"
-	response.headers["Expires"] = "0"
-	return response
