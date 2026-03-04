@@ -276,7 +276,6 @@ def publish_capteurs_full():
 
 	if USE_MQTT and mqtt_client:
 		mqtt_client.publish(topic, payload, qos=1, retain=True)
-		mqtt_client.loop(0.1)
 
 	return jsonify({"status": "ok"}), 200
 

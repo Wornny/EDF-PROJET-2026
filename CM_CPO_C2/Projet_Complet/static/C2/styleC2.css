@@ -78,8 +78,8 @@ body > *{ position: relative; z-index: 0; }
   left: 50%;
   top: 14px;
   transform: translateX(-50%);
-  width: 74%;
-  height: 84%;
+  width: 70%;
+  height: 80%;
   overflow: visible;
   border-radius: var(--ui-radius);
 }
@@ -227,55 +227,55 @@ button{
 }
 
 
-.cap-c1r1 { left: calc(var(--grid-left) + 0 * var(--grid-x-gap)); top: calc(var(--grid-top) + 0 * var(--grid-y-gap)); }
-.cap-c1r2 { left: calc(var(--grid-left) + 0 * var(--grid-x-gap)); top: calc(var(--grid-top) + 1 * var(--grid-y-gap)); }
-.cap-c1r3 { left: calc(var(--grid-left) + 0 * var(--grid-x-gap)); top: calc(var(--grid-top) + 2 * var(--grid-y-gap)); }
-.cap-c1r4 { left: calc(var(--grid-left) + 0 * var(--grid-x-gap)); top: calc(var(--grid-top) + 3 * var(--grid-y-gap)); }
-.cap-c1r5 { left: calc(var(--grid-left) + 0 * var(--grid-x-gap)); top: calc(var(--grid-top) + 4 * var(--grid-y-gap)); }
+.cap-c1r1 { left: calc(var(--grid-left) + 0 * var(--grid-x-gap)); top: calc(var(--grid-top) + 0.5 * var(--grid-y-gap)); }
+.cap-c1r2 { left: calc(var(--grid-left) + 0 * var(--grid-x-gap)); top: calc(var(--grid-top) + 1.5 * var(--grid-y-gap)); }
+.cap-c1r3 { left: calc(var(--grid-left) + 0 * var(--grid-x-gap)); top: calc(var(--grid-top) + 2.5 * var(--grid-y-gap)); }
+.cap-c1r4 { left: calc(var(--grid-left) + 0 * var(--grid-x-gap)); top: calc(var(--grid-top) + 3.5 * var(--grid-y-gap)); }
+.cap-c1r5 { left: calc(var(--grid-left) + 0 * var(--grid-x-gap)); top: calc(var(--grid-top) + 4.5 * var(--grid-y-gap)); }
 
-.cap-c2r1 { left: calc(var(--grid-left) + 1 * var(--grid-x-gap)); top: calc(var(--grid-top) + 0 * var(--grid-y-gap)); }
-.cap-c2r2 { left: calc(var(--grid-left) + 1 * var(--grid-x-gap)); top: calc(var(--grid-top) + 1 * var(--grid-y-gap)); }
-.cap-c2r3 { left: calc(var(--grid-left) + 1 * var(--grid-x-gap)); top: calc(var(--grid-top) + 2 * var(--grid-y-gap)); }
-.cap-c2r4 { left: calc(var(--grid-left) + 1 * var(--grid-x-gap)); top: calc(var(--grid-top) + 3 * var(--grid-y-gap)); }
-.cap-c2r5 { left: calc(var(--grid-left) + 1 * var(--grid-x-gap)); top: calc(var(--grid-top) + 4 * var(--grid-y-gap)); }
+.cap-c2r1 { left: calc(var(--grid-left) + 1 * var(--grid-x-gap)); top: calc(var(--grid-top) + 0.5 * var(--grid-y-gap)); }
+.cap-c2r2 { left: calc(var(--grid-left) + 1 * var(--grid-x-gap)); top: calc(var(--grid-top) + 1.5 * var(--grid-y-gap)); }
+.cap-c2r3 { left: calc(var(--grid-left) + 1 * var(--grid-x-gap)); top: calc(var(--grid-top) + 2.5 * var(--grid-y-gap)); }
+.cap-c2r4 { left: calc(var(--grid-left) + 1 * var(--grid-x-gap)); top: calc(var(--grid-top) + 3.5 * var(--grid-y-gap)); }
+.cap-c2r5 { left: calc(var(--grid-left) + 1 * var(--grid-x-gap)); top: calc(var(--grid-top) + 4.5 * var(--grid-y-gap)); }
 
-.cap-c3r1 { left: calc(var(--grid-left) + 2 * var(--grid-x-gap)); top: calc(var(--grid-top) + 0 * var(--grid-y-gap)); }
-.cap-c3r2 { left: calc(var(--grid-left) + 2 * var(--grid-x-gap)); top: calc(var(--grid-top) + 1 * var(--grid-y-gap)); }
-.cap-c3r3 { left: calc(var(--grid-left) + 2 * var(--grid-x-gap)); top: calc(var(--grid-top) + 2 * var(--grid-y-gap)); }
-.cap-c3r4 { left: calc(var(--grid-left) + 2 * var(--grid-x-gap)); top: calc(var(--grid-top) + 3 * var(--grid-y-gap)); }
-.cap-c3r5 { left: calc(var(--grid-left) + 2 * var(--grid-x-gap)); top: calc(var(--grid-top) + 4 * var(--grid-y-gap)); }
+.cap-c3r1 { left: calc(var(--grid-left) + 2 * var(--grid-x-gap)); top: calc(var(--grid-top) + 0.5 * var(--grid-y-gap)); }
+.cap-c3r2 { left: calc(var(--grid-left) + 2 * var(--grid-x-gap)); top: calc(var(--grid-top) + 1.5 * var(--grid-y-gap)); }
+.cap-c3r3 { left: calc(var(--grid-left) + 2 * var(--grid-x-gap)); top: calc(var(--grid-top) + 2.5 * var(--grid-y-gap)); }
+.cap-c3r4 { left: calc(var(--grid-left) + 2 * var(--grid-x-gap)); top: calc(var(--grid-top) + 3.5 * var(--grid-y-gap)); }
+.cap-c3r5 { left: calc(var(--grid-left) + 2 * var(--grid-x-gap)); top: calc(var(--grid-top) + 4.5 * var(--grid-y-gap)); }
 
 /* ===== COLONNE DE DROITE ===== */
-.cap-colS-r1 { left: 36%; top: 41%; }
-.cap-colS-r2 { left: 36%; top: 58%; }
-.cap-colS-r3 { left: 36%; top: 75%; }
+.cap-colS-r1 { left: 36%; top: 47.5%; }
+.cap-colS-r2 { left: 36%; top: 64.5%; }
+.cap-colS-r3 { left: 36%; top: 81.5%; }
 
 /* ===== GROUPE MAINS ===== */
-.cap-tri-top   { left: 50%; top: 25%; transform: rotate(-10deg) skewX(15deg); transform-origin: center; }
-.cap-tri-left  { left: 45%; top: 45%; transform: rotate(-10deg) skewX(-4deg); transform-origin: center; }
-.cap-tri-right { left: 54%; top: 44%; transform: rotate(-2deg) skewX(8deg);  transform-origin: center; }
+.cap-tri-top   { left: 51%; top: 32.5%; transform: rotate(-10deg) skewX(15deg); transform-origin: center; }
+.cap-tri-left  { left: 46%; top: 52.5%; transform: rotate(-10deg) skewX(-4deg); transform-origin: center; }
+.cap-tri-right { left: 55%; top: 51.5%; transform: rotate(-2deg) skewX(8deg);  transform-origin: center; }
 /* ===== COLONNE DE GAUCHE  ===== */
-.cap-left-r1 { left: 2%; top: 9.5%; }
-.cap-left-r2 { left: 2%; top: 26%; height: 30%;}
-.cap-left-r3 { left: 2%; top: 58%; height: 30%;}
+.cap-left-r1 { left: 2%; top: 17.5%; }
+.cap-left-r2 { left: 2%; top: 34%; height: 30%;}
+.cap-left-r3 { left: 2%; top: 66%; height: 30%;}
 
 /* ===== RANGÉE DU HAUT TÊTE ===== */
-.cap-top-center { left: 14.5%; top: -3%; }
+.cap-top-center { left: 14.5%; top: 4.5%; }
 
 /* ===== RANGÉE DU BAS PIEDS ===== */
 .cap-bottom-c1 { 
   left: 16%;
-  top: 99%; 
+  top: 106.5%; 
   transform: skewX(35deg);
   height: 7%;
 }
 .cap-bottom-c2 { 
   left: 14.5%;
-  top: 89%; 
+  top: 96.5%; 
 }
 .cap-bottom-c3 { 
   left: 24%;
-  top: 99%; 
+  top: 106.5%; 
   transform: skewX(35deg);
   height: 7%;
 }
@@ -330,7 +330,7 @@ button{
 .zone-tete  { left: 41%; top: 11%; width: 18%; height: 10%; }
 .zone-buste { left: 34%; top: 23%; width: 32%; height: 20%; }
 .zone-jambes{ left: 34%; top: 45%; width: 32%; height: 37%; }
-.zone-bras  { left: 20%; top: 22%; width: 10%; height: 33%; transform: rotate(12deg); }
+.zone-bras  { left: 11%; top: 25%; width: 14%; height: 30%; transform: rotate(12deg); position: absolute;}
 .zone-pieds{ left: 34%; top: 82%; width: 32%; height: 7%; }
 
 /* ===== BANNIÈRE HAUT ===== */
