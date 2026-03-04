@@ -1,4 +1,9 @@
 ﻿﻿document.addEventListener('DOMContentLoaded', () => {
+	if (window.__c2PageInitialized) {
+		return;
+	}
+	window.__c2PageInitialized = true;
+
     let C2_ID = document.body.dataset.c2Id || 'C2_1';
 	const apiBase = '/C2';
 
@@ -208,6 +213,8 @@
         }
     }
 
+	let lastPublishedStateSignature = null;
+
 	// envoi de l'état compact au backend (Flask -> MQTT)
 	// Format souhaité dans MQTT : { "F": [..], "D": [..] }
 	// avec uniquement les numéros des capteurs actifs, sans le "c" ou "dos".
@@ -228,6 +235,12 @@
 			D: toNums(stateCapteurs.DOS)
 		};
 
+		const signature = `${C2_ID}|${payloadCapteurs.F.join(',')}|${payloadCapteurs.D.join(',')}`;
+		if (signature === lastPublishedStateSignature) {
+			return;
+		}
+		lastPublishedStateSignature = signature;
+
 		fetch('/C2/publish_capteurs_full', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -238,7 +251,10 @@
 				F: payloadCapteurs.F,
 				D: payloadCapteurs.D
 			})
-		}).catch(err => console.error('Erreur fetch MQTT:', err));
+		}).catch(err => {
+			lastPublishedStateSignature = null;
+			console.error('Erreur fetch MQTT:', err);
+		});
 	}
 
     // clic individuel sur un capteur
