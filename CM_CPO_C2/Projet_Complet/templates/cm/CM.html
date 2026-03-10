@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Controleur Mobile - MIP10</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="{{ url_for('static', filename='cm/styleCM.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='CM/styleCM.css') }}">
   <script>
     // Initialiser l'état du drawer AVANT le rendu pour éviter les animations
     if (localStorage.getItem("drawerOpen") === "true") {
@@ -13,7 +13,7 @@
       document.documentElement.style.setProperty('--arrow-initial', 'scaleX(-1)');
     }
   </script>
-  <script defer src="{{ url_for('static', filename='cm/scriptCM.js') }}?v=2"></script>
+  <script defer src="{{ url_for('static', filename='CM/scriptCM.js') }}?v=2"></script>
 </head>
 
 <body data-cm-id="{{ cm_id }}" data-api-base="/ControllerMobile">
