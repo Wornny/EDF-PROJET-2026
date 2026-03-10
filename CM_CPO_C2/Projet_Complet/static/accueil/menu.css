@@ -1,3 +1,28 @@
+/* Bouton de déconnexion */
+.logout-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.btn-logout {
+  background: var(--primary);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.btn-logout:hover {
+  background: var(--accent);
+  transform: translateY(-2px);
+}
 :root{ 
   --bg:#f4f7fb; 
   --card:#ffffff; 

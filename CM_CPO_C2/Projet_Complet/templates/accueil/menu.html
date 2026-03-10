@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='accueil/menu.css') }}?v=10" />
 </head>
 <body>
+  <div class="logout-button">
+    <a href="{{ url_for('login.logout') }}" class="btn-logout">Déconnexion</a>
+  </div>
   <div class="container">
     <img class="logo" src="{{ url_for('static', filename='accueil/EDF Logo.png') }}" alt="EDF Logo" />
 
@@ -23,7 +26,7 @@
           <div class="label">CPO</div>
         </div>
         <div class="device" data-label="Initialisateur">
-          <img src="{{ url_for('static', filename='accueil/Initialisateur.png') }}" alt="Initialisateur" />
+          <img src="{{ url_for('static', filename='accueil/maintenance.png') }}" alt="Initialisateur" />
           <div class="label">Initialisateur</div>
         </div>
         <div class="device" data-label="C2">

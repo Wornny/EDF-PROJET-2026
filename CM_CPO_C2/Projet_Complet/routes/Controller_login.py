@@ -157,3 +157,9 @@ def login():
         )
 
     return render_template("login/login.html", locked=False)
+
+
+@login_bp.route("/logout")
+def logout():
+    session.pop("is_authenticated", None)
+    return redirect(url_for("login.login"))

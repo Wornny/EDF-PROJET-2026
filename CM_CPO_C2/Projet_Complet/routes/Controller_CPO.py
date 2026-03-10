@@ -2,7 +2,7 @@ import logging
 
 from flask import Blueprint, jsonify, redirect, render_template, request, url_for
 
-USE_MQTT = True  # False chez moi sans MQTT et True au lycee
+USE_MQTT = False  # False chez moi sans MQTT et True au lycee
 if USE_MQTT:
     import paho.mqtt.client as mqtt
 
