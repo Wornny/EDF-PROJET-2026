@@ -9,8 +9,8 @@ if USE_MQTT:
 
 c2_bp = Blueprint("c2", __name__, url_prefix="/C2")
 
-BROKER_HOST = "192.168.190.31"
-BROKER_PORT = 1883
+BROKER_HOST = "192.168.190.53"
+BROKER_PORT = 8883
 
 mqtt_client = None
 c2_names = {1: "C2 ID 1", 2: "C2 ID 2"}
@@ -275,8 +275,11 @@ def publish_capteurs_full():
 	payload = json.dumps({"F": f_list, "D": d_list}, ensure_ascii=False)
 
 	if USE_MQTT and mqtt_client:
-		mqtt_client.publish(topic, payload, qos=1, retain=True)
-		mqtt_client.loop(0.1)
+		try:
+			mqtt_client.publish(topic, payload, qos=1, retain=True)
+		except Exception as exc:
+			print("MQTT publish error:", exc)
+			return jsonify({"status": "error", "error": "mqtt_publish_failed"}), 500
 
 	return jsonify({"status": "ok"}), 200
 

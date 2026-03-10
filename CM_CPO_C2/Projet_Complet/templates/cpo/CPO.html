@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>CPO</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="{{ url_for('static', filename='cpo/styleCPO.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='CPO/styleCPO.css') }}">
   <script>
     if (localStorage.getItem("drawerOpen") === "true") {
       document.documentElement.style.setProperty('--drawer-initial', 'translateX(0)');
@@ -12,7 +12,7 @@
       document.documentElement.style.setProperty('--arrow-initial', 'scaleX(-1)');
     }
   </script>
-  <script defer src="{{ url_for('static', filename='cpo/scriptCPO.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='CPO/scriptCPO.js') }}"></script>
 </head>
 
 <body data-cm-id="{{ cpo_id }}" data-api-base="/CPO">

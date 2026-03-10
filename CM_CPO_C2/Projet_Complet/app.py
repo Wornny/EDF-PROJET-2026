@@ -53,7 +53,7 @@ def create_app() -> Flask:
 if __name__ == "__main__":
     host = "0.0.0.0"
     port = 5000
-    debug = True
+    debug = False
 
-    print_startup_banner(host=host, port=port, debug=debug)
+    print_startup_banner(host=host, port=port, debug=False)
     create_app().run(host=host, port=port, debug=debug, use_reloader=False)

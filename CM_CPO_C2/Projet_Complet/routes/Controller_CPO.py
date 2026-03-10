@@ -37,8 +37,8 @@ def _sorted_ids(values) -> list[int]:
     return sorted(values, key=_key)
 
 
-BROKER_HOST = "192.168.190.31"
-BROKER_PORT = 1883
+BROKER_HOST = "192.168.190.53"
+BROKER_PORT = 8883
 
 
 def get_topic_contamination(cpo_id: int) -> str:
