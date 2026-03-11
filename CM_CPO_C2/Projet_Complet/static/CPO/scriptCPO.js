@@ -323,13 +323,39 @@ document.addEventListener("DOMContentLoaded", () => {
       jauge_bdf.value = raw;
       const vTxt = updateGauge(raw, valeur_bdf, valueBox_bdf, mask_bdf, triangle_bdf, overlay_bdf);
       if (doSend) sendValue("Bruit de fond", vTxt);
+      return vTxt;
     };
 
     updateBdf(false);
 
-    jauge_bdf.addEventListener("input", () => updateBdf(true));
-    jauge_bdf.addEventListener("change", () => updateBdf(true));
-    enableGaugeClick(gaugeBg_bdf, jauge_bdf, () => updateBdf(true));
+    jauge_bdf.addEventListener("input", () => {
+      updateBdf(false);
+    });
+    jauge_bdf.addEventListener("change", () => {
+      updateBdf(true);
+    });
+    
+    // Custom click handler pour envoyer au relâchement
+    if (gaugeBg_bdf) {
+      let isClickDragging = false;
+      
+      gaugeBg_bdf.addEventListener("pointerdown", () => {
+        isClickDragging = true;
+      });
+      
+      document.addEventListener("pointerup", () => {
+        if (isClickDragging) {
+          isClickDragging = false;
+          const raw = snap(Number(jauge_bdf.value));
+          const vTxt = formatValue(sliderToValue(raw));
+          sendValue("Bruit de fond", vTxt);
+        }
+      });
+      
+      enableGaugeClick(gaugeBg_bdf, jauge_bdf, (doSend) => {
+        updateBdf(doSend);
+      });
+    }
   }
 
   // --- Bouton Envoyer

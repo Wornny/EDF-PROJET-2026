@@ -1,23 +1,24 @@
 import re
 import json
 import uuid
-from flask import Blueprint, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, jsonify, redirect, render_template, request, session, url_for
+from .Controller_login import require_admin_role
 
-USE_MQTT = False  # False chez moi sans MQTT et True au lycee
+USE_MQTT = True  # False chez moi sans MQTT et True au lycee
 if USE_MQTT:
 	import paho.mqtt.client as mqtt
 
 c2_bp = Blueprint("c2", __name__, url_prefix="/C2")
 
-BROKER_HOST = "192.168.190.53"
-BROKER_PORT = 8883
+BROKER_HOST = "192.168.10.3"
+BROKER_PORT = 1883
 
 mqtt_client = None
 c2_names = {1: "C2 ID 1", 2: "C2 ID 2"}
 c2_values = {}
 
 
-def _normalize_numeric_list(values):
+def normaliser_liste_numerique(values):
 	if not isinstance(values, list):
 		return []
 
@@ -31,7 +32,7 @@ def _normalize_numeric_list(values):
 	return sorted(set(result))
 
 
-def _extract_numeric_sensor_ids(values: dict, prefix: str):
+def extraire_ids_capteurs_numeriques(values: dict, prefix: str):
 	ids = []
 	if not isinstance(values, dict):
 		return ids
@@ -51,18 +52,18 @@ def _extract_numeric_sensor_ids(values: dict, prefix: str):
 	return sorted(set(ids))
 
 
-def _format_array(values):
+def formater_tableau(values):
 	if not values:
 		return "[]"
 	joined = "; ".join(str(int(v)) for v in values)
 	return f"[{joined}]"
 
 
-def _default_c2_entry():
+def entree_c2_defaut():
 	return {"F": [], "D": []}
 
 
-def _parse_capteurs_payload(payload: str):
+def analyser_charge_capteurs(payload: str):
 	text = (payload or "").strip()
 	if not text:
 		return [], []
@@ -76,12 +77,12 @@ def _parse_capteurs_payload(payload: str):
 				capteurs = obj.get("capteurs", {})
 				face_values = capteurs.get("FACE", {}) or {}
 				dos_values = capteurs.get("DOS", {}) or {}
-				f_values = _extract_numeric_sensor_ids(face_values, "c")
-				d_values = _extract_numeric_sensor_ids(dos_values, "dos")
+				f_values = extraire_ids_capteurs_numeriques(face_values, "c")
+				d_values = extraire_ids_capteurs_numeriques(dos_values, "dos")
 				return f_values, d_values
 
-			f_values = _normalize_numeric_list(obj.get("F", []))
-			d_values = _normalize_numeric_list(obj.get("D", []))
+			f_values = normaliser_liste_numerique(obj.get("F", []))
+			d_values = normaliser_liste_numerique(obj.get("D", []))
 			if f_values or d_values:
 				return f_values, d_values
 	except Exception:
@@ -108,7 +109,7 @@ def _parse_capteurs_payload(payload: str):
 	return f_values, d_values
 
 
-def _extract_c2_numeric_id(c2_token: str):
+def extraire_id_numerique_c2(c2_token: str):
 	token = (c2_token or "").strip()
 	if not token:
 		return None
@@ -131,7 +132,7 @@ def _extract_c2_numeric_id(c2_token: str):
 		return None
 
 
-def _validate_device_name(name: str, device_type: str):
+def valider_nom_appareil(name: str, device_type: str):
 	n = (name or "").strip()
 	t = (device_type or "").strip()
 	if not n:
@@ -154,7 +155,7 @@ def _validate_device_name(name: str, device_type: str):
 	return False, f"Le nom doit commencer par {t}."
 
 
-def _extract_device_id(name: str, device_type: str):
+def extraire_id_appareil(name: str, device_type: str):
 	n = (name or "").strip()
 	t = (device_type or "").strip()
 	if not n or not t:
@@ -182,24 +183,24 @@ def _extract_device_id(name: str, device_type: str):
 if USE_MQTT:
 	mqtt_client = mqtt.Client(client_id=f"IHM_C2_{uuid.uuid4().hex[:8]}")
 
-	def on_connect(client, userdata, flags, rc):
+	def connecter_mqtt(client, userdata, flags, rc):
 		try:
 			client.subscribe("FormaReaEDF/C2/+/Capteurs")
 			print(f"C2 MQTT connected (rc={rc}) and subscribed", flush=True)
 		except Exception as exc:
 			print("MQTT on_connect subscribe error:", exc)
 
-	def on_message(client, userdata, msg):
+	def traiter_message_mqtt(client, userdata, msg):
 		try:
 			parts = msg.topic.split("/")
 			if len(parts) < 4:
 				return
-			c2_id = _extract_c2_numeric_id(parts[2])
+			c2_id = extraire_id_numerique_c2(parts[2])
 			if c2_id is None or c2_id < 1:
 				return
 
 			payload = msg.payload.decode("utf-8", errors="ignore")
-			f_values, d_values = _parse_capteurs_payload(payload)
+			f_values, d_values = analyser_charge_capteurs(payload)
 			c2_values[c2_id] = {"F": f_values, "D": d_values}
 
 			if c2_id not in c2_names:
@@ -207,8 +208,8 @@ if USE_MQTT:
 		except Exception as exc:
 			print("MQTT on_message error:", exc)
 
-	mqtt_client.on_connect = on_connect
-	mqtt_client.on_message = on_message
+	mqtt_client.on_connect = connecter_mqtt
+	mqtt_client.on_message = traiter_message_mqtt
 	mqtt_client.reconnect_delay_set(min_delay=1, max_delay=30)
 	try:
 		mqtt_client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
@@ -218,30 +219,31 @@ if USE_MQTT:
 
 
 @c2_bp.route("/")
-def c2_root():
-	return redirect(url_for("c2.c2_page", c2_id=1))
+def accueil_c2():
+	return redirect(url_for("c2.afficher_page_c2", c2_id=1))
 
 
 @c2_bp.route("/<int:c2_id>")
-def c2_page(c2_id: int):
+def afficher_page_c2(c2_id: int):
 	if c2_id < 1:
 		c2_id = 1
 
 	if c2_id not in c2_names:
 		c2_names[c2_id] = f"C2 ID {c2_id}"
 	if c2_id not in c2_values:
-		c2_values[c2_id] = _default_c2_entry()
+		c2_values[c2_id] = entree_c2_defaut()
 
 	return render_template(
 		"c2/C2.html",
 		c2_id=c2_id,
 		c2_names=c2_names,
 		c2_ids=sorted(c2_names.keys()),
+		role=session.get("role", "user")
 	)
 
 
 @c2_bp.route("/publish_capteurs_full", methods=["POST"])
-def publish_capteurs_full():
+def publier_capteurs_complet():
 	data = request.get_json(silent=True) or {}
 
 	c2_id = data.get("c2_id")
@@ -259,13 +261,13 @@ def publish_capteurs_full():
 		face_values = capteurs.get("FACE", {}) or {}
 		dos_values = capteurs.get("DOS", {}) or {}
 
-		f_list = _extract_numeric_sensor_ids(face_values, "c")
-		d_list = _extract_numeric_sensor_ids(dos_values, "dos")
+		f_list = extraire_ids_capteurs_numeriques(face_values, "c")
+		d_list = extraire_ids_capteurs_numeriques(dos_values, "dos")
 	else:
-		f_list = _normalize_numeric_list(f_list)
-		d_list = _normalize_numeric_list(d_list)
+		f_list = normaliser_liste_numerique(f_list)
+		d_list = normaliser_liste_numerique(d_list)
 
-	c2_numeric_id = _extract_c2_numeric_id(str(c2_id))
+	c2_numeric_id = extraire_id_numerique_c2(str(c2_id))
 	if c2_numeric_id is not None and c2_numeric_id >= 1:
 		c2_values[c2_numeric_id] = {"F": f_list, "D": d_list}
 		if c2_numeric_id not in c2_names:
@@ -285,15 +287,16 @@ def publish_capteurs_full():
 
 
 @c2_bp.route("/ajouter-appareil", methods=["POST"])
-def add_device():
+@require_admin_role()
+def ajouter_appareil():
 	name = request.form.get("name", "")
 	device_type = request.form.get("type", "")
 
-	ok, error = _validate_device_name(name, device_type)
+	ok, error = valider_nom_appareil(name, device_type)
 	if not ok:
 		return jsonify(ok=False, error=error), 400
 
-	c2_id = _extract_device_id(name, device_type)
+	c2_id = extraire_id_appareil(name, device_type)
 	if c2_id is None:
 		return jsonify(ok=False, error="Numero manquant dans le nom."), 400
 	if c2_id > 99:
@@ -303,7 +306,7 @@ def add_device():
 
 	c2_names[c2_id] = f"C2 ID {c2_id}"
 	if c2_id not in c2_values:
-		c2_values[c2_id] = _default_c2_entry()
+		c2_values[c2_id] = entree_c2_defaut()
 
 	print(f"C2 N°{c2_id} a ete cree")
 
@@ -311,7 +314,8 @@ def add_device():
 
 
 @c2_bp.route("/supprimer-appareil", methods=["POST"])
-def delete_device():
+@require_admin_role()
+def supprimer_appareil():
 	c2_id_raw = request.form.get("id", "")
 	try:
 		c2_id = int(c2_id_raw)
@@ -330,20 +334,20 @@ def delete_device():
 
 
 @c2_bp.route("/state/<int:c2_id>")
-def get_state(c2_id: int):
+def obtenir_etat(c2_id: int):
 	if c2_id < 1:
 		return jsonify(ok=False, error="ID invalide."), 400
 
 	entry = c2_values.get(c2_id)
 	if entry is None:
-		entry = _default_c2_entry()
+		entry = entree_c2_defaut()
 		c2_values[c2_id] = entry
 
 	response = jsonify(
 		ok=True,
 		c2_id=f"C2_{c2_id}",
-		F=_normalize_numeric_list(entry.get("F", [])),
-		D=_normalize_numeric_list(entry.get("D", [])),
+		F=normaliser_liste_numerique(entry.get("F", [])),
+		D=normaliser_liste_numerique(entry.get("D", [])),
 	)
 	response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
 	response.headers["Pragma"] = "no-cache"

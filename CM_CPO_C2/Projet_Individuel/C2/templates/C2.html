@@ -2,12 +2,21 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>C2 - Capteurs</title>
-<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/templates/c2/C2.html
-    <link rel="stylesheet" href="{{ url_for('static', filename='C2/C2.css') }}">
-========
-    <link rel="stylesheet" href="../static/C2.css">
->>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/templates/C2.html
+    <link rel="stylesheet" href="{{ url_for('static', filename='C2/styleC2.css') }}">
+    <script>
+        if (localStorage.getItem("drawerOpen") === "true") {
+            document.documentElement.style.setProperty('--drawer-initial', 'translateX(0)');
+            document.documentElement.style.setProperty('--toggle-initial', '220px');
+            document.documentElement.style.setProperty('--arrow-initial', 'scaleX(-1)');
+        }
+        if (localStorage.getItem("drawerRightOpen") === "true") {
+            document.documentElement.style.setProperty('--drawer-right-initial', 'translateX(0)');
+            document.documentElement.style.setProperty('--toggle-right-initial', '220px');
+            document.documentElement.style.setProperty('--arrow-right-initial', 'scaleX(-1)');
+        }
+    </script>
 </head>
 <body data-c2-id="C2_{{ c2_id }}">
 <!-- DRAWER GAUCHE -->
@@ -15,21 +24,14 @@
     <div class="drawer-content">
         <h2>Panneau de Contrôle</h2>
         <div class="drawer-section">
-<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/templates/c2/C2.html
             <div class="id-list">
                 {% for i in c2_ids %}
                 <div class="id-item">
                     <a class="id-btn {% if c2_id == i %}active{% endif %}" href="/C2/{{ i }}">{{ c2_names[i] }}</a>
-                    <button class="cm-delete" type="button" data-id="{{ i }}" title="Supprimer"><span class="cm-delete-mark">-</span></button>
+                    <button class="id-delete" type="button" data-id="{{ i }}" title="Supprimer"><span class="id-delete-mark">-</span></button>
                 </div>
                 {% endfor %}
                 <a class="id-btn id-add" id="id-add" href="#" title="Ajouter un appareil">+</a>
-========
-            <div class="cm-list">
-                <a class="cm-btn {% if c2_id == 1 %}active{% endif %}" href="/C2/1">C2 ID 1</a>
-                <a class="cm-btn {% if c2_id == 2 %}active{% endif %}" href="/C2/2">C2 ID 2</a>
-                <button class="cm-btn cm-add">+</button>
->>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/templates/C2.html
             </div>
         </div>
         <div class="drawer-section">
@@ -52,17 +54,32 @@
 
 <div class="banner">
     <div class="banner-text"></div>
-<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/templates/c2/C2.html
     <p class="c2-id-display">C2 Id : {{ c2_id }}</p>
-    <a class="home-link" href="{{ url_for('accueil.accueil') }}" title="Accueil" aria-label="Accueil">
+    <a class="home-link" href="{{ url_for('accueil.menu') }}" title="Accueil" aria-label="Accueil">
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="M3 10.5L12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5v-9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
       <path d="M9 20v-6h6v6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
     </svg>
   </a>
-========
-    <p class="c2-id-display">C2 ID : C2_{{ c2_id }}</p>
->>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/templates/C2.html
+  <button class="control-btn-reset" id="resetCapsBtn" type="button" title="Réinitialiser les capteurs" aria-label="Réinitialiser les capteurs">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                            focusable="false"
+                        >
+                            <path d="M6 7a7 7 0 1 1 2.05 9.9" />
+                            <polyline points="6 3 6 7 10 7" />
+                            <line x1="4" y1="20" x2="20" y2="4" />
+                        </svg>
+                </button>
 </div>
 <div class="c2-wrapper">
     <div class="c2-container">
@@ -73,7 +90,7 @@
             <!-- <img src="" class="c2-bg" alt="C2 fond"> -->
 
             <!-- CAPTEURS FACE -->
-            <!-- COLONNE 3x5 à gauche -->
+            <!-- COLONNE 3x5 Ã  gauche -->
             <!-- colonne 1 -->
             <button class="cap cap-c1 cap-c1r1" data-capteur="c1" data-mode="FACE"><i>1</i></button>
             <button class="cap cap-c1 cap-c1r2" data-capteur="c4" data-mode="FACE"><i>4</i></button>
@@ -100,7 +117,7 @@
             <button class="cap cap-colS-r2" data-capteur="c17" data-mode="FACE"><d>17</d></button>
             <button class="cap cap-colS-r3" data-capteur="c18" data-mode="FACE"><d>18</d></button>
 
-            <!-- TRIANGLE DE 3 (marron à droite) -->
+            <!-- TRIANGLE DE 3 (marron Ã  droite) -->
             <button class="cap cap-tri-top" data-capteur="c19" data-mode="FACE"><i>19</i></button>
             <button class="cap cap-tri-left" data-capteur="c20" data-mode="FACE"><i>20</i></button>
             <button class="cap cap-tri-right" data-capteur="c21" data-mode="FACE"><i>21</i></button>
@@ -110,16 +127,16 @@
             <button class="cap cap-left-r2" data-capteur="c26" data-mode="FACE"><i>26</i></button>
             <button class="cap cap-left-r3" data-capteur="c27" data-mode="FACE"><i>27</i></button>
 
-            <!-- RANGÉE DU HAUT (1 capteur au centre) -->
+            <!-- RANGÃ‰E DU HAUT (1 capteur au centre) -->
             <button class="cap cap-horizontal cap-top-center" data-capteur="c28" data-mode="FACE"><d>28</d></button>
 
-            <!-- RANGÉE DU BAS (3 capteurs losanges) -->
+            <!-- RANGÃ‰E DU BAS (3 capteurs losanges) -->
             <button class="cap cap-bottom-c1" data-capteur="c22" data-mode="FACE"><d>22</d></button>
             <button class="cap cap-horizontal cap-bottom-c2" data-capteur="c23" data-mode="FACE"><d>23</d></button>
             <button class="cap cap-bottom-c3" data-capteur="c24" data-mode="FACE"><d>24</d></button>
 
-            <!-- CAPTEURS DOS (cachés par défaut) -->
-            <!-- COLONNE 3x5 à gauche -->
+            <!-- CAPTEURS DOS (cachÃ©s par dÃ©faut) -->
+            <!-- COLONNE 3x5 Ã  gauche -->
             <!-- colonne 1 -->
             <button class="cap cap-c1 cap-c1r1 hidden-mode" data-capteur="dos1" data-mode="DOS"><i>1</i></button>
             <button class="cap cap-c1 cap-c1r2 hidden-mode" data-capteur="dos4" data-mode="DOS"><i>4</i></button>
@@ -147,7 +164,7 @@
             <button class="cap cap-colS-r3 hidden-mode" data-capteur="dos18" data-mode="DOS"><d>18</d></button>
 
 
-            <!-- TRIANGLE DE 3 (marron à droite) -->
+            <!-- TRIANGLE DE 3 (marron Ã  droite) -->
             <button class="cap cap-tri-top hidden-mode" data-capteur="dos19" data-mode="DOS"><i>19</i></button>
             <button class="cap cap-tri-left hidden-mode" data-capteur="dos20" data-mode="DOS"><i>20</i></button>
             <button class="cap cap-tri-right hidden-mode" data-capteur="dos21" data-mode="DOS"><i>21</i></button>
@@ -157,47 +174,39 @@
             <button class="cap cap-left-r2 hidden-mode" data-capteur="dos26" data-mode="DOS"><i>26</i></button>
             <button class="cap cap-left-r3 hidden-mode" data-capteur="dos27" data-mode="DOS"><i>27</i></button>
 
-            <!-- RANGÉE DU HAUT (1 capteur au centre) DOS -->
+            <!-- RANGÃ‰E DU HAUT (1 capteur au centre) DOS -->
             <button class="cap cap-horizontal cap-top-center hidden-mode" data-capteur="dos28" data-mode="DOS"><d>28</d></button>
 
-            <!-- RANGÉE DU BAS (3 capteurs losanges) DOS -->
+            <!-- RANGÃ‰E DU BAS (3 capteurs losanges) DOS -->
             <button class="cap cap-bottom-c1 hidden-mode" data-capteur="dos22" data-mode="DOS"><d>22</d></button>
             <button class="cap cap-horizontal cap-bottom-c2 hidden-mode" data-capteur="dos23" data-mode="DOS"><d>23</d></button>
             <button class="cap cap-bottom-c3 hidden-mode" data-capteur="dos24" data-mode="DOS"><d>24</d></button>
         </div>
 
-        <!-- Image / silhouette du corps à droite -->
+        <!-- Image / silhouette du corps Ã  droite -->
         <div class="body-container">
-<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/templates/c2/C2.html
             <img src="{{ url_for('static', filename='C2/img/homme_face_blanc.png') }}" class="body-img body-img-face" alt="corps face">
             <img src="{{ url_for('static', filename='C2/img/homme_dos_blanc.png') }}" class="body-img body-img-dos hidden-mode" alt="corps dos">
-========
-            <img src="../static/img/homme_face_blanc.png" class="body-img body-img-face" alt="corps face">
-            <img src="../static/img/homme_dos_blanc.png" class="body-img body-img-dos hidden-mode" alt="corps dos">
->>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/templates/C2.html
 
             <!-- zones cliquables -->
             <button class="body-zone zone-tete"    data-group="tete"></button>
             <button class="body-zone zone-bras"  data-group="bras"></button>
             <button class="body-zone zone-buste"   data-group="buste"></button>
             <button class="body-zone zone-jambes"  data-group="jambes"></button>
-<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/templates/c2/C2.html
             <button class="body-zone zone-pieds"  data-group="pieds"></button>
-========
->>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/templates/C2.html
         </div>
     </div>
 </div>
 <footer>
     <div class="banner-footer">
         <div class="control-group">
-        <button class="control-btn" data-mode="FACE">FACE</button>
-        <button class="control-btn" data-mode="DOS">DOS</button>
+                <button class="control-btn" data-mode="FACE" type="button">FACE</button>
+                <button class="control-btn" data-mode="DOS" type="button">DOS</button>
+                </div>
     </div>
 </footer>
 
-<<<<<<<< HEAD:CM_CPO_C2/Projet_Complet/templates/c2/C2.html
-<script src="{{ url_for('static', filename='C2/script.js') }}"></script>
+<script src="{{ url_for('static', filename='C2/scriptC2.js') }}"></script>
 
 <!-- BOUTON + POUR AJOUTER UN APPAREIL -->
 <div class="cm-modal" id="cm-modal" aria-hidden="true">
@@ -216,9 +225,6 @@
         <button class="cm-modal-submit" id="cm-modal-submit">valider</button>
     </div>
 </div>
-========
-<script src="../static/script.js"></script>
->>>>>>>> 3ddada121b7176518b626efcc8466ba588802fd3:CM_CPO_C2/Projet_Individuel/C2/templates/C2.html
 </body>
 </html>
 

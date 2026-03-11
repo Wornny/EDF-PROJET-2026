@@ -28,10 +28,10 @@
                 {% for i in c2_ids %}
                 <div class="id-item">
                     <a class="id-btn {% if c2_id == i %}active{% endif %}" href="/C2/{{ i }}">{{ c2_names[i] }}</a>
-                    <button class="id-delete" type="button" data-id="{{ i }}" title="Supprimer"><span class="id-delete-mark">-</span></button>
+                    {% if role == "admin" %}<button class="id-delete" type="button" data-id="{{ i }}" title="Supprimer"><span class="id-delete-mark">-</span></button>{% endif %}
                 </div>
                 {% endfor %}
-                <a class="id-btn id-add" id="id-add" href="#" title="Ajouter un appareil">+</a>
+                {% if role == "admin" %}<a class="id-btn id-add" id="id-add" href="#" title="Ajouter un appareil">+</a>{% endif %}
             </div>
         </div>
         <div class="drawer-section">

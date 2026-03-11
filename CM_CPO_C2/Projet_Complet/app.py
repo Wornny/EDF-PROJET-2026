@@ -37,7 +37,7 @@ def create_app() -> Flask:
             return None
 
         if not session.get("is_authenticated"):
-            return redirect(url_for("login.login"))
+            return redirect(url_for("login.connexion"))
 
         return None
 

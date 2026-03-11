@@ -26,10 +26,10 @@
         {% for i in cpo_ids %}
           <div class="id-item">
             <a class="id-btn {% if cpo_id == i %}active{% endif %}" href="/CPO/{{ i }}">{{ cpo_names[i] }}</a>
-            <button class="id-delete" type="button" data-id="{{ i }}" title="Supprimer"><span class="id-delete-mark">-</span></button>
+            {% if role == "admin" %}<button class="id-delete" type="button" data-id="{{ i }}" title="Supprimer"><span class="id-delete-mark">-</span></button>{% endif %}
           </div>
         {% endfor %}
-        <a class="id-btn id-add" id="id-add" href="#" title="Ajouter un appareil">+</a>
+        {% if role == "admin" %}<a class="id-btn id-add" id="id-add" href="#" title="Ajouter un appareil">+</a>{% endif %}
       </div>
     </div>
   </div>
@@ -61,7 +61,7 @@
         <span>Niveau Contamination</span>
 
         <span class="value-box value-green" id="valueBox">
-          <span id="valeur">{{ valeur_conta }}</span> Bq
+          <span id="valeur">{{ valeur_conta }}</span>
         </span>
       </div>
 
@@ -115,7 +115,7 @@
         <span>Bruit de Fond</span>
 
         <span class="value-box value-green" id="valueBox_bdf">
-          <span id="valeur_bdf">{{ valeur_bdf }}</span> Bq
+          <span id="valeur_bdf">{{ valeur_bdf }}</span>
         </span>
       </div>
 
