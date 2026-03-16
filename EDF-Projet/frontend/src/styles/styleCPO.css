@@ -2,7 +2,8 @@
 :root {
   --ui-pad: clamp(12px, 1.2vw, 24px);
   --ui-border: rgb(127, 134, 158);
-  --ui-text: rgba(255, 255, 255, .92);
+  --ui-glow: rgba(255,255,255,.08);
+  --ui-text: rgba(255,255,255,.92);
 }
 
 html, body {
@@ -15,20 +16,19 @@ html, body {
 body {
   min-height: 100dvh;
   position: relative;
-  background: radial-gradient(circle at center, #1e3a8a 0%, #020617 70%);
   font-family: system-ui, sans-serif;
   color: var(--ui-text);
 }
 
 /* Background animé */
-body::before {
+body.cpo-page::before {
   content: "";
   position: fixed;
   inset: -8%;
-  background: url("img/Background.png") center / cover no-repeat;
-  transform: translate3d(0, 0, 0) scale(1.08);
+  background: url('/Background.png') center center / cover no-repeat;
+  transform: translate3d(-2%, -1%, 0) scale(1.08);
   will-change: transform;
-  animation: bg-float 40s linear infinite;
+  animation: menu-bg-float 40s linear infinite;
   z-index: -1;
 }
 
@@ -323,8 +323,8 @@ body > * {
   position: absolute;
   left: 266px;
   right: 40px;
-  top: 40px; /* remonté davantage pour remonter les panneaux */
-  bottom: 20px;
+  top: 110px;
+  bottom: 30px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -629,7 +629,7 @@ body > * {
 }
 
 #jauge,
-#jauge_bdf {
+#jauge {
   position: absolute;
   inset: 0;
   opacity: 0;
@@ -688,16 +688,11 @@ body > * {
   z-index: 11;
 }
 
-/* ===== ESPACEMENT PANNEAUX ===== */
-.detector-panel + .detector-panel {
-  margin-top: 40px; /* réduit pour rapprocher les panneaux */
-}
-
-.cm-id-display {
+.cpo-id-display {
     margin: 0;
     padding: var(--ui-pad);
     width: 15%;
-    height: 20%;
+    height: 50px;
     background: radial-gradient(circle, rgb(28, 53, 98) 10%, rgb(20, 38, 79)  100%);
     border: 2px solid var(--ui-border);
     box-shadow: 0 5px 0 5px rgba(16, 25, 47, .20);
@@ -708,5 +703,3 @@ body > * {
     border-radius: 100px;
     text-align: center;
 }
-
-

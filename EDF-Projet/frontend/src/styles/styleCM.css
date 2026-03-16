@@ -15,7 +15,6 @@ html, body {
 body {
   min-height: 100dvh;
   position: relative;
-  background: radial-gradient(circle at center, #1e3a8a 0%, #020617 70%);
   font-family: system-ui, sans-serif;
   color: var(--ui-text);
 }
@@ -25,7 +24,7 @@ body::before {
   content: "";
   position: fixed;
   inset: -8%;
-  background: url("img/Background.png") center / cover no-repeat;
+  background: url("/Background.png") center / cover no-repeat;
   transform: translate3d(0, 0, 0) scale(1.08);
   will-change: transform;
   animation: bg-float 40s linear infinite;
@@ -269,11 +268,13 @@ body > * {
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
 }
 
+.id-delete-mark,
 .cm-delete-mark {
   display: block;
   transform: translateY(-1px);
 }
 
+.id-delete:hover,
 .cm-delete:hover {
   filter: brightness(1.1);
 }
@@ -697,7 +698,7 @@ body > * {
     margin: 0;
     padding: var(--ui-pad);
     width: 15%;
-    height: 20%;
+    height: 50px;
     background: radial-gradient(circle, rgb(28, 53, 98) 10%, rgb(20, 38, 79)  100%);
     border: 2px solid var(--ui-border);
     box-shadow: 0 5px 0 5px rgba(16, 25, 47, .20);

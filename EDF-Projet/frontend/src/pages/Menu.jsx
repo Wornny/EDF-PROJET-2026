@@ -9,7 +9,7 @@ const DEVICES = [
 	{
 		label: "Controleur mobile",
 		image: "/Mip10_color.png",
-		route: "/ControllerMobile/1",
+		route: "/CM/1",
 	},
 	{
 		label: "CPO",

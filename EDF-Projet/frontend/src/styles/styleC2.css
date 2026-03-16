@@ -160,28 +160,36 @@ body.c2-page > *{ position: relative; z-index: 0; }
   --grid-y-gap: 16%;
 }
 
-.id-btn {
-  height: 40px;
-  width: 100%;
-  padding: 0;
-  background: linear-gradient(#ffdd99, #ffb466);
-  box-shadow: 0 10px 0 5px rgba(16, 25, 47,.100);
-  border-radius: 10px;
-  border: 1px solid #c87a30;
-  font-size: 14px;
-  color: #333;
-  font-weight: 600;
-  cursor: pointer;
+.id-list {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
   align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  transition: all 0.2s ease;
 }
 
 .id-item {
   position: relative;
   width: 180px;
+}
+
+.id-btn {
+  height: 40px;
+  width: 100%;
+  padding: 0;
+  background: linear-gradient(#ffdd99, #ffb466);
+  box-shadow: 0 10px 0 5px rgba(16, 25, 47, .100);
+  border-radius: 10px;
+  border: none;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
 
 .id-delete {
@@ -204,12 +212,12 @@ body.c2-page > *{ position: relative; z-index: 0; }
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
 }
 
-.cm-delete-mark {
+.id-delete-mark {
   display: block;
   transform: translateY(-1px);
 }
 
-.cm-delete:hover {
+.id-delete:hover {
   filter: brightness(1.1);
 }
 
@@ -228,19 +236,6 @@ body.c2-page > *{ position: relative; z-index: 0; }
   background: #ffcc66;
   font-weight: bold;
   font-size: 18px;
-}
-
-.cm-btn.active {
-  background: linear-gradient(#ffcc66, #ff9933);
-  font-weight: 700;
-}
-
-.id-list {
-    display: flex;
-    flex-direction: column;      /* ou row si tu veux en ligne */
-    gap: 10px;                   /* ← distance réglable entre les boutons */
-    align-items: center;         /* centre dans le drawer */
-    width: 100%;
 }
 
 
