@@ -10,7 +10,7 @@ const P1 = 200;
 const P10 = 400;
 const P100 = 600;
 const P1000 = 800;
-const P10000 = 1000;
+const P3000 = 1000;
 
 const TH_GREEN = 10;
 const TH_ORANGE = 100;
@@ -62,8 +62,8 @@ function sliderToValue(position) {
 		return Math.pow(10, logVal);
 	}
 
-	const t = (p - P1000) / (P10000 - P1000);
-	const logVal = Math.log10(1000) + t * (Math.log10(10000) - Math.log10(1000));
+	const t = (p - P1000) / (P3000 - P1000);
+	const logVal = Math.log10(1000) + t * (Math.log10(3000) - Math.log10(1000));
 	return Math.pow(10, logVal);
 }
 
@@ -73,7 +73,7 @@ function formatValue(value) {
 	if (value < 10) return value.toFixed(2);
 	if (value < 100) return value.toFixed(1);
 	if (value < 1000) return value.toFixed(0);
-	if (value <= 10000) return value.toFixed(0);
+	if (value <= 3000) return value.toFixed(0);
 	return value.toExponential(1);
 }
 
@@ -83,7 +83,7 @@ function snap(rawValue) {
 	if (Math.abs(raw - P10) < 3) raw = P10;
 	if (Math.abs(raw - P100) < 3) raw = P100;
 	if (Math.abs(raw - P1000) < 3) raw = P1000;
-	if (Math.abs(raw - P10000) < 3) raw = P10000;
+	if (Math.abs(raw - P3000) < 3) raw = P3000;
 	return raw;
 }
 
@@ -479,7 +479,7 @@ function CM({ cmId = 1 }) {
 						<div className="detector-title">
 							<span>Niveau Contamination</span>
 							<span className={`value-box ${valueClass(contaminationValue)}`} id="valueBox">
-								<span id="valeur">{formatValue(contaminationValue)}</span>
+								<span id="valeur">{`${formatValue(contaminationValue)} Bq/m²`}</span>
 							</span>
 						</div>
 

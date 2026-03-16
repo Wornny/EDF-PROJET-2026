@@ -10,18 +10,32 @@ const { createLoginController } = require("./controllers/loginControlleur");
 
 const HOST = process.env.HOST || "0.0.0.0";
 const PORT = Number(process.env.PORT || 3000);
+const DEFAULT_MQTT_URL = "mqtt://192.168.190.38:1883";
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "";
 const FRONTEND_ORIGINS = (process.env.FRONTEND_ORIGINS || FRONTEND_ORIGIN)
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
 const CORS_ALLOW_ALL = process.env.CORS_ALLOW_ALL !== "false";
-const MQTT_ENABLED = process.env.MQTT_ENABLED === "true";
+const MQTT_ENABLED = process.env.MQTT_ENABLED !== "false";
 const SQLITE_DB_PATH = process.env.AUTH_DB_PATH || path.join(__dirname, "database", "users.db");
 
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 
 const app = express();
+
+function normalizeMqttUrl(rawValue) {
+  const value = String(rawValue || "").trim();
+  if (!value) {
+    return DEFAULT_MQTT_URL;
+  }
+
+  if (/^mqtts?:\/\//i.test(value)) {
+    return value;
+  }
+
+  return `mqtt://${value}`;
+}
 
 function isOriginAllowed(origin) {
   if (!origin) {
@@ -437,7 +451,7 @@ function publishMqtt(topic, payload) {
 }
 
 if (MQTT_ENABLED) {
-  const mqttUrl = process.env.MQTT_URL || "mqtt://localhost:1883";
+  const mqttUrl = normalizeMqttUrl(process.env.MQTT_URL || DEFAULT_MQTT_URL);
   const mqttOptions = {
     clientId: process.env.MQTT_CLIENT_ID || `IHM_Node_${crypto.randomUUID().slice(0, 8)}`,
     username: process.env.MQTT_USERNAME || undefined,
@@ -580,10 +594,10 @@ app.post("/api/cm/:cmId/slider", (req, res) => {
   ensureCm(cmId);
   if (type.includes("bruit")) {
     cmValues[cmId].BruitDeFond = value;
-    publishMqtt(mqttTopicCmBdf(cmId), `${value} Bq`);
+    publishMqtt(mqttTopicCmBdf(cmId), `${value} `);
   } else {
     cmValues[cmId].NivContamination = value;
-    publishMqtt(mqttTopicCmContamination(cmId), `${value} Bq`);
+    publishMqtt(mqttTopicCmContamination(cmId), `${value} `);
   }
 
   return res.json({ ok: true });
@@ -654,10 +668,10 @@ app.post("/api/cpo/:cpoId/slider", (req, res) => {
   ensureCpo(cpoId);
   if (type.includes("bruit")) {
     cpoValues[cpoId].BruitDeFond = value;
-    publishMqtt(mqttTopicCpoBdf(cpoId), `${value} Bq`);
+    publishMqtt(mqttTopicCpoBdf(cpoId), `${value} `);
   } else {
     cpoValues[cpoId].NivContamination = value;
-    publishMqtt(mqttTopicCpoContamination(cpoId), `${value} Bq`);
+    publishMqtt(mqttTopicCpoContamination(cpoId), `${value} `);
   }
 
   return res.json({ ok: true });

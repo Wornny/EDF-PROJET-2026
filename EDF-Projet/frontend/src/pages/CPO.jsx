@@ -442,7 +442,7 @@ function CPO({ cpoId = 1 }) {
       <button className="drawer-toggle-btn" id="drawerToggle" type="button" onClick={() => setLeftDrawerOpen((prev) => !prev)} />
 
       <div className="banner">
-        <p className="cm-id-display">CPO ID : {currentCpoId}</p>
+        <p className="cpo-id-display">CPO ID : {currentCpoId}</p>
         <a className="home-link" href="/menu" title="Accueil" aria-label="Accueil">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M3 10.5L12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5v-9Z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
@@ -457,7 +457,7 @@ function CPO({ cpoId = 1 }) {
             <div className="detector-title">
               <span>Niveau Contamination</span>
               <span className={`value-box ${valueClass(contaminationValue)}`} id="valueBox">
-                <span id="valeur">{formatValue(contaminationValue)}</span>
+                <span id="valeur">{`${formatValue(contaminationValue)} Bq/m²`}</span>
               </span>
             </div>
 
@@ -525,7 +525,7 @@ function CPO({ cpoId = 1 }) {
         }}
       >
         <div className="cm-modal-card" role="dialog" aria-modal="true" aria-labelledby="cm-modal-title">
-          <button className="cm-modal-close" id="cm-modal-close" aria-label="Fermer" type="button" onClick={closeModal}>
+          <button className="cpo-modal-close" id="cm-modal-close" aria-label="Fermer" type="button" onClick={closeModal}>
             X
           </button>
           <h3 className="cm-modal-title" id="cm-modal-title">

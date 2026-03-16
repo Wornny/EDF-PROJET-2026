@@ -75,6 +75,8 @@ body.c2-page > *{ position: relative; z-index: 0; }
   width: 1280px;
   height: 720px;
   aspect-ratio: var(--ui-ratio);
+  display: flex;
+  align-items: center;
 
   /* optionnel : si tu veux visualiser la zone letterbox */
   /*outline: 1px dashed rgba(255,255,255,.15);*/
@@ -92,6 +94,8 @@ body.c2-page > *{ position: relative; z-index: 0; }
   height: 80%;
   overflow: visible;
   border-radius: var(--ui-radius);
+  align-items: center;
+  display: flex;
 }
 
 /* image de fond dans le panneau */
