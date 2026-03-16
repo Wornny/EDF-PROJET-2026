@@ -194,7 +194,6 @@ function CM({ cmId = 1 }) {
 	const [leftDrawerOpen, setLeftDrawerOpen] = useState(() => localStorage.getItem("drawerOpen") === "true");
 
 	const [contaminationRaw, setContaminationRaw] = useState(() => snap(displayValueToRaw("1")));
-	const [bdfRaw, setBdfRaw] = useState(() => snap(displayValueToRaw("0.50")));
 
 	const [modalOpen, setModalOpen] = useState(false);
 	const [modalError, setModalError] = useState("");
@@ -202,11 +201,8 @@ function CM({ cmId = 1 }) {
 
 	const contaminationGaugeBgRef = useRef(null);
 	const contaminationSliderRef = useRef(null);
-	const bdfGaugeBgRef = useRef(null);
-	const bdfSliderRef = useRef(null);
 
 	const hasPendingContaminationRef = useRef(false);
-	const hasPendingBdfRef = useRef(false);
 	const lastServerStateRef = useRef(null);
 
 	const token = localStorage.getItem("authToken") || "";
@@ -236,12 +232,7 @@ function CM({ cmId = 1 }) {
 					return;
 				}
 
-				const typeNorm = String(type || "").toLowerCase();
-				if (typeNorm.includes("bruit")) {
-					hasPendingBdfRef.current = false;
-				} else {
-					hasPendingContaminationRef.current = false;
-				}
+				hasPendingContaminationRef.current = false;
 			} catch {
 				// Ignore temporary network failures.
 			}
@@ -254,16 +245,7 @@ function CM({ cmId = 1 }) {
 		setContaminationRaw(snap(raw));
 	}, []);
 
-	const updateBdfRaw = useCallback((raw) => {
-		hasPendingBdfRef.current = true;
-		setBdfRaw(snap(raw));
-	}, []);
-
 	useGaugePointer(contaminationGaugeBgRef, contaminationSliderRef, updateContaminationRaw);
-	useGaugePointer(bdfGaugeBgRef, bdfSliderRef, updateBdfRaw, (raw) => {
-		const snapped = snap(raw);
-		sendValue("Bruit de fond", formatValue(sliderToValue(snapped)));
-	});
 
 	useEffect(() => {
 		document.body.classList.add("cm-page");
@@ -286,7 +268,6 @@ function CM({ cmId = 1 }) {
 
 	useEffect(() => {
 		hasPendingContaminationRef.current = false;
-		hasPendingBdfRef.current = false;
 		lastServerStateRef.current = null;
 	}, [currentCmId]);
 
@@ -336,8 +317,7 @@ function CM({ cmId = 1 }) {
 
 				const serverId = normalizeCmId(payload.cmId ?? payload.cm_id ?? currentCmId, currentCmId);
 				const contamination = String(payload.NivContamination ?? "");
-				const bdf = String(payload.BruitDeFond ?? "");
-				const nextKey = `${serverId}|${contamination}|${bdf}`;
+				const nextKey = `${serverId}|${contamination}`;
 				if (nextKey === lastServerStateRef.current) {
 					return;
 				}
@@ -347,9 +327,6 @@ function CM({ cmId = 1 }) {
 
 				if (!hasPendingContaminationRef.current) {
 					setContaminationRaw(snap(displayValueToRaw(contamination)));
-				}
-				if (!hasPendingBdfRef.current) {
-					setBdfRaw(snap(displayValueToRaw(bdf)));
 				}
 			} catch {
 				// Ignore temporary poll failures.
@@ -385,8 +362,6 @@ function CM({ cmId = 1 }) {
 
 	const contaminationValue = sliderToValue(contaminationRaw);
 	const contaminationPercent = (contaminationRaw / 1000) * 100;
-	const bdfValue = sliderToValue(bdfRaw);
-	const bdfPercent = (bdfRaw / 1000) * 100;
 
 	const openModal = () => {
 		setModalError("");
@@ -499,7 +474,7 @@ function CM({ cmId = 1 }) {
 			</div>
 
 			<div className="tablet">
-				<div className="right-area">
+				<div className="right-area right-area-single">
 					<div className="detector-panel">
 						<div className="detector-title">
 							<span>Niveau Contamination</span>
@@ -557,64 +532,6 @@ function CM({ cmId = 1 }) {
 								title="Envoyer les valeurs au MQTT"
 								onClick={() => sendValue("Contamination", formatValue(sliderToValue(contaminationRaw)))}
 							/>
-						</div>
-					</div>
-
-					<div className="detector-panel">
-						<div className="detector-title">
-							<span>Bruit de Fond</span>
-							<span className={`value-box ${valueClass(bdfValue)}`} id="valueBox_bdf">
-								<span id="valeur_bdf">{formatValue(bdfValue)}</span>
-							</span>
-						</div>
-
-						<div className="detector-content">
-							<div className="beta-icon">β</div>
-
-							<div className="gauge-zone">
-								<div className="gauge-overlay" id="gaugeOverlay_bdf" style={{ "--tri-left": `${bdfPercent}%` }}>
-									<div className="gauge-triangle" id="gaugeTriangle_bdf" style={{ left: `${bdfPercent}%` }} />
-								</div>
-
-								<div className="gauge-bg" id="gaugeBg_bdf" ref={bdfGaugeBgRef}>
-									<div className="gauge-mask" id="gaugeMask_bdf" style={{ width: `${100 - bdfPercent}%` }} />
-									<div className="gauge-separators">
-										<span style={{ left: "0%" }} />
-										<span style={{ left: "20%" }} />
-										<span style={{ left: "40%" }} />
-										<span style={{ left: "60%" }} />
-										<span style={{ left: "80%" }} />
-										<span style={{ left: "100%" }} />
-									</div>
-								</div>
-
-								<div className="scale">
-									<span style={{ left: "0%" }}>0</span>
-									<span style={{ left: "20%" }}>1</span>
-									<span style={{ left: "40%" }}>10</span>
-									<span style={{ left: "60%" }}>100</span>
-									<span style={{ left: "80%" }}>1000</span>
-									<span style={{ left: "100%" }}>C/S</span>
-								</div>
-
-								<input
-									type="range"
-									id="jauge_bdf"
-									min="0"
-									max="1000"
-									step="1"
-									value={bdfRaw}
-									ref={bdfSliderRef}
-									onInput={(event) => updateBdfRaw(event.currentTarget.value)}
-									onChange={(event) => {
-										const raw = snap(event.currentTarget.value);
-										updateBdfRaw(raw);
-										sendValue("Bruit de fond", formatValue(sliderToValue(raw)));
-									}}
-								/>
-							</div>
-
-							<div style={{ width: "76px", height: "76px" }} />
 						</div>
 					</div>
 				</div>
