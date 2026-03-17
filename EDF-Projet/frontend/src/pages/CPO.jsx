@@ -120,6 +120,16 @@ function valueClass(value) {
   return "value-red";
 }
 
+function gaugeToneClass(value) {
+  if (value < TH_GREEN) {
+    return "gauge-tone-green";
+  }
+  if (value < TH_ORANGE) {
+    return "gauge-tone-yellow";
+  }
+  return "gauge-tone-red";
+}
+
 function useGaugePointer(gaugeBgRef, sliderRef, onRawChange) {
   useEffect(() => {
     const gaugeBgEl = gaugeBgRef.current;
@@ -340,6 +350,7 @@ function CPO({ cpoId = 1 }) {
 
   const contaminationValue = sliderToValue(contaminationRaw);
   const contaminationPercent = (contaminationRaw / 1000) * 100;
+  const contaminationToneClass = gaugeToneClass(contaminationValue);
 
   const openModal = () => {
     setModalError("");
@@ -465,10 +476,10 @@ function CPO({ cpoId = 1 }) {
               <div className="beta-icon">β</div>
               <div className="gauge-zone">
                 <div className="gauge-overlay" style={{ "--tri-left": `${contaminationPercent}%` }}>
-                  <div className="gauge-triangle" id="gaugeTriangle" style={{ left: `${contaminationPercent}%` }} />
+                  <div className={`gauge-triangle ${contaminationToneClass}`} id="gaugeTriangle" style={{ left: `${contaminationPercent}%` }} />
                 </div>
 
-                <div className="gauge-bg" id="gaugeBg" ref={contaminationGaugeBgRef}>
+                <div className={`gauge-bg ${contaminationToneClass}`} id="gaugeBg" ref={contaminationGaugeBgRef}>
                   <div className="gauge-mask" id="gaugeMask" style={{ width: `${100 - contaminationPercent}%` }} />
                   <div className="gauge-separators">
                     <span style={{ left: "0%" }} />

@@ -546,6 +546,12 @@ body.c2-page > *{ position: relative; z-index: 0; }
   transition: transform 0.3s ease;
   z-index: 1000;
   overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.drawer::-webkit-scrollbar {
+  display: none;
 }
 
 .drawer.open {

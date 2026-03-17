@@ -4,6 +4,7 @@ import "../styles/menu.css";
 const DEFAULT_API_HOST = typeof window !== "undefined" && window.location.hostname ? window.location.hostname : "localhost";
 const DEFAULT_API_PROTOCOL = typeof window !== "undefined" && window.location.protocol === "https:" ? "https:" : "http:";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || `${DEFAULT_API_PROTOCOL}//${DEFAULT_API_HOST}:3000`;
+const MENU_SELECTED_DEVICE_KEY = "menu.selectedDeviceLabel";
 
 const DEVICES = [
 	{
@@ -30,6 +31,27 @@ const DEVICES = [
 
 function Menu({ onLogout }) {
 	const [currentIndex, setCurrentIndex] = useState(() => {
+		const defaultIndex = (() => {
+			const preferred = DEVICES.findIndex((device) => device.label === "CPO");
+			return preferred >= 0 ? preferred : 0;
+		})();
+
+		if (typeof window === "undefined") {
+			return defaultIndex;
+		}
+
+		try {
+			const savedLabel = localStorage.getItem(MENU_SELECTED_DEVICE_KEY);
+			if (savedLabel) {
+				const savedIndex = DEVICES.findIndex((device) => device.label === savedLabel);
+				if (savedIndex >= 0) {
+					return savedIndex;
+				}
+			}
+		} catch {
+			// Ignore storage read errors and keep default.
+		}
+
 		const preferred = DEVICES.findIndex((device) => device.label === "CPO");
 		return preferred >= 0 ? preferred : 0;
 	});
@@ -55,6 +77,19 @@ function Menu({ onLogout }) {
 		setPulseIndex(currentIndex);
 		const timeout = setTimeout(() => setPulseIndex(null), 550);
 		return () => clearTimeout(timeout);
+	}, [currentIndex]);
+
+	useEffect(() => {
+		const currentLabel = DEVICES[currentIndex]?.label;
+		if (!currentLabel) {
+			return;
+		}
+
+		try {
+			localStorage.setItem(MENU_SELECTED_DEVICE_KEY, currentLabel);
+		} catch {
+			// Ignore storage write errors.
+		}
 	}, [currentIndex]);
 
 	const currentDevice = DEVICES[currentIndex] || DEVICES[0];

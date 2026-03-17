@@ -361,7 +361,7 @@ const c2Values = {};
 
 for (let i = 1; i <= 11; i += 1) {
   cmNames[i] = `CM ID ${i}`;
-  cmValues[i] = { NivContamination: "1", BruitDeFond: "0.50" };
+  cmValues[i] = { NivContamination: "1", BruitDeFond: "0.50", Status: "0" };
 }
 for (let i = 1; i <= 2; i += 1) {
   cpoNames[i] = `CPO ID ${i}`;
@@ -370,7 +370,7 @@ for (let i = 1; i <= 2; i += 1) {
 
 function ensureCm(id) {
   if (!cmNames[id]) cmNames[id] = `CM ID ${id}`;
-  if (!cmValues[id]) cmValues[id] = { NivContamination: "1", BruitDeFond: "0.50" };
+  if (!cmValues[id]) cmValues[id] = { NivContamination: "1", BruitDeFond: "0.50", Status: "0" };
 }
 
 function ensureCpo(id) {
@@ -434,6 +434,10 @@ function mqttTopicCmBdf(cmId) {
   return `FormaReaEDF/ControllerMobile/CM_${cmId}/BruitDeFond`;
 }
 
+function mqttTopicCmStatus(cmId) {
+  return `FormaReaEDF/ControllerMobile/CM_${cmId}/Status`;
+}
+
 function mqttTopicCpoContamination(cpoId) {
   return `FormaReaEDF/CPO/CPO_${cpoId}/NivContamination`;
 }
@@ -480,6 +484,8 @@ if (MQTT_ENABLED) {
         cmValues[cmId].NivContamination = payload;
       } else if (topic.includes("BruitDeFond")) {
         cmValues[cmId].BruitDeFond = payload;
+      } else if (/\/status$/i.test(topic)) {
+        cmValues[cmId].Status = payload === "1" ? "1" : "0";
       }
       return;
     }
@@ -592,7 +598,11 @@ app.post("/api/cm/:cmId/slider", (req, res) => {
   }
 
   ensureCm(cmId);
-  if (type.includes("bruit")) {
+  if (type.includes("status")) {
+    const statusValue = value === "1" ? "1" : "0";
+    cmValues[cmId].Status = statusValue;
+    publishMqtt(mqttTopicCmStatus(cmId), statusValue);
+  } else if (type.includes("bruit")) {
     cmValues[cmId].BruitDeFond = value;
     publishMqtt(mqttTopicCmBdf(cmId), `${value} `);
   } else {

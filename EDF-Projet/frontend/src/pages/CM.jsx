@@ -11,6 +11,7 @@ const P10 = 400;
 const P100 = 600;
 const P1000 = 800;
 const P3000 = 1000;
+const MAX_CONTAMINATION_VALUE = 3000;
 
 const TH_GREEN = 10;
 const TH_ORANGE = 100;
@@ -63,18 +64,23 @@ function sliderToValue(position) {
 	}
 
 	const t = (p - P1000) / (P3000 - P1000);
-	const logVal = Math.log10(1000) + t * (Math.log10(3000) - Math.log10(1000));
-	return Math.pow(10, logVal);
+	const logVal = Math.log10(1000) + t * (Math.log10(MAX_CONTAMINATION_VALUE) - Math.log10(1000));
+	return Math.min(MAX_CONTAMINATION_VALUE, Math.pow(10, logVal));
 }
 
 function formatValue(value) {
-	if (value === 0) return "0";
-	if (value < 1) return value.toFixed(2);
-	if (value < 10) return value.toFixed(2);
-	if (value < 100) return value.toFixed(1);
-	if (value < 1000) return value.toFixed(0);
-	if (value <= 3000) return value.toFixed(0);
-	return value.toExponential(1);
+	const epsilon = Number.EPSILON * MAX_CONTAMINATION_VALUE * 10;
+	const normalized = value > MAX_CONTAMINATION_VALUE && value <= MAX_CONTAMINATION_VALUE + epsilon
+		? MAX_CONTAMINATION_VALUE
+		: value;
+
+	if (normalized === 0) return "0";
+	if (normalized < 1) return normalized.toFixed(2);
+	if (normalized < 10) return normalized.toFixed(2);
+	if (normalized < 100) return normalized.toFixed(1);
+	if (normalized < 1000) return normalized.toFixed(0);
+	if (normalized <= MAX_CONTAMINATION_VALUE) return normalized.toFixed(0);
+	return normalized.toExponential(1);
 }
 
 function snap(rawValue) {
@@ -118,6 +124,16 @@ function valueClass(value) {
 		return "value-orange";
 	}
 	return "value-red";
+}
+
+function gaugeToneClass(value) {
+	if (value < TH_GREEN) {
+		return "gauge-tone-green";
+	}
+	if (value < TH_ORANGE) {
+		return "gauge-tone-yellow";
+	}
+	return "gauge-tone-red";
 }
 
 function useGaugePointer(gaugeBgRef, sliderRef, onRawChange, onCommit) {
@@ -194,6 +210,7 @@ function CM({ cmId = 1 }) {
 	const [leftDrawerOpen, setLeftDrawerOpen] = useState(() => localStorage.getItem("drawerOpen") === "true");
 
 	const [contaminationRaw, setContaminationRaw] = useState(() => snap(displayValueToRaw("1")));
+	const [cmStatus, setCmStatus] = useState("0");
 
 	const [modalOpen, setModalOpen] = useState(false);
 	const [modalError, setModalError] = useState("");
@@ -203,6 +220,7 @@ function CM({ cmId = 1 }) {
 	const contaminationSliderRef = useRef(null);
 
 	const hasPendingContaminationRef = useRef(false);
+	const hasPendingStatusRef = useRef(false);
 	const lastServerStateRef = useRef(null);
 
 	const token = localStorage.getItem("authToken") || "";
@@ -232,7 +250,12 @@ function CM({ cmId = 1 }) {
 					return;
 				}
 
-				hasPendingContaminationRef.current = false;
+				const normalizedType = String(type || "").toLowerCase();
+				if (normalizedType.includes("status")) {
+					hasPendingStatusRef.current = false;
+				} else {
+					hasPendingContaminationRef.current = false;
+				}
 			} catch {
 				// Ignore temporary network failures.
 			}
@@ -268,6 +291,8 @@ function CM({ cmId = 1 }) {
 
 	useEffect(() => {
 		hasPendingContaminationRef.current = false;
+		hasPendingStatusRef.current = false;
+		setCmStatus("0");
 		lastServerStateRef.current = null;
 	}, [currentCmId]);
 
@@ -317,7 +342,8 @@ function CM({ cmId = 1 }) {
 
 				const serverId = normalizeCmId(payload.cmId ?? payload.cm_id ?? currentCmId, currentCmId);
 				const contamination = String(payload.NivContamination ?? "");
-				const nextKey = `${serverId}|${contamination}`;
+				const status = String(payload.Status ?? payload.status ?? "0").trim() === "1" ? "1" : "0";
+				const nextKey = `${serverId}|${contamination}|${status}`;
 				if (nextKey === lastServerStateRef.current) {
 					return;
 				}
@@ -327,6 +353,9 @@ function CM({ cmId = 1 }) {
 
 				if (!hasPendingContaminationRef.current) {
 					setContaminationRaw(snap(displayValueToRaw(contamination)));
+				}
+				if (!hasPendingStatusRef.current) {
+					setCmStatus(status);
 				}
 			} catch {
 				// Ignore temporary poll failures.
@@ -362,6 +391,18 @@ function CM({ cmId = 1 }) {
 
 	const contaminationValue = sliderToValue(contaminationRaw);
 	const contaminationPercent = (contaminationRaw / 1000) * 100;
+	const contaminationToneClass = gaugeToneClass(contaminationValue);
+	const isSendActive = cmStatus === "1";
+
+	const handleSendToggle = () => {
+		const nextStatus = cmStatus === "1" ? "0" : "1";
+		hasPendingStatusRef.current = true;
+		setCmStatus(nextStatus);
+
+		const valueToSend = formatValue(sliderToValue(contaminationRaw));
+		sendValue("Contamination", valueToSend);
+		sendValue("Status", nextStatus);
+	};
 
 	const openModal = () => {
 		setModalError("");
@@ -488,10 +529,10 @@ function CM({ cmId = 1 }) {
 
 							<div className="gauge-zone">
 								<div className="gauge-overlay" style={{ "--tri-left": `${contaminationPercent}%` }}>
-									<div className="gauge-triangle" id="gaugeTriangle" style={{ left: `${contaminationPercent}%` }} />
+									<div className={`gauge-triangle ${contaminationToneClass}`} id="gaugeTriangle" style={{ left: `${contaminationPercent}%` }} />
 								</div>
 
-								<div className="gauge-bg" id="gaugeBg" ref={contaminationGaugeBgRef}>
+								<div className={`gauge-bg ${contaminationToneClass}`} id="gaugeBg" ref={contaminationGaugeBgRef}>
 									<div className="gauge-mask" id="gaugeMask" style={{ width: `${100 - contaminationPercent}%` }} />
 									<div className="gauge-separators">
 										<span style={{ left: "0%" }} />
@@ -527,10 +568,11 @@ function CM({ cmId = 1 }) {
 
 							<button
 								type="button"
-								className="send-btn"
+								className={`send-btn ${isSendActive ? "is-active" : ""}`}
 								id="sendBtn"
-								title="Envoyer les valeurs au MQTT"
-								onClick={() => sendValue("Contamination", formatValue(sliderToValue(contaminationRaw)))}
+								title="Envoyer la contamination + statut"
+								aria-pressed={isSendActive}
+								onClick={handleSendToggle}
 							/>
 						</div>
 					</div>
