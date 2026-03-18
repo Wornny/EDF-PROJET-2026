@@ -43,24 +43,57 @@
 }
 
 *{box-sizing:border-box} 
-html,body{height:100%;width:100%;margin:0}
-body{
+html,body.menu-page{height:100%;width:100%;margin:0;overflow:hidden}
+body.menu-page{
   font-family:Inter, system-ui, -apple-system,'Segoe UI',Roboto,Arial;
-  background: url('Background.png') center/cover no-repeat fixed;
+  min-height: 100dvh;
+  background: none;
   display:flex;
   align-items:center;
   justify-content:center;
   padding:0;
   overflow:hidden;
   position: relative;
+  isolation: isolate;
+}
+
+body.menu-page::before {
+  content: "";
+  position: fixed;
+  inset: -8%;
+  background: url('img/Background.png') center center / cover no-repeat;
+  transform: translate3d(-2%, -1%, 0) scale(1.08);
+  will-change: transform;
+  animation: menu-bg-float 40s linear infinite;
+  z-index: -1;
+}
+
+@keyframes menu-bg-float {
+  0%   { transform: translate3d(-2%, -1%, 0) scale(1.08); }
+  25%  { transform: translate3d( 2%, -2%, 0) scale(1.08); }
+  50%  { transform: translate3d( 2%,  1%, 0) scale(1.08); }
+  75%  { transform: translate3d(-2%,  2%, 0) scale(1.08); }
+  100% { transform: translate3d(-2%, -1%, 0) scale(1.08); }
+}
+
+body.menu-page #root {
+  width: 100%;
+  min-width: 100%;
+  min-height: 100dvh;
+  height: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
 }
 
 .container{
-  width:100%;
-  max-width:100%;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-width: 100%;
+  max-width: none;
   height:100vh;
   min-height:100vh;
-  width:100vw;
   background: transparent;
   border-radius:0;
   padding:28px 18px;
@@ -350,8 +383,12 @@ body{
   }
 
   .container{
+    width: 100%;
+    min-width: 100%;
+    max-width: none;
+    min-height: 100dvh;
     padding: 22px 16px;
-    transform: scale(1.12) translateY(-8px);
+    transform: translateY(-8px);
   }
 
   .logo{
@@ -372,21 +409,53 @@ body{
   :root{ 
     --device-size:108px; 
     --device-image:54px; 
-    --choice-min-width:130px; 
     --carousel-height:288px; 
     --logo-size:86px; 
     --title-pill-font-size:13px 
   }
   
   .container{padding:18px}
-  .devices-stage{width:94%;height:var(--carousel-height)}
-  .device{width:var(--device-size);height:var(--device-size)}
-  .device img{width:var(--device-image);height:var(--device-image)}
-  .slider-item{min-width:110px;padding:8px 14px}
 
   .choice-item {
     font-size: 18px;
-    padding: 16px 36px;
-    min-width: 110px;
+    padding: 16px 36px;  }
+}
+
+/* Tablettes tactiles larges (ex: iPad Pro 1366px)
+   On force le layout tablette meme si la largeur depasse 1024px. */
+@media (hover: none) and (pointer: coarse) and (min-width: 541px) {
+  :root {
+    --carousel-height: 514px;
+    --logo-size: 126px;
+    --circle-y: 20%;
+  }
+
+  body.menu-page #root {
+    width: 100%;
+    min-width: 100%;
+    max-width: none;
+  }
+
+  .container {
+    top: 85px;
+    width: 100%;
+    min-width: 100%;
+    max-width: none;
+    min-height: 100dvh;
+    padding: 22px 16px;
+    transform: translateY(-8px);
+  }
+
+  .logo {
+    margin: 18px auto 8px;
+  }
+
+  .title-pill {
+    margin-top: 10px;
+    margin-bottom: 22px;
+  }
+
+  .carousel-wrapper {
+    margin: -140px auto 6px;
   }
 }

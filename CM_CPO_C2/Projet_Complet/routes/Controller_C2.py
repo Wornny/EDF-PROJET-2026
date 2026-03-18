@@ -3,14 +3,14 @@ import json
 import uuid
 from flask import Blueprint, jsonify, redirect, render_template, request, session, url_for
 from .Controller_login import require_admin_role
+from utilisation_ou_non_mqtt import USE_MQTT
 
-USE_MQTT = True  # False chez moi sans MQTT et True au lycee
 if USE_MQTT:
 	import paho.mqtt.client as mqtt
 
 c2_bp = Blueprint("c2", __name__, url_prefix="/C2")
 
-BROKER_HOST = "192.168.10.3"
+BROKER_HOST = "192.168.190.38"
 BROKER_PORT = 1883
 
 mqtt_client = None

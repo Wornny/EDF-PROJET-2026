@@ -2,8 +2,8 @@ import logging
 
 from flask import Blueprint, jsonify, redirect, render_template, request, session, url_for
 from .Controller_login import require_admin_role
+from utilisation_ou_non_mqtt import USE_MQTT
 
-USE_MQTT = True  # False chez moi sans MQTT et True au lycee
 if USE_MQTT:
     import paho.mqtt.client as mqtt
 
@@ -20,7 +20,6 @@ def charger_valeurs_defaut():
 def entree_par_defaut():
     return {
         "NivContamination": "1",
-        "BruitDeFond": "0.50",
     }
 
 
@@ -38,50 +37,35 @@ def ids_triees(values) -> list[int]:
     return sorted(values, key=cle_tri)
 
 
-BROKER_HOST = "192.168.10.3"
+BROKER_HOST = "192.168.190.38"
 BROKER_PORT = 1883
+TOPIC_CPO_CONTAMINATION_WILDCARD = "FormaReaEDF/CPO/+/NivContamination"
 
 
 def topic_contamination(cpo_id: int) -> str:
     return f"FormaReaEDF/CPO/CPO_{cpo_id}/NivContamination"
 
 
-def topic_bruit_fond(cpo_id: int) -> str:
-    return f"FormaReaEDF/CPO/CPO_{cpo_id}/BruitDeFond"
-
-
-def topic_ancien_contamination(cpo_id: int) -> str:
+def topic_contamination_legacy(cpo_id: int) -> str:
     return f"FormaReaEDF/CPO/CPO_{cpo_id:02d}/NivContamination"
-
-
-def topic_ancien_bruit_fond(cpo_id: int) -> str:
-    return f"FormaReaEDF/CPO/CPO_{cpo_id:02d}/BruitDeFond"
-
-
-def nettoyer_anciens_topics_cpo() -> None:
-    if not (USE_MQTT and mqtt_client):
-        return
-
-    for cpo_id in range(1, 10):
-        legacy_conta = topic_ancien_contamination(cpo_id)
-        legacy_bdf = topic_ancien_bruit_fond(cpo_id)
-        mqtt_client.publish(legacy_conta, "", retain=True)
-        mqtt_client.publish(legacy_bdf, "", retain=True)
-        mqtt_client.unsubscribe(legacy_conta)
-        mqtt_client.unsubscribe(legacy_bdf)
 
 
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
 last_values = charger_valeurs_defaut()
 cpo_names = charger_noms_defaut()
+deleted_cpo_ids: set[int] = set()
 
 mqtt_client = None
 
 
+def ids_cpo_actifs() -> list[int]:
+    return ids_triees(i for i in cpo_names.keys() if i not in deleted_cpo_ids)
+
+
 def nettoyer_donnees(payload: str) -> str:
     p = (payload or "").strip()
-    return p.replace("Bq/cm²", "").replace("Bq", "").strip()
+    return p.replace("Bq/m²", "").replace("Bq/cm²", "").replace("Bq", "").strip()
 
 
 def valider_nom_appareil(name: str, device_type: str):
@@ -112,29 +96,11 @@ def initialiser_mqtt_cpo(cpo_id: int):
         return
 
     topic_conta = topic_contamination(cpo_id)
-    topic_bdf = topic_bruit_fond(cpo_id)
-    legacy_conta = topic_ancien_contamination(cpo_id)
-    legacy_bdf = topic_ancien_bruit_fond(cpo_id)
-
-    mqtt_client.subscribe(topic_conta)
-    mqtt_client.subscribe(topic_bdf)
     mqtt_client.publish(
         topic_conta,
         f"{last_values[cpo_id]['NivContamination']}",
         retain=True,
     )
-    mqtt_client.publish(
-        topic_bdf,
-        f"{last_values[cpo_id]['BruitDeFond']}",
-        retain=True,
-    )
-
-    if legacy_conta != topic_conta:
-        mqtt_client.publish(legacy_conta, "", retain=True)
-        mqtt_client.unsubscribe(legacy_conta)
-    if legacy_bdf != topic_bdf:
-        mqtt_client.publish(legacy_bdf, "", retain=True)
-        mqtt_client.unsubscribe(legacy_bdf)
 
 
 def deconnecter_mqtt_cpo(cpo_id: int):
@@ -142,60 +108,68 @@ def deconnecter_mqtt_cpo(cpo_id: int):
         return
 
     topic_conta = topic_contamination(cpo_id)
-    topic_bdf = topic_bruit_fond(cpo_id)
-    legacy_conta = topic_ancien_contamination(cpo_id)
-    legacy_bdf = topic_ancien_bruit_fond(cpo_id)
-
     mqtt_client.publish(topic_conta, "", retain=True)
-    mqtt_client.publish(topic_bdf, "", retain=True)
-    mqtt_client.unsubscribe(topic_conta)
-    mqtt_client.unsubscribe(topic_bdf)
 
-    if legacy_conta != topic_conta:
-        mqtt_client.publish(legacy_conta, "", retain=True)
-        mqtt_client.unsubscribe(legacy_conta)
-    if legacy_bdf != topic_bdf:
-        mqtt_client.publish(legacy_bdf, "", retain=True)
-        mqtt_client.unsubscribe(legacy_bdf)
+
+def on_connect_mqtt_cpo(client, userdata, flags, rc):
+    if rc != 0:
+        print(f"MQTT connect failed: rc={rc}")
+        return
+
+    try:
+        result_conta, _ = client.subscribe(TOPIC_CPO_CONTAMINATION_WILDCARD, qos=0)
+    except ValueError as exc:
+        print(f"MQTT subscribe filter error: {exc}")
+        return
+
+    if result_conta != mqtt.MQTT_ERR_SUCCESS:
+        print(f"MQTT subscribe failed for {TOPIC_CPO_CONTAMINATION_WILDCARD}: {result_conta}")
+
+    # Cleanup des anciens topics zero-padded (CPO_01..CPO_09) pour eviter les doublons.
+    for cpo_id in range(1, 10):
+        client.publish(topic_contamination_legacy(cpo_id), "", retain=True)
 
 
 def traiter_message_mqtt(client, userdata, msg):
     try:
         payload = nettoyer_donnees(msg.payload.decode("utf-8", errors="ignore"))
 
-        if "/CPO_" not in msg.topic:
+        parts = msg.topic.split("/")
+        if len(parts) < 4 or not parts[2].startswith("CPO_"):
             return
 
         try:
-            cpo_part = msg.topic.split("/")[2]
-            cpo_token = cpo_part.replace("CPO_", "")
+            cpo_token = parts[2][4:]
             if len(cpo_token) > 1 and cpo_token.startswith("0"):
                 return
             cpo_id = int(cpo_token)
-        except Exception:
+        except ValueError:
             return
 
-        if cpo_id not in (1, 2):
+        if cpo_id < 1:
             return
 
-        if "NivContamination" in msg.topic:
+        # Ne pas recreer automatiquement un ID explicitement supprime.
+        if cpo_id in deleted_cpo_ids:
+            return
+
+        if cpo_id not in last_values:
+            last_values[cpo_id] = entree_par_defaut()
+        if cpo_id not in cpo_names:
+            cpo_names[cpo_id] = f"CPO ID {cpo_id}"
+
+        if msg.topic.lower().endswith("/nivcontamination"):
             last_values[cpo_id]["NivContamination"] = payload
-        elif "BruitDeFond" in msg.topic:
-            last_values[cpo_id]["BruitDeFond"] = payload
 
     except Exception as exc:
         print("MQTT on_message error:", exc)
 
 
 if USE_MQTT:
-    mqtt_client = mqtt.Client(client_id="IHM_CPO")
+    mqtt_client = mqtt.Client(client_id="IHM_CPO", protocol=mqtt.MQTTv311)
+    mqtt_client.on_connect = on_connect_mqtt_cpo
     mqtt_client.on_message = traiter_message_mqtt
     mqtt_client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
-
-    nettoyer_anciens_topics_cpo()
-
-    for cpo_id in ids_triees(cpo_names.keys()):
-        initialiser_mqtt_cpo(cpo_id)
 
     mqtt_client.loop_start()
 
@@ -210,6 +184,11 @@ def afficher_page_cpo(cpo_id: int):
     if cpo_id < 1:
         cpo_id = 1
 
+    if cpo_id in deleted_cpo_ids:
+        actifs = ids_cpo_actifs()
+        cible = actifs[0] if actifs else 1
+        return redirect(url_for("cpo.afficher_page_cpo", cpo_id=cible))
+
     if cpo_id not in last_values:
         last_values[cpo_id] = entree_par_defaut()
     if cpo_id not in cpo_names:
@@ -221,9 +200,8 @@ def afficher_page_cpo(cpo_id: int):
         "cpo/CPO.html",
         cpo_id=cpo_id,
         valeur_conta=last_values[cpo_id]["NivContamination"],
-        valeur_bdf=last_values[cpo_id]["BruitDeFond"],
         cpo_names=cpo_names,
-        cpo_ids=ids_triees(cpo_names.keys()),
+        cpo_ids=ids_cpo_actifs(),
         role=session.get("role", "user")
     )
 
@@ -239,22 +217,14 @@ def traiter_jauge(cpo_id: int):
     initialiser_mqtt_cpo(cpo_id)
 
     value = request.form.get("value")
-    type_ = request.form.get("type")
     equip = request.form.get("equip")
 
     if value is None:
         return "missing value", 400
 
-    type_norm = (type_ or "").strip().lower()
-
-    if "bruit" in type_norm:
-        last_values[cpo_id]["BruitDeFond"] = value
-        topic = topic_bruit_fond(cpo_id)
-        display_type = "Bruit de fond"
-    else:
-        last_values[cpo_id]["NivContamination"] = value
-        topic = topic_contamination(cpo_id)
-        display_type = "Contamination"
+    last_values[cpo_id]["NivContamination"] = value
+    topic = topic_contamination(cpo_id)
+    display_type = "Contamination"
 
     print(equip, display_type, "=", value, "Bq", flush=True)
 
@@ -285,13 +255,12 @@ def ajouter_appareil():
         return jsonify(ok=False, error="ID CPO invalide (1 a 99)."), 400
 
     cpo_names[cpo_id] = f"CPO ID {cpo_id}"
+    deleted_cpo_ids.discard(cpo_id)
     if cpo_id not in last_values:
         last_values[cpo_id] = entree_par_defaut()
     initialiser_mqtt_cpo(cpo_id)
-    if USE_MQTT and mqtt_client:
-        mqtt_client.loop(0.1)
 
-    print(f"CPO N°{cpo_id} a ete cree")
+    print(f"CPO ID {cpo_id} a ete cree")
 
     return jsonify(ok=True)
 
@@ -308,12 +277,33 @@ def supprimer_appareil():
     if cpo_id < 1:
         return jsonify(ok=False, error="ID invalide."), 400
 
+    deleted_cpo_ids.add(cpo_id)
     cpo_names.pop(cpo_id, None)
     last_values.pop(cpo_id, None)
     deconnecter_mqtt_cpo(cpo_id)
-    if USE_MQTT and mqtt_client:
-        mqtt_client.loop(0.1)
 
-    print(f"CPO N°{cpo_id} a ete supprime")
+    print(f"CPO ID {cpo_id} a ete supprime")
 
     return jsonify(ok=True)
+
+
+@cpo_bp.route("/state/<int:cpo_id>")
+def obtenir_etat(cpo_id: int):
+    if cpo_id < 1:
+        return jsonify(ok=False, error="ID invalide."), 400
+
+    if cpo_id not in last_values:
+        last_values[cpo_id] = entree_par_defaut()
+
+    entry = last_values[cpo_id]
+    contamination = str(entry.get("NivContamination", "1"))
+
+    response = jsonify(
+        ok=True,
+        cpo_id=cpo_id,
+        NivContamination=contamination,
+    )
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response

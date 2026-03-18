@@ -2,9 +2,28 @@ const devices = Array.from(document.querySelectorAll('.device'));
 const labelDisplay = document.getElementById('selected-label');
 const carouselWrapper = document.querySelector('.carousel-wrapper');
 const dragTarget = carouselWrapper || document.body;
+const MENU_SELECTED_DEVICE_KEY = 'menu.selectedDeviceLabel';
 
-let currentIndex = devices.findIndex(d => d.dataset.label === (labelDisplay?.textContent || ''));
-if (currentIndex < 0) currentIndex = 0;
+function getDefaultIndex() {
+  const preferred = devices.findIndex((device) => device.dataset.label === 'CPO');
+  return preferred >= 0 ? preferred : 0;
+}
+
+function getSavedIndex() {
+  try {
+    const savedLabel = localStorage.getItem(MENU_SELECTED_DEVICE_KEY);
+    if (!savedLabel) return -1;
+    return devices.findIndex((device) => device.dataset.label === savedLabel);
+  } catch {
+    return -1;
+  }
+}
+
+let currentIndex = getSavedIndex();
+if (currentIndex < 0) {
+  currentIndex = devices.findIndex((d) => d.dataset.label === (labelDisplay?.textContent || ''));
+}
+if (currentIndex < 0) currentIndex = getDefaultIndex();
 let lastIndex = currentIndex;
 
 function getRoute(label) {
@@ -42,6 +61,15 @@ function updateCarousel() {
 
   if (labelDisplay) {
     labelDisplay.textContent = devices[currentIndex].dataset.label;
+  }
+
+  try {
+    const currentLabel = devices[currentIndex]?.dataset?.label;
+    if (currentLabel) {
+      localStorage.setItem(MENU_SELECTED_DEVICE_KEY, currentLabel);
+    }
+  } catch {
+    // Ignore storage write errors.
   }
 
   if (lastIndex !== currentIndex) {

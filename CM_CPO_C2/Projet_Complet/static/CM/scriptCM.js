@@ -1,46 +1,43 @@
-// ================== CONTAMINATION DOM ==================
-const jauge     = document.getElementById("jauge");
-const valeur    = document.getElementById("valeur");
-const valueBox  = document.getElementById("valueBox");
-const mask      = document.getElementById("gaugeMask");
-const triangle  = document.getElementById("gaugeTriangle");
-const overlay   = document.querySelector(".gauge-overlay");
-const gaugeBg   = document.getElementById("gaugeBg");
+const jauge = document.getElementById("jauge");
+const valeur = document.getElementById("valeur");
+const valueBox = document.getElementById("valueBox");
+const mask = document.getElementById("gaugeMask");
+const triangle = document.getElementById("gaugeTriangle");
+const overlay = document.querySelector(".gauge-overlay");
+const gaugeBg = document.getElementById("gaugeBg");
 
-// ================== BRUIT DE FOND DOM ==================
-const jauge_bdf     = document.getElementById("jauge_bdf");
-const valeur_bdf    = document.getElementById("valeur_bdf");
-const valueBox_bdf  = document.getElementById("valueBox_bdf");
-const mask_bdf      = document.getElementById("gaugeMask_bdf");
-const triangle_bdf  = document.getElementById("gaugeTriangle_bdf");
-const overlay_bdf   = document.getElementById("gaugeOverlay_bdf");
-const gaugeBg_bdf   = document.getElementById("gaugeBg_bdf");
-
-// CM ID courant
 const cmId = Number(document.body.dataset.cmId || "1");
 const apiBase = document.body.dataset.apiBase || "";
 
 let hasPendingContamination = false;
-let hasPendingBdf = false;
+let hasPendingStatus = false;
+let currentStatus = "0";
 
-// ================== CONSTANTES JAUGE ==================
-const P0     = 0;
-const P1     = 200;
-const P10    = 400;
-const P100   = 600;
-const P1000  = 800;
-const P10000 = 1000;
+const P0 = 0;
+const P1 = 200;
+const P10 = 400;
+const P100 = 600;
+const P1000 = 800;
+const P3000 = 1000;
+const MAX_CONTAMINATION_VALUE = 3000;
 
-const TH_GREEN  = 10;
+const TH_GREEN = 10;
 const TH_ORANGE = 100;
 
-// ================== SLIDER -> VALEUR (log) ==================
-function sliderToValue(pos) {
-  const p = Number(pos);
+function clampRaw(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return 0;
+  }
+  return Math.min(1000, Math.max(0, Math.round(numeric)));
+}
+
+function sliderToValue(position) {
+  const p = clampRaw(position);
 
   if (p <= P1) {
     const t = (p - P0) / (P1 - P0);
-    return t * 1;
+    return t;
   }
 
   if (p <= P10) {
@@ -61,145 +58,204 @@ function sliderToValue(pos) {
     return Math.pow(10, logVal);
   }
 
-  const t = (p - P1000) / (P10000 - P1000);
-  const logVal = Math.log10(1000) + t * (Math.log10(10000) - Math.log10(1000));
-  return Math.pow(10, logVal);
+  const t = (p - P1000) / (P3000 - P1000);
+  const logVal = Math.log10(1000) + t * (Math.log10(MAX_CONTAMINATION_VALUE) - Math.log10(1000));
+  return Math.min(MAX_CONTAMINATION_VALUE, Math.pow(10, logVal));
 }
 
-function formatValue(v) {
-  if (v === 0) return "0";
-  if (v < 1)      return v.toFixed(2);
-  if (v < 10)     return v.toFixed(2);
-  if (v < 100)    return v.toFixed(1);
-  if (v < 1000)   return v.toFixed(0);
-  if (v <= 10000) return v.toFixed(0);
-  return v.toExponential(1);
+function formatValue(value) {
+  const epsilon = Number.EPSILON * MAX_CONTAMINATION_VALUE * 10;
+  const normalized = value > MAX_CONTAMINATION_VALUE && value <= MAX_CONTAMINATION_VALUE + epsilon
+    ? MAX_CONTAMINATION_VALUE
+    : value;
+
+  if (normalized === 0) return "0";
+  if (normalized < 1) return normalized.toFixed(2);
+  if (normalized < 10) return normalized.toFixed(2);
+  if (normalized < 100) return normalized.toFixed(1);
+  if (normalized < 1000) return normalized.toFixed(0);
+  if (normalized <= MAX_CONTAMINATION_VALUE) return normalized.toFixed(0);
+  return normalized.toExponential(1);
 }
 
-function snap(raw) {
-  if (Math.abs(raw - P1)     < 3) raw = P1;
-  if (Math.abs(raw - P10)    < 3) raw = P10;
-  if (Math.abs(raw - P100)   < 3) raw = P100;
-  if (Math.abs(raw - P1000)  < 3) raw = P1000;
-  if (Math.abs(raw - P10000) < 3) raw = P10000;
+function snap(rawValue) {
+  let raw = clampRaw(rawValue);
+  if (Math.abs(raw - P1) < 3) raw = P1;
+  if (Math.abs(raw - P10) < 3) raw = P10;
+  if (Math.abs(raw - P100) < 3) raw = P100;
+  if (Math.abs(raw - P1000) < 3) raw = P1000;
+  if (Math.abs(raw - P3000) < 3) raw = P3000;
   return raw;
 }
 
-// ================== COULEURS ==================
-function setValueBoxColor(boxEl, valNum) {
-  if (!boxEl) return;
-
-  boxEl.classList.remove("value-green", "value-orange", "value-red");
-  if (valNum < TH_GREEN) boxEl.classList.add("value-green");
-  else if (valNum < TH_ORANGE) boxEl.classList.add("value-orange");
-  else boxEl.classList.add("value-red");
+function normalizeDisplayValue(text) {
+  return String(text || "")
+    .replace(/Bq\/m²/gi, "")
+    .replace(/Bq\/cm²/gi, "")
+    .replace(/Bq/gi, "")
+    .trim()
+    .replace(",", ".");
 }
 
-// ================== UPDATE JAUGE ==================
-function updateGauge(raw, valeurEl, boxEl, maskEl, triangleEl, overlayEl) {
-  const valNum = sliderToValue(raw);
-  const valTxt = formatValue(valNum);
+function restoreSliderFromDisplayedValue(sliderEl, valueEl) {
+  if (!sliderEl || !valueEl) return;
 
-  if (valeurEl) valeurEl.textContent = valTxt;
-  setValueBoxColor(boxEl, valNum);
-
-  const percent = (raw / 1000) * 100;
-  if (maskEl) maskEl.style.width = (100 - percent) + "%";
-  if (triangleEl) triangleEl.style.left = percent + "%";
-  if (overlayEl) overlayEl.style.setProperty("--tri-left", percent + "%");
-
-  return valTxt;
-}
-
-// ================== RESTORE ==================
-function restoreSliderFromDisplayedValue(sliderEl, valeurEl) {
-  if (!sliderEl || !valeurEl) return;
-
-  const txt = (valeurEl.textContent || "").trim().replace(",", ".");
-  const target = Number(txt);
-
-  if (!isFinite(target) || target < 0) {
+  const target = Number(normalizeDisplayValue(valueEl.textContent));
+  if (!Number.isFinite(target) || target < 0) {
     sliderEl.value = 0;
     return;
   }
 
-  let bestPos = 0;
-  let bestDiff = Infinity;
+  let bestRaw = 0;
+  let bestDiff = Number.POSITIVE_INFINITY;
 
-  for (let p = 0; p <= 1000; p++) {
-    const v = sliderToValue(p);
-    const diff = Math.abs(v - target);
+  for (let raw = 0; raw <= 1000; raw += 1) {
+    const candidate = sliderToValue(raw);
+    const diff = Math.abs(candidate - target);
     if (diff < bestDiff) {
       bestDiff = diff;
-      bestPos = p;
+      bestRaw = raw;
     }
   }
 
-  sliderEl.value = bestPos;
+  sliderEl.value = bestRaw;
 }
 
-// ================== ENVOI SERVEUR ==================
-function sendValue(type, vTxt) {
+function setValueBoxColor(boxEl, valueNum) {
+  if (!boxEl) return;
+
+  boxEl.classList.remove("value-green", "value-orange", "value-red");
+  if (valueNum < TH_GREEN) {
+    boxEl.classList.add("value-green");
+  } else if (valueNum < TH_ORANGE) {
+    boxEl.classList.add("value-orange");
+  } else {
+    boxEl.classList.add("value-red");
+  }
+}
+
+function setGaugeTone(valueNum) {
+  const toneClass = valueNum < TH_GREEN
+    ? "gauge-tone-green"
+    : valueNum < TH_ORANGE
+      ? "gauge-tone-yellow"
+      : "gauge-tone-red";
+
+  if (gaugeBg) {
+    gaugeBg.classList.remove("gauge-tone-green", "gauge-tone-yellow", "gauge-tone-red");
+    gaugeBg.classList.add(toneClass);
+  }
+
+  if (triangle) {
+    triangle.classList.remove("gauge-tone-green", "gauge-tone-yellow", "gauge-tone-red");
+    triangle.classList.add(toneClass);
+  }
+}
+
+function updateGauge(rawValue) {
+  const raw = snap(rawValue);
+  if (jauge) {
+    jauge.value = raw;
+  }
+
+  const valueNum = sliderToValue(raw);
+  const valueText = formatValue(valueNum);
+
+  if (valeur) {
+    valeur.textContent = `${valueText} Bq/m²`;
+  }
+  setValueBoxColor(valueBox, valueNum);
+  setGaugeTone(valueNum);
+
+  const percent = (raw / 1000) * 100;
+  if (mask) mask.style.width = `${100 - percent}%`;
+  if (triangle) triangle.style.left = `${percent}%`;
+  if (overlay) overlay.style.setProperty("--tri-left", `${percent}%`);
+
+  return valueText;
+}
+
+function updateSendButtonState() {
+  const sendBtn = document.getElementById("sendBtn");
+  if (!sendBtn) return;
+
+  const isActive = currentStatus === "1";
+  sendBtn.classList.toggle("is-active", isActive);
+  sendBtn.setAttribute("aria-pressed", isActive ? "true" : "false");
+}
+
+function setStatus(nextStatus) {
+  currentStatus = String(nextStatus).trim() === "1" ? "1" : "0";
+  updateSendButtonState();
+}
+
+function sendValue(type, valueText) {
   const data = new FormData();
-  data.append("value", vTxt);
-  data.append("equip", "Controller Mobile N°" + cmId);
+  data.append("value", valueText);
+  data.append("equip", `Controller Mobile N°${cmId}`);
   data.append("type", type);
 
   return fetch(`${apiBase}/slider/${cmId}`, {
     method: "POST",
-    body: data
+    body: data,
   })
-    .then(() => {
-      const typeNorm = String(type || "").toLowerCase();
-      if (typeNorm.includes("bruit")) hasPendingBdf = false;
-      else hasPendingContamination = false;
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Request failed");
+      }
+
+      if (type === "Contamination") {
+        hasPendingContamination = false;
+      }
+      if (type === "Status") {
+        hasPendingStatus = false;
+      }
     })
-    .catch(() => {});
+    .catch(() => {
+      // Ignore temporary network failures.
+    });
 }
 
-function applyServerValues(contamination, bruitDeFond) {
+function applyServerState(contamination, status) {
   if (!hasPendingContamination && typeof contamination === "string" && valeur) {
-    valeur.textContent = contamination;
+    valeur.textContent = `${normalizeDisplayValue(contamination)} Bq/m²`;
     if (jauge) {
       restoreSliderFromDisplayedValue(jauge, valeur);
-      const raw = snap(Number(jauge.value));
-      jauge.value = raw;
-      updateGauge(raw, valeur, valueBox, mask, triangle, overlay);
+      updateGauge(Number(jauge.value));
     }
   }
 
-  if (!hasPendingBdf && typeof bruitDeFond === "string" && valeur_bdf) {
-    valeur_bdf.textContent = bruitDeFond;
-    if (jauge_bdf) {
-      restoreSliderFromDisplayedValue(jauge_bdf, valeur_bdf);
-      const rawBdf = snap(Number(jauge_bdf.value));
-      jauge_bdf.value = rawBdf;
-      updateGauge(rawBdf, valeur_bdf, valueBox_bdf, mask_bdf, triangle_bdf, overlay_bdf);
-    }
+  if (!hasPendingStatus && typeof status !== "undefined") {
+    setStatus(status);
   }
 }
 
 let lastServerStateKey = null;
 function pollServerState() {
-  fetch(`${apiBase}/state/${cmId}`)
+  fetch(`${apiBase}/state/${cmId}?_=${Date.now()}`, {
+    cache: "no-store",
+    headers: { "Cache-Control": "no-cache" },
+  })
     .then((res) => res.json().then((json) => ({ ok: res.ok, json })))
     .then(({ ok, json }) => {
-      if (!ok || !json?.ok) return;
+      if (!ok || !json || json.ok !== true) return;
 
       const contamination = String(json.NivContamination ?? "");
-      const bruitDeFond = String(json.BruitDeFond ?? "");
-      const nextKey = `${contamination}|${bruitDeFond}`;
-      if (nextKey === lastServerStateKey) return;
+      const status = String(json.Status ?? "0");
+      const nextKey = `${contamination}|${status}`;
 
+      if (nextKey === lastServerStateKey) return;
       lastServerStateKey = nextKey;
-      applyServerValues(contamination, bruitDeFond);
+
+      applyServerState(contamination, status);
     })
-    .catch(() => {});
+    .catch(() => {
+      // Ignore temporary poll failures.
+    });
 }
 
-// ================== CLIC SUR BARRE ==================
-function enableGaugeClick(gaugeBgEl, sliderEl, updateFn) {
-  if (!gaugeBgEl || !sliderEl) return;
+function enableGaugePointer(gaugeBgEl, sliderEl, onRawChange) {
+  if (!gaugeBgEl || !sliderEl || typeof onRawChange !== "function") return;
 
   let activePointerId = null;
   sliderEl.style.touchAction = "none";
@@ -207,26 +263,27 @@ function enableGaugeClick(gaugeBgEl, sliderEl, updateFn) {
 
   const setFromClientX = (clientX) => {
     const rect = gaugeBgEl.getBoundingClientRect();
+    if (rect.width <= 0) return;
+
     const ratio = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
-    sliderEl.value = Math.round(ratio * 1000);
-    updateFn(false);
+    onRawChange(Math.round(ratio * 1000));
   };
 
-  const onPointerDown = (e) => {
-    activePointerId = e.pointerId;
-    setFromClientX(e.clientX);
-    e.preventDefault();
+  const onPointerDown = (event) => {
+    activePointerId = event.pointerId;
+    setFromClientX(event.clientX);
+    event.preventDefault();
   };
 
-  const onPointerMove = (e) => {
-    if (activePointerId !== e.pointerId) return;
-    setFromClientX(e.clientX);
-    e.preventDefault();
+  const onPointerMove = (event) => {
+    if (activePointerId !== event.pointerId) return;
+    setFromClientX(event.clientX);
+    event.preventDefault();
   };
 
-  const onPointerUpOrCancel = (e) => {
-    if (activePointerId !== e.pointerId) return;
-    setFromClientX(e.clientX);
+  const onPointerUpOrCancel = (event) => {
+    if (activePointerId !== event.pointerId) return;
+    setFromClientX(event.clientX);
     activePointerId = null;
   };
 
@@ -237,158 +294,87 @@ function enableGaugeClick(gaugeBgEl, sliderEl, updateFn) {
   window.addEventListener("pointercancel", onPointerUpOrCancel);
 }
 
-// ================== DRAWER ==================
 function initDrawer() {
   const drawer = document.getElementById("drawer");
   const drawerToggle = document.getElementById("drawerToggle");
-  const cmListToggle = document.getElementById("cm-list-toggle");
-  const cmListWrap = document.getElementById("cm-list-wrap");
-  
   if (!drawer || !drawerToggle) return;
 
-  // Restaurer l'état du drawer depuis localStorage (et assurer variables CSS initiales cohérentes)
   const drawerOpen = localStorage.getItem("drawerOpen") === "true";
   if (drawerOpen) {
     drawer.classList.add("open");
-    document.documentElement.style.setProperty('--drawer-initial', 'translateX(0)');
-    document.documentElement.style.setProperty('--toggle-initial', '220px');
-    document.documentElement.style.setProperty('--arrow-initial', 'scaleX(-1)');
+    document.documentElement.style.setProperty("--drawer-initial", "translateX(0)");
+    document.documentElement.style.setProperty("--toggle-initial", "220px");
+    document.documentElement.style.setProperty("--arrow-initial", "scaleX(-1)");
   } else {
     drawer.classList.remove("open");
-    document.documentElement.style.removeProperty('--drawer-initial');
-    document.documentElement.style.setProperty('--toggle-initial', '0');
-    document.documentElement.style.setProperty('--arrow-initial', 'scaleX(1)');
+    document.documentElement.style.removeProperty("--drawer-initial");
+    document.documentElement.style.setProperty("--toggle-initial", "0");
+    document.documentElement.style.setProperty("--arrow-initial", "scaleX(1)");
   }
 
   drawerToggle.addEventListener("click", () => {
     const willOpen = !drawer.classList.contains("open");
-    drawer.classList.toggle("open");
-    // Synchroniser localStorage
-    localStorage.setItem("drawerOpen", willOpen);
+    drawer.classList.toggle("open", willOpen);
+    localStorage.setItem("drawerOpen", String(willOpen));
 
-    // Mettre à jour les variables pour que le bouton reflète immédiatement l'état
     if (willOpen) {
-      document.documentElement.style.setProperty('--drawer-initial', 'translateX(0)');
-      document.documentElement.style.setProperty('--toggle-initial', '220px');
-      document.documentElement.style.setProperty('--arrow-initial', 'scaleX(-1)');
+      document.documentElement.style.setProperty("--drawer-initial", "translateX(0)");
+      document.documentElement.style.setProperty("--toggle-initial", "220px");
+      document.documentElement.style.setProperty("--arrow-initial", "scaleX(-1)");
     } else {
-      document.documentElement.style.removeProperty('--drawer-initial');
-      document.documentElement.style.setProperty('--toggle-initial', '0');
-      document.documentElement.style.setProperty('--arrow-initial', 'scaleX(1)');
+      document.documentElement.style.removeProperty("--drawer-initial");
+      document.documentElement.style.setProperty("--toggle-initial", "0");
+      document.documentElement.style.setProperty("--arrow-initial", "scaleX(1)");
     }
   });
-
-  // Gestion de la liste déroulante des CM
-  if (cmListToggle && cmListWrap) {
-    const stored = localStorage.getItem('cmListOpen');
-    const open = (stored === null) ? true : (stored === 'true');
-    if (!open) {
-      cmListWrap.classList.add('collapsed');
-      cmListToggle.setAttribute('aria-expanded', 'false');
-    } else {
-      cmListWrap.classList.remove('collapsed');
-      cmListToggle.setAttribute('aria-expanded', 'true');
-    }
-
-    cmListToggle.addEventListener('click', () => {
-      const collapsed = cmListWrap.classList.toggle('collapsed');
-      const nowOpen = !collapsed;
-      cmListToggle.setAttribute('aria-expanded', String(nowOpen));
-      localStorage.setItem('cmListOpen', String(nowOpen));
-    });
-  }
 }
 
-// ================== INIT ==================
 document.addEventListener("DOMContentLoaded", () => {
   initDrawer();
+
   pollServerState();
   setInterval(pollServerState, 1000);
 
-  // --- Contamination
   if (jauge) {
     restoreSliderFromDisplayedValue(jauge, valeur);
+    updateGauge(Number(jauge.value));
 
-    const updateCont = (doSend=false) => {
-      let raw = snap(Number(jauge.value));
-      jauge.value = raw;
-      const vTxt = updateGauge(raw, valeur, valueBox, mask, triangle, overlay);
-      if (doSend) sendValue("Contamination", vTxt);
-    };
-
-    updateCont(false);
-
-    jauge.addEventListener("input", () => {
+    jauge.addEventListener("input", (event) => {
       hasPendingContamination = true;
-      updateCont(false);
+      updateGauge(Number(event.currentTarget.value));
     });
-    jauge.addEventListener("change", () => {
+
+    jauge.addEventListener("change", (event) => {
       hasPendingContamination = true;
-      updateCont(false);
+      updateGauge(Number(event.currentTarget.value));
     });
-    enableGaugeClick(gaugeBg, jauge, () => {
+
+    enableGaugePointer(gaugeBg, jauge, (raw) => {
       hasPendingContamination = true;
-      updateCont(false);
+      updateGauge(raw);
     });
   }
 
-  // --- Bruit de Fond
-  if (jauge_bdf) {
-    restoreSliderFromDisplayedValue(jauge_bdf, valeur_bdf);
-
-    const updateBdf = (doSend=false) => {
-      let raw = snap(Number(jauge_bdf.value));
-      jauge_bdf.value = raw;
-      const vTxt = updateGauge(raw, valeur_bdf, valueBox_bdf, mask_bdf, triangle_bdf, overlay_bdf);
-      if (doSend) sendValue("Bruit de fond", vTxt);
-      return vTxt;
-    };
-
-    updateBdf(false);
-
-    jauge_bdf.addEventListener("input", () => {
-      hasPendingBdf = true;
-      updateBdf(false);
-    });
-    jauge_bdf.addEventListener("change", () => {
-      hasPendingBdf = true;
-      updateBdf(true);
-    });
-    
-    // Custom click handler pour envoyer au relâchement
-    if (gaugeBg_bdf) {
-      let isClickDragging = false;
-      
-      gaugeBg_bdf.addEventListener("pointerdown", () => {
-        isClickDragging = true;
-      });
-      
-      document.addEventListener("pointerup", () => {
-        if (isClickDragging) {
-          isClickDragging = false;
-          const raw = snap(Number(jauge_bdf.value));
-          const vTxt = formatValue(sliderToValue(raw));
-          sendValue("Bruit de fond", vTxt);
-        }
-      });
-      
-      enableGaugeClick(gaugeBg_bdf, jauge_bdf, (doSend) => {
-        updateBdf(doSend);
-      });
-    }
-  }
-
-  // --- Bouton Envoyer
   const sendBtn = document.getElementById("sendBtn");
   if (sendBtn) {
     sendBtn.addEventListener("click", () => {
-      const rawCont = snap(Number(jauge?.value || 0));
-      const vTxtCont = formatValue(sliderToValue(rawCont));
-      sendValue("Contamination", vTxtCont);
+      const contaminationRaw = snap(Number(jauge ? jauge.value : 0));
+      const contaminationText = formatValue(sliderToValue(contaminationRaw));
+      const nextStatus = currentStatus === "1" ? "0" : "1";
+
+      hasPendingContamination = true;
+      hasPendingStatus = true;
+      setStatus(nextStatus);
+
+      Promise.all([
+        sendValue("Contamination", contaminationText),
+        sendValue("Status", nextStatus),
+      ]).catch(() => {
+        // Keep optimistic local state until next server poll.
+      });
     });
   }
 
-  // --- BOUTON + POUR AJOUTER UN APPAREIL
   const addBtn = document.getElementById("id-add");
   const modal = document.getElementById("cm-modal");
   const modalClose = document.getElementById("cm-modal-close");
@@ -400,7 +386,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const updatePlaceholder = () => {
     if (!modalInput || !modalType) return;
     const type = modalType.value || "CM";
-    modalInput.placeholder = "Ex: " + type + " 3";
+    modalInput.placeholder = `Ex: ${type} 3`;
   };
 
   const setError = (message) => {
@@ -425,8 +411,8 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   if (addBtn) {
-    addBtn.addEventListener("click", (e) => {
-      e.preventDefault();
+    addBtn.addEventListener("click", (event) => {
+      event.preventDefault();
       openModal();
     });
   }
@@ -436,20 +422,24 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (modal) {
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) closeModal();
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        closeModal();
+      }
     });
   }
 
   if (modalSubmit) {
     modalSubmit.addEventListener("click", () => {
-      const name = (modalInput?.value || "").trim();
-      const type = (modalType?.value || "CM").trim();
+      const name = (modalInput && modalInput.value ? modalInput.value : "").trim();
+      const type = (modalType && modalType.value ? modalType.value : "CM").trim();
+
       if (!name) {
         setError("Le nom est obligatoire.");
-        modalInput?.focus();
+        if (modalInput) modalInput.focus();
         return;
       }
+
       setError("");
 
       const data = new FormData();
@@ -458,21 +448,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
       fetch(`${apiBase}/ajouter-appareil`, {
         method: "POST",
-        body: data
+        body: data,
       })
         .then((res) => res.json().then((json) => ({ ok: res.ok, json })))
         .then(({ ok, json }) => {
-          if (!ok || !json?.ok) {
-            setError(json?.error || "Nom invalide.");
-            modalInput?.focus();
+          if (!ok || !json || !json.ok) {
+            setError((json && json.error) || "Nom invalide.");
+            if (modalInput) modalInput.focus();
             return;
           }
+
           closeModal();
           window.location.reload();
         })
         .catch(() => {
           setError("Erreur serveur, reessaie.");
-          modalInput?.focus();
+          if (modalInput) modalInput.focus();
         });
     });
   }
@@ -486,19 +477,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (modal) {
-    modal.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        modalSubmit?.click();
+    modal.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        if (modalSubmit) modalSubmit.click();
       }
     });
   }
 
   const deleteButtons = document.querySelectorAll(".id-delete");
   deleteButtons.forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
+    btn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
       const id = btn.getAttribute("data-id");
       if (!id) return;
 
@@ -507,14 +499,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
       fetch(`${apiBase}/supprimer-appareil`, {
         method: "POST",
-        body: data
+        body: data,
       })
         .then((res) => res.json().then((json) => ({ ok: res.ok, json })))
         .then(({ ok, json }) => {
-          if (!ok || !json?.ok) {
-            alert(json?.error || "Suppression impossible.");
+          if (!ok || !json || !json.ok) {
+            alert((json && json.error) || "Suppression impossible.");
             return;
           }
+
           const deletedId = Number(id);
           if (deletedId === cmId) {
             window.location.href = `${apiBase}/1`;
@@ -528,7 +521,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeModal();
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      if (modal && modal.classList.contains("open")) {
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+      }
+    }
   });
 });

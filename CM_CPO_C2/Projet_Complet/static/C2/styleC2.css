@@ -38,6 +38,16 @@ body::before{
   transform: translate3d(0,0,0) scale(1.08);
   will-change: transform;
   animation: bg-float 40s linear infinite;
+  z-index: -2;
+}
+
+/* voile pour harmoniser la luminosite avec CM/CPO */
+body::after{
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 25, 70, 0.5);
+  pointer-events: none;
   z-index: -1;
 }
 
@@ -58,13 +68,15 @@ body > *{ position: relative; z-index: 0; }
 .c2-wrapper{
   position: relative;
   left: 50%;
-  top: 65%;
+  top: 55%;
   transform: translate(-50%, -50%);
   max-height: none;
 
   width: 1280px;
   height: 720px;
   aspect-ratio: var(--ui-ratio);
+  display: flex;
+  align-items: center;
 
   /* optionnel : si tu veux visualiser la zone letterbox */
   /*outline: 1px dashed rgba(255,255,255,.15);*/
@@ -82,6 +94,8 @@ body > *{ position: relative; z-index: 0; }
   height: 80%;
   overflow: visible;
   border-radius: var(--ui-radius);
+  align-items: center;
+  display: flex;
 }
 
 /* image de fond dans le panneau */
@@ -94,10 +108,7 @@ body > *{ position: relative; z-index: 0; }
 }
 
 /* ===== TYPO ===== */
-button{
-  color: var(--ui-text);
-  font-size: clamp(14px, 1.2vw, 22px);
-}
+
 
 /* ===== CAPTEURS =====
    Taille/épaisseur avec clamp : stable sur toutes tailles d’écran
@@ -106,12 +117,31 @@ button{
   position: absolute;
   width: 6%;
   height: 15%;
+  padding: 0;
+  margin: 0;
+  color: var(--ui-text);
+  font-size: clamp(14px, 1.2vw, 22px);
   background: rgba(255,255,255,0.10);
   border: clamp(1px, .18vw, 3px) solid rgba(255,255,255,0.40);
   border-radius: clamp(6px, .7vw, 12px);
   cursor: pointer;
   transition: background .15s, border-color .15s;
   box-shadow: 0 5px 0 3px rgba(16, 25, 47,.20);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.cap > span {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-weight: 700;
+  transform: translateY(0);
 }
 
 .cap-horizontal {
@@ -143,28 +173,36 @@ button{
   --grid-y-gap: 16%;
 }
 
-.id-btn {
-  height: 40px;
-  width: 100%;
-  padding: 0;
-  background: linear-gradient(#ffdd99, #ffb466);
-  box-shadow: 0 10px 0 5px rgba(16, 25, 47,.100);
-  border-radius: 10px;
-  border: 1px solid #c87a30;
-  font-size: 14px;
-  color: #333;
-  font-weight: 600;
-  cursor: pointer;
+.id-list {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
   align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  transition: all 0.2s ease;
 }
 
 .id-item {
   position: relative;
   width: 180px;
+}
+
+.id-btn {
+  height: 40px;
+  width: 100%;
+  padding: 0;
+  background: linear-gradient(#ffdd99, #ffb466);
+  box-shadow: 0 10px 0 5px rgba(16, 25, 47, .100);
+  border-radius: 10px;
+  border: none;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
 
 .id-delete {
@@ -173,6 +211,9 @@ button{
   right: -5px;
   width: 18px;
   height: 18px;
+  padding: 0;
+  box-sizing: border-box;
+  aspect-ratio: 1 / 1;
   border-radius: 50%;
   border: 2px solid rgba(255, 255, 255, 0.5);
   background: #b91c1c;
@@ -187,12 +228,12 @@ button{
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
 }
 
-.cm-delete-mark {
+.id-delete-mark {
   display: block;
   transform: translateY(-1px);
 }
 
-.cm-delete:hover {
+.id-delete:hover {
   filter: brightness(1.1);
 }
 
@@ -211,19 +252,6 @@ button{
   background: #ffcc66;
   font-weight: bold;
   font-size: 18px;
-}
-
-.cm-btn.active {
-  background: linear-gradient(#ffcc66, #ff9933);
-  font-weight: 700;
-}
-
-.id-list {
-    display: flex;
-    flex-direction: column;      /* ou row si tu veux en ligne */
-    gap: 10px;                   /* ← distance réglable entre les boutons */
-    align-items: center;         /* centre dans le drawer */
-    width: 100%;
 }
 
 
@@ -418,7 +446,7 @@ button{
 }
 
 /* ===== Layout interne  ===== */
-.container{
+.c2-page .container{
   display: flex;
   width: 100%;
   height: 100%;
@@ -485,7 +513,7 @@ button{
     margin: 0;
     padding: var(--ui-pad);
     width: 15%;
-    height: 20%;
+    height: 25px;
     background: radial-gradient(circle, rgb(28, 53, 98) 10%, rgb(20, 38, 79)  100%);
     border: 2px solid var(--ui-border);
     box-shadow: 0 5px 0 5px rgba(16, 25, 47, .20);
@@ -518,6 +546,12 @@ button{
   transition: transform 0.3s ease;
   z-index: 1000;
   overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.drawer::-webkit-scrollbar {
+  display: none;
 }
 
 .drawer.open {
@@ -567,7 +601,7 @@ button{
 
 @media (max-width: 1024px) {
   body {
-    overflow: visible; /* ou auto */
+    overflow: hidden;
   }
 }
 
@@ -699,7 +733,7 @@ button{
   filter: brightness(1.06);
 }
 
-.cm-modal-close {
+.c2-modal-close {
   position: absolute;
   top: 10px;
   right: 10px;

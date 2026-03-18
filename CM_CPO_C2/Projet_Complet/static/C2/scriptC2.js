@@ -1,4 +1,4 @@
-﻿﻿document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
 	if (window.__c2PageInitialized) {
 		return;
 	}
@@ -535,12 +535,12 @@ const c2Buttons = document.querySelectorAll('.id-btn[href^="/C2/"]');
 
 	// --- BOUTON + POUR AJOUTER UN APPAREIL
 	const addBtn = document.getElementById('id-add');
-	const modal = document.getElementById('cm-modal');
-	const modalClose = document.getElementById('cm-modal-close');
-	const modalSubmit = document.getElementById('cm-modal-submit');
-	const modalInput = document.getElementById('cm-modal-input');
-	const modalType = document.getElementById('cm-modal-type');
-	const modalError = document.getElementById('cm-modal-error');
+	const modal = document.getElementById('modal');
+	const modalClose = document.getElementById('modal-close');
+	const modalSubmit = document.getElementById('modal-submit');
+	const modalInput = document.getElementById('modal-input');
+	const modalType = document.getElementById('modal-type');
+	const modalError = document.getElementById('modal-error');
 
 	const updatePlaceholder = () => {
 		if (!modalInput || !modalType) return;
@@ -639,7 +639,7 @@ const c2Buttons = document.querySelectorAll('.id-btn[href^="/C2/"]');
 		});
 	}
 
-	const deleteButtons = document.querySelectorAll('.id-delete, .cm-delete');
+	const deleteButtons = document.querySelectorAll('.id-delete');
 	deleteButtons.forEach((btn) => {
 		btn.addEventListener('click', (e) => {
 			e.preventDefault();

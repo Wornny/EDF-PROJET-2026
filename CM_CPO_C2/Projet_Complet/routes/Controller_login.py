@@ -12,11 +12,11 @@ LOCK_DURATION_SECONDS = 15 * 60
 
 # Configuration MySQL
 MYSQL_CONFIG = {
-    "host": "192.168.10.3",
+    "host": "192.168.191.14",
     "user": "admin",
     "password": "superbddnormandie765",
-    "database": "creation",
-    "port": 3306
+    "database": "EDF",
+    "port": 53306
 }
 
 
@@ -52,6 +52,13 @@ def message_identifiants_invalides(remaining_attempts: int) -> str:
 def reinitialiser_tentatives_connexion() -> None:
     session.pop("login_attempts", None)
     session.pop("login_lock_until", None)
+
+
+def normaliser_role(role: str) -> str:
+    role_norm = str(role or "").strip().lower()
+    if role_norm in {"admin", "administrateur"}:
+        return "admin"
+    return "user"
 
 
 def enregistrer_tentative_echec() -> int:
@@ -121,7 +128,7 @@ def connexion():
             session["is_authenticated"] = True
             session["user_id"] = user_data.get("id")
             session["username"] = user_data.get("username")
-            session["role"] = user_data.get("role", "user")
+            session["role"] = normaliser_role(user_data.get("role", "user"))
             reinitialiser_tentatives_connexion()
             return redirect(url_for("accueil.menu"))
 

@@ -13,10 +13,10 @@
       document.documentElement.style.setProperty('--arrow-initial', 'scaleX(-1)');
     }
   </script>
-  <script defer src="{{ url_for('static', filename='CM/scriptCM.js') }}?v=2"></script>
+  <script defer src="{{ url_for('static', filename='CM/scriptCM.js') }}?v=3"></script>
 </head>
 
-<body data-cm-id="{{ cm_id }}" data-api-base="/ControllerMobile">
+<body class="cm-page" data-cm-id="{{ cm_id }}" data-api-base="/ControllerMobile">
 
 <!-- DRAWER GAUCHE -->
 <div class="drawer" id="drawer">
@@ -53,7 +53,7 @@
 <div class="tablet">
 
   <!-- ================== ZONE DROITE ================== -->
-  <div class="right-area">
+  <div class="right-area right-area-single">
 
     <!-- ===== PANEL NIVEAU CONTAMINATION ===== -->
     <div class="detector-panel">
@@ -62,7 +62,7 @@
         <span>Niveau Contamination</span>
 
         <span class="value-box value-green" id="valueBox">
-          <span id="valeur">{{ valeur_conta }}</span>
+          <span id="valeur">{{ valeur_conta }} Bq/m²</span>
         </span>
       </div>
 
@@ -104,62 +104,7 @@
           <input type="range" id="jauge" min="0" max="1000" step="1" value="0">
         </div>
 
-        <!-- bouton envoyer -->
-        <button class="send-btn" id="sendBtn" title="Envoyer les valeurs au MQTT"></button>
-      </div>
-    </div>
-
-    <!-- ✅ ===== PANEL BRUIT DE FOND (AJOUTÉ) ===== -->
-    <div class="detector-panel">
-
-      <div class="detector-title">
-        <span>Bruit de Fond</span>
-
-        <span class="value-box value-green" id="valueBox_bdf">
-          <span id="valeur_bdf">{{ valeur_bdf }}</span> 
-        </span>
-      </div>
-
-      <div class="detector-content">
-        <div class="beta-icon">β</div>
-
-        <div class="gauge-zone">
-
-          <!-- overlay triangle -->
-          <div class="gauge-overlay" id="gaugeOverlay_bdf">
-            <div class="gauge-triangle" id="gaugeTriangle_bdf"></div>
-          </div>
-
-          <!-- barre -->
-          <div class="gauge-bg" id="gaugeBg_bdf">
-            <div class="gauge-mask" id="gaugeMask_bdf"></div>
-
-            <div class="gauge-separators">
-              <span style="left:0%"></span>
-              <span style="left:20%"></span>
-              <span style="left:40%"></span>
-              <span style="left:60%"></span>
-              <span style="left:80%"></span>
-              <span style="left:100%"></span>
-            </div>
-          </div>
-
-          <!-- échelle -->
-          <div class="scale">
-            <span style="left:0%">0</span>
-            <span style="left:20%">1</span>
-            <span style="left:40%">10</span>
-            <span style="left:60%">100</span>
-            <span style="left:80%">1000</span>
-            <span style="left:100%">C/S</span>
-          </div>
-
-          <!-- slider invisible -->
-          <input type="range" id="jauge_bdf" min="0" max="1000" step="1" value="0">
-        </div>
-
-        <!-- placeholder pour aligner avec le bouton du haut -->
-        <div style="width: 76px; height: 76px;"></div>
+        <button class="send-btn" id="sendBtn" title="Envoyer la contamination + statut" aria-pressed="false"></button>
       </div>
     </div>
 

@@ -11,6 +11,6 @@ def accueil():
 @accueil_bp.route("/menu")
 def menu():
     if not session.get("is_authenticated"):
-        return redirect(url_for("login.login"))
+        return redirect(url_for("login.connexion"))
 
     return render_template("accueil/menu.html")

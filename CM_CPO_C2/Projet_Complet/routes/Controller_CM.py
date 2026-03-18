@@ -2,8 +2,8 @@ import logging
 
 from flask import Blueprint, jsonify, redirect, render_template, request, session, url_for
 from .Controller_login import require_admin_role
+from utilisation_ou_non_mqtt import USE_MQTT
 
-USE_MQTT = True  # False chez moi sans MQTT et True au lycee
 if USE_MQTT:
     import paho.mqtt.client as mqtt
 
@@ -20,12 +20,12 @@ def charger_valeurs_defaut():
 def entree_par_defaut():
     return {
         "NivContamination": "1",
-        "BruitDeFond": "0.50",
+        "Status": "0",
     }
 
 
 def charger_noms_defaut():
-    return {i: f"CM N°{i}" for i in range(1, 12)}
+    return {i: f"CM ID {i}" for i in range(1, 12)}
 
 
 def ids_triees(values) -> list[int]:
@@ -38,50 +38,44 @@ def ids_triees(values) -> list[int]:
     return sorted(values, key=cle_tri)
 
 
-BROKER_HOST = "192.168.10.3"
+BROKER_HOST = "192.168.190.38"
 BROKER_PORT = 1883
+TOPIC_CM_CONTAMINATION_WILDCARD = "FormaReaEDF/ControllerMobile/+/NivContamination"
+TOPIC_CM_STATUS_WILDCARD = "FormaReaEDF/ControllerMobile/+/Status"
 
 
 def topic_contamination(cm_id: int) -> str:
     return f"FormaReaEDF/ControllerMobile/CM_{cm_id}/NivContamination"
 
 
-def topic_bruit_fond(cm_id: int) -> str:
-    return f"FormaReaEDF/ControllerMobile/CM_{cm_id}/BruitDeFond"
+def topic_status(cm_id: int) -> str:
+    return f"FormaReaEDF/ControllerMobile/CM_{cm_id}/Status"
 
 
-def topic_ancien_contamination(cm_id: int) -> str:
+def topic_contamination_legacy(cm_id: int) -> str:
     return f"FormaReaEDF/ControllerMobile/CM_{cm_id:02d}/NivContamination"
 
 
-def topic_ancien_bruit_fond(cm_id: int) -> str:
-    return f"FormaReaEDF/ControllerMobile/CM_{cm_id:02d}/BruitDeFond"
-
-
-def nettoyer_anciens_topics_cm() -> None:
-    if not (USE_MQTT and mqtt_client):
-        return
-
-    for cm_id in range(1, 10):
-        legacy_conta = topic_ancien_contamination(cm_id)
-        legacy_bdf = topic_ancien_bruit_fond(cm_id)
-        mqtt_client.publish(legacy_conta, "", retain=True)
-        mqtt_client.publish(legacy_bdf, "", retain=True)
-        mqtt_client.unsubscribe(legacy_conta)
-        mqtt_client.unsubscribe(legacy_bdf)
+def topic_status_legacy(cm_id: int) -> str:
+    return f"FormaReaEDF/ControllerMobile/CM_{cm_id:02d}/Status"
 
 
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
 last_values = charger_valeurs_defaut()
 cm_names = charger_noms_defaut()
+deleted_cm_ids: set[int] = set()
 
 mqtt_client = None
 
 
+def ids_cm_actifs() -> list[int]:
+    return ids_triees(i for i in cm_names.keys() if i not in deleted_cm_ids)
+
+
 def nettoyer_donnees(payload: str) -> str:
     p = (payload or "").strip()
-    return p.replace("Bq/cm²", "").replace("Bq/cm²", "").strip()
+    return p.replace("Bq/m²", "").replace("Bq/cm²", "").replace("Bq", "").strip()
 
 
 def valider_nom_appareil(name: str, device_type: str):
@@ -111,30 +105,20 @@ def initialiser_mqtt_cm(cm_id: int):
     if not (USE_MQTT and mqtt_client):
         return
 
-    topic_conta = topic_contamination(cm_id)
-    topic_bdf = topic_bruit_fond(cm_id)
-    legacy_conta = topic_ancien_contamination(cm_id)
-    legacy_bdf = topic_ancien_bruit_fond(cm_id)
+    last_values[cm_id].setdefault("Status", "0")
 
-    mqtt_client.subscribe(topic_conta)
-    mqtt_client.subscribe(topic_bdf)
+    topic_conta = topic_contamination(cm_id)
+    topic_statut = topic_status(cm_id)
     mqtt_client.publish(
         topic_conta,
         f"{last_values[cm_id]['NivContamination']}",
         retain=True,
     )
     mqtt_client.publish(
-        topic_bdf,
-        f"{last_values[cm_id]['BruitDeFond']}",
+        topic_statut,
+        f"{last_values[cm_id]['Status']}",
         retain=True,
     )
-
-    if legacy_conta != topic_conta:
-        mqtt_client.publish(legacy_conta, "", retain=True)
-        mqtt_client.unsubscribe(legacy_conta)
-    if legacy_bdf != topic_bdf:
-        mqtt_client.publish(legacy_bdf, "", retain=True)
-        mqtt_client.unsubscribe(legacy_bdf)
 
 
 def deconnecter_mqtt_cm(cm_id: int):
@@ -142,21 +126,33 @@ def deconnecter_mqtt_cm(cm_id: int):
         return
 
     topic_conta = topic_contamination(cm_id)
-    topic_bdf = topic_bruit_fond(cm_id)
-    legacy_conta = topic_ancien_contamination(cm_id)
-    legacy_bdf = topic_ancien_bruit_fond(cm_id)
+    topic_statut = topic_status(cm_id)
 
     mqtt_client.publish(topic_conta, "", retain=True)
-    mqtt_client.publish(topic_bdf, "", retain=True)
-    mqtt_client.unsubscribe(topic_conta)
-    mqtt_client.unsubscribe(topic_bdf)
+    mqtt_client.publish(topic_statut, "", retain=True)
 
-    if legacy_conta != topic_conta:
-        mqtt_client.publish(legacy_conta, "", retain=True)
-        mqtt_client.unsubscribe(legacy_conta)
-    if legacy_bdf != topic_bdf:
-        mqtt_client.publish(legacy_bdf, "", retain=True)
-        mqtt_client.unsubscribe(legacy_bdf)
+
+def on_connect_mqtt_cm(client, userdata, flags, rc):
+    if rc != 0:
+        print(f"MQTT connect failed: rc={rc}")
+        return
+
+    try:
+        result_conta, _ = client.subscribe(TOPIC_CM_CONTAMINATION_WILDCARD, qos=0)
+        result_status, _ = client.subscribe(TOPIC_CM_STATUS_WILDCARD, qos=0)
+    except ValueError as exc:
+        print(f"MQTT subscribe filter error: {exc}")
+        return
+
+    if result_conta != mqtt.MQTT_ERR_SUCCESS:
+        print(f"MQTT subscribe failed for {TOPIC_CM_CONTAMINATION_WILDCARD}: {result_conta}")
+    if result_status != mqtt.MQTT_ERR_SUCCESS:
+        print(f"MQTT subscribe failed for {TOPIC_CM_STATUS_WILDCARD}: {result_status}")
+
+    # Cleanup des anciens topics zero-padded (CM_01..CM_09) pour éviter les doublons.
+    for cm_id in range(1, 10):
+        client.publish(topic_contamination_legacy(cm_id), "", retain=True)
+        client.publish(topic_status_legacy(cm_id), "", retain=True)
 
 
 def traiter_message_mqtt(client, userdata, msg):
@@ -178,6 +174,10 @@ def traiter_message_mqtt(client, userdata, msg):
         if cm_id < 1:
             return
 
+        # Ne pas recréer automatiquement un ID explicitement supprimé.
+        if cm_id in deleted_cm_ids:
+            return
+
         if cm_id not in last_values:
             last_values[cm_id] = entree_par_defaut()
         if cm_id not in cm_names:
@@ -185,22 +185,18 @@ def traiter_message_mqtt(client, userdata, msg):
 
         if "NivContamination" in msg.topic:
             last_values[cm_id]["NivContamination"] = payload
-        elif "BruitDeFond" in msg.topic:
-            last_values[cm_id]["BruitDeFond"] = payload
+        elif msg.topic.lower().endswith("/status"):
+            last_values[cm_id]["Status"] = "1" if str(payload).strip() == "1" else "0"
 
     except Exception as exc:
         print("MQTT on_message error:", exc)
 
 
 if USE_MQTT:
-    mqtt_client = mqtt.Client(client_id="IHM_ControllerMobile")
+    mqtt_client = mqtt.Client(client_id="IHM_ControllerMobile", protocol=mqtt.MQTTv311)
+    mqtt_client.on_connect = on_connect_mqtt_cm
     mqtt_client.on_message = traiter_message_mqtt
     mqtt_client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
-
-    nettoyer_anciens_topics_cm()
-
-    for cm_id in range(1, 12):
-        initialiser_mqtt_cm(cm_id)
 
     mqtt_client.loop_start()
 
@@ -215,10 +211,16 @@ def afficher_page_cm(cm_id: int):
     if cm_id < 1:
         cm_id = 1
 
+    if cm_id in deleted_cm_ids:
+        actifs = ids_cm_actifs()
+        cible = actifs[0] if actifs else 1
+        return redirect(url_for("cm.afficher_page_cm", cm_id=cible))
+
     if cm_id not in last_values:
         last_values[cm_id] = entree_par_defaut()
     if cm_id not in cm_names:
-        cm_names[cm_id] = f"CM N°{cm_id}"
+        cm_names[cm_id] = f"CM ID {cm_id}"
+    last_values[cm_id].setdefault("Status", "0")
 
     initialiser_mqtt_cm(cm_id)
 
@@ -226,9 +228,8 @@ def afficher_page_cm(cm_id: int):
         "cm/CM.html",
         cm_id=cm_id,
         valeur_conta=last_values[cm_id]["NivContamination"],
-        valeur_bdf=last_values[cm_id]["BruitDeFond"],
         cm_names=cm_names,
-        cm_ids=ids_triees(cm_names.keys()),
+        cm_ids=ids_cm_actifs(),
         role=session.get("role", "user")
     )
 
@@ -240,6 +241,7 @@ def slider(cm_id: int):
 
     if cm_id not in last_values:
         last_values[cm_id] = entree_par_defaut()
+    last_values[cm_id].setdefault("Status", "0")
 
     initialiser_mqtt_cm(cm_id)
 
@@ -252,19 +254,22 @@ def slider(cm_id: int):
 
     type_norm = (type_ or "").strip().lower()
 
-    if type_norm in ("bruit de fond", "bruitdefond"):
-        last_values[cm_id]["BruitDeFond"] = value
-        topic = topic_bruit_fond(cm_id)
-        display_type = "Bruit de fond"
+    if type_norm in ("status", "statut"):
+        normalized_status = "1" if str(value).strip() == "1" else "0"
+        last_values[cm_id]["Status"] = normalized_status
+        topic = topic_status(cm_id)
+        display_type = "Status"
+        value_to_publish = normalized_status
     else:
         last_values[cm_id]["NivContamination"] = value
         topic = topic_contamination(cm_id)
         display_type = "Contamination"
+        value_to_publish = value
 
-    print(equip, display_type, "=", value, "Bq", flush=True)
+    print(equip, display_type, "=", value_to_publish, "Bq", flush=True)
 
     if USE_MQTT and mqtt_client:
-        mqtt_client.publish(topic, f"{value}", retain=True)
+        mqtt_client.publish(topic, f"{value_to_publish}", retain=True)
 
     return "ok"
 
@@ -290,11 +295,10 @@ def ajouter_appareil():
         return jsonify(ok=False, error="ID CM invalide (1 a 99)."), 400
 
     cm_names[cm_id] = f"CM ID {cm_id}"
+    deleted_cm_ids.discard(cm_id)
     if cm_id not in last_values:
         last_values[cm_id] = entree_par_defaut()
     initialiser_mqtt_cm(cm_id)
-    if USE_MQTT and mqtt_client:
-        mqtt_client.loop(0.1)
 
     print(f"Controller Mobile N°{cm_id} a ete cree")
 
@@ -313,12 +317,35 @@ def supprimer_appareil():
     if cm_id < 1:
         return jsonify(ok=False, error="ID invalide."), 400
 
+    deleted_cm_ids.add(cm_id)
     cm_names.pop(cm_id, None)
     last_values.pop(cm_id, None)
     deconnecter_mqtt_cm(cm_id)
-    if USE_MQTT and mqtt_client:
-        mqtt_client.loop(0.1)
 
     print(f"Controller Mobile N°{cm_id} a ete supprime")
 
     return jsonify(ok=True)
+
+
+@cm_bp.route("/state/<int:cm_id>")
+def obtenir_etat(cm_id: int):
+    if cm_id < 1:
+        return jsonify(ok=False, error="ID invalide."), 400
+
+    if cm_id not in last_values:
+        last_values[cm_id] = entree_par_defaut()
+
+    entry = last_values[cm_id]
+    contamination = str(entry.get("NivContamination", "1"))
+    status = "1" if str(entry.get("Status", "0")).strip() == "1" else "0"
+
+    response = jsonify(
+        ok=True,
+        cm_id=cm_id,
+        NivContamination=contamination,
+        Status=status,
+    )
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
