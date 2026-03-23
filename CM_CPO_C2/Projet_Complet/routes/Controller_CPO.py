@@ -129,6 +129,10 @@ def on_connect_mqtt_cpo(client, userdata, flags, rc):
     for cpo_id in range(1, 10):
         client.publish(topic_contamination_legacy(cpo_id), "", retain=True)
 
+    # Publier tous les CPO actifs dès la connexion établie
+    for cpo_id in ids_cpo_actifs():
+        client.publish(topic_contamination(cpo_id), f"{last_values.get(cpo_id, entree_par_defaut())['NivContamination']}", retain=True)
+
 
 def traiter_message_mqtt(client, userdata, msg):
     try:
@@ -226,7 +230,7 @@ def traiter_jauge(cpo_id: int):
     topic = topic_contamination(cpo_id)
     display_type = "Contamination"
 
-    print(equip, display_type, "=", value, "Bq", flush=True)
+    print(equip, display_type, "=", value, "", flush=True)
 
     if USE_MQTT and mqtt_client:
         mqtt_client.publish(topic, f"{value}", retain=True)
@@ -260,7 +264,7 @@ def ajouter_appareil():
         last_values[cpo_id] = entree_par_defaut()
     initialiser_mqtt_cpo(cpo_id)
 
-    print(f"CPO ID {cpo_id} a ete cree")
+    print(f"CPO ID {cpo_id} a été créé")
 
     return jsonify(ok=True)
 
@@ -282,7 +286,7 @@ def supprimer_appareil():
     last_values.pop(cpo_id, None)
     deconnecter_mqtt_cpo(cpo_id)
 
-    print(f"CPO ID {cpo_id} a ete supprime")
+    print(f"CPO ID {cpo_id} a été supprimé")
 
     return jsonify(ok=True)
 

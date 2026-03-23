@@ -8,7 +8,7 @@ from mysql.connector import Error
 login_bp = Blueprint("login", __name__)
 
 MAX_LOGIN_ATTEMPTS = 5
-LOCK_DURATION_SECONDS = 15 * 60
+LOCK_DURATION_SECONDS = 5 * 60
 
 # Configuration MySQL
 MYSQL_CONFIG = {

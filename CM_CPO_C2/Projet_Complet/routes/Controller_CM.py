@@ -154,6 +154,12 @@ def on_connect_mqtt_cm(client, userdata, flags, rc):
         client.publish(topic_contamination_legacy(cm_id), "", retain=True)
         client.publish(topic_status_legacy(cm_id), "", retain=True)
 
+    # Publier tous les CM actifs dès la connexion établie
+    for cm_id in ids_cm_actifs():
+        entry = last_values.get(cm_id, entree_par_defaut())
+        client.publish(topic_contamination(cm_id), f"{entry['NivContamination']}", retain=True)
+        client.publish(topic_status(cm_id), f"{entry.get('Status', '0')}", retain=True)
+
 
 def traiter_message_mqtt(client, userdata, msg):
     try:
@@ -266,7 +272,7 @@ def slider(cm_id: int):
         display_type = "Contamination"
         value_to_publish = value
 
-    print(equip, display_type, "=", value_to_publish, "Bq", flush=True)
+    print(equip, display_type, "=", value_to_publish, "", flush=True)
 
     if USE_MQTT and mqtt_client:
         mqtt_client.publish(topic, f"{value_to_publish}", retain=True)
@@ -300,7 +306,7 @@ def ajouter_appareil():
         last_values[cm_id] = entree_par_defaut()
     initialiser_mqtt_cm(cm_id)
 
-    print(f"Controller Mobile N°{cm_id} a ete cree")
+    print(f"Controller Mobile N°{cm_id} a été créé")
 
     return jsonify(ok=True)
 
@@ -322,7 +328,7 @@ def supprimer_appareil():
     last_values.pop(cm_id, None)
     deconnecter_mqtt_cm(cm_id)
 
-    print(f"Controller Mobile N°{cm_id} a ete supprime")
+    print(f"Controller Mobile N°{cm_id} a été supprimé")
 
     return jsonify(ok=True)
 

@@ -13,12 +13,13 @@ let hasPendingContamination = false;
 let hasPendingStatus = false;
 let currentStatus = "0";
 
+const RAW_MAX = 10000;
 const P0 = 0;
-const P1 = 200;
-const P10 = 400;
-const P100 = 600;
-const P1000 = 800;
-const P3000 = 1000;
+const P1 = 2000;
+const P10 = 4000;
+const P100 = 6000;
+const P1000 = 8000;
+const P3000 = RAW_MAX;
 const MAX_CONTAMINATION_VALUE = 3000;
 
 const TH_GREEN = 10;
@@ -29,7 +30,7 @@ function clampRaw(value) {
   if (!Number.isFinite(numeric)) {
     return 0;
   }
-  return Math.min(1000, Math.max(0, Math.round(numeric)));
+  return Math.min(RAW_MAX, Math.max(0, Math.round(numeric)));
 }
 
 function sliderToValue(position) {
@@ -79,13 +80,7 @@ function formatValue(value) {
 }
 
 function snap(rawValue) {
-  let raw = clampRaw(rawValue);
-  if (Math.abs(raw - P1) < 3) raw = P1;
-  if (Math.abs(raw - P10) < 3) raw = P10;
-  if (Math.abs(raw - P100) < 3) raw = P100;
-  if (Math.abs(raw - P1000) < 3) raw = P1000;
-  if (Math.abs(raw - P3000) < 3) raw = P3000;
-  return raw;
+  return clampRaw(rawValue);
 }
 
 function normalizeDisplayValue(text) {
@@ -109,7 +104,7 @@ function restoreSliderFromDisplayedValue(sliderEl, valueEl) {
   let bestRaw = 0;
   let bestDiff = Number.POSITIVE_INFINITY;
 
-  for (let raw = 0; raw <= 1000; raw += 1) {
+  for (let raw = 0; raw <= RAW_MAX; raw += 1) {
     const candidate = sliderToValue(raw);
     const diff = Math.abs(candidate - target);
     if (diff < bestDiff) {
@@ -124,11 +119,11 @@ function restoreSliderFromDisplayedValue(sliderEl, valueEl) {
 function setValueBoxColor(boxEl, valueNum) {
   if (!boxEl) return;
 
-  boxEl.classList.remove("value-green", "value-orange", "value-red");
+  boxEl.classList.remove("value-green", "value-yellow", "value-orange", "value-red");
   if (valueNum < TH_GREEN) {
     boxEl.classList.add("value-green");
   } else if (valueNum < TH_ORANGE) {
-    boxEl.classList.add("value-orange");
+    boxEl.classList.add("value-yellow");
   } else {
     boxEl.classList.add("value-red");
   }
@@ -162,12 +157,12 @@ function updateGauge(rawValue) {
   const valueText = formatValue(valueNum);
 
   if (valeur) {
-    valeur.textContent = `${valueText} Bq/m²`;
+    valeur.textContent = `${valueText} Bq/cm²`;
   }
   setValueBoxColor(valueBox, valueNum);
   setGaugeTone(valueNum);
 
-  const percent = (raw / 1000) * 100;
+  const percent = (raw / RAW_MAX) * 100;
   if (mask) mask.style.width = `${100 - percent}%`;
   if (triangle) triangle.style.left = `${percent}%`;
   if (overlay) overlay.style.setProperty("--tri-left", `${percent}%`);
@@ -218,7 +213,7 @@ function sendValue(type, valueText) {
 
 function applyServerState(contamination, status) {
   if (!hasPendingContamination && typeof contamination === "string" && valeur) {
-    valeur.textContent = `${normalizeDisplayValue(contamination)} Bq/m²`;
+    valeur.textContent = `${normalizeDisplayValue(contamination)} Bq/cm²`;
     if (jauge) {
       restoreSliderFromDisplayedValue(jauge, valeur);
       updateGauge(Number(jauge.value));
@@ -266,7 +261,7 @@ function enableGaugePointer(gaugeBgEl, sliderEl, onRawChange) {
     if (rect.width <= 0) return;
 
     const ratio = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
-    onRawChange(Math.round(ratio * 1000));
+    onRawChange(Math.round(ratio * RAW_MAX));
   };
 
   const onPointerDown = (event) => {
@@ -292,6 +287,41 @@ function enableGaugePointer(gaugeBgEl, sliderEl, onRawChange) {
   window.addEventListener("pointermove", onPointerMove, { passive: false });
   window.addEventListener("pointerup", onPointerUpOrCancel);
   window.addEventListener("pointercancel", onPointerUpOrCancel);
+}
+
+function enableFineTune(sliderEl, gaugeBgEl, onRawChange) {
+  if (!sliderEl || !gaugeBgEl || typeof onRawChange !== "function") return;
+
+  const applyDelta = (deltaRaw) => {
+    const current = clampRaw(Number(sliderEl.value));
+    onRawChange(current + deltaRaw);
+  };
+
+  const onWheel = (event) => {
+    event.preventDefault();
+
+    const direction = event.deltaY < 0 ? 1 : -1;
+    const step = event.shiftKey ? 10 : 1;
+    applyDelta(direction * step);
+  };
+
+  const onKeyDown = (event) => {
+    if (event.key === "ArrowRight" || event.key === "ArrowUp") {
+      event.preventDefault();
+      applyDelta(event.shiftKey ? 10 : 1);
+      return;
+    }
+
+    if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
+      event.preventDefault();
+      applyDelta(event.shiftKey ? -10 : -1);
+      return;
+    }
+  };
+
+  gaugeBgEl.addEventListener("wheel", onWheel, { passive: false });
+  sliderEl.addEventListener("wheel", onWheel, { passive: false });
+  sliderEl.addEventListener("keydown", onKeyDown);
 }
 
 function initDrawer() {
@@ -350,6 +380,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     enableGaugePointer(gaugeBg, jauge, (raw) => {
+      hasPendingContamination = true;
+      updateGauge(raw);
+    });
+
+    enableFineTune(jauge, gaugeBg, (raw) => {
       hasPendingContamination = true;
       updateGauge(raw);
     });

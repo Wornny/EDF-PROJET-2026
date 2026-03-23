@@ -381,6 +381,7 @@ body > * {
 }
 
 .value-green { background: #22c55e; }
+.value-yellow { background: #eab308; }
 .value-orange { background: #f97316; }
 .value-red { background: #ef4444; }
 
