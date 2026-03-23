@@ -304,6 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	// clic sur les formes SVG uniquement (pas sur les rectangles)
+	// Ancien handler direct (fonctionne pour les zones dont le SVG ne déborde pas)
 	const zoneHits = document.querySelectorAll('.zone-hit[data-group]');
 	zoneHits.forEach(hit => {
 		hit.addEventListener('click', (event) => {
@@ -312,6 +313,27 @@ document.addEventListener('DOMContentLoaded', () => {
 			toggleCapteurGroup(hit.dataset.group);
 		});
 	});
+
+	// Hit-test géométrique au niveau du container : corrige les zones (buste, jambes)
+	// dont le SVG déborde visuellement du bouton mais où les clics overflow
+	// ne sont pas captés par le handler direct ci-dessus.
+	const bodyContainer = document.querySelector('.body-container');
+	if (bodyContainer) {
+		bodyContainer.addEventListener('click', function(e) {
+			const allHits = document.querySelectorAll('.zone-hit[data-group]');
+			for (const hit of allHits) {
+				const ctm = hit.getScreenCTM();
+				if (!ctm) continue;
+				const svgPt = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse());
+				if (hit.isPointInFill(svgPt)) {
+					e.preventDefault();
+					e.stopPropagation();
+					toggleCapteurGroup(hit.dataset.group);
+					return;
+				}
+			}
+		});
+	}
 
 
 	    // gestion des boutons de contrôle FACE/DOS
