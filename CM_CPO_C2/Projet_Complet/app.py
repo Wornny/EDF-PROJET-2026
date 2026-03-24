@@ -52,7 +52,8 @@ def create_app() -> Flask:
 
 if __name__ == "__main__":
     host = "0.0.0.0"
-    port = 5000
+    # Keep default port aligned with NAT rule (external 55001 -> internal 5001).
+    port = int(os.environ.get("FLASK_PORT", "5001"))
     debug = False
 
     print_startup_banner(host=host, port=port, debug=False)

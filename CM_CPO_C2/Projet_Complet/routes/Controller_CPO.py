@@ -12,7 +12,7 @@ cpo_bp = Blueprint("cpo", __name__, url_prefix="/CPO")
 
 def charger_valeurs_defaut():
     values = {}
-    for i in range(1, 12):
+    for i in range(1, 5):
         values[i] = entree_par_defaut()
     return values
 
@@ -37,7 +37,7 @@ def ids_triees(values) -> list[int]:
     return sorted(values, key=cle_tri)
 
 
-BROKER_HOST = "192.168.190.38"
+BROKER_HOST = "192.168.190.58"
 BROKER_PORT = 1883
 TOPIC_CPO_CONTAMINATION_WILDCARD = "FormaReaEDF/CPO/+/NivContamination"
 
@@ -65,7 +65,7 @@ def ids_cpo_actifs() -> list[int]:
 
 def nettoyer_donnees(payload: str) -> str:
     p = (payload or "").strip()
-    return p.replace("Bq/m²", "").replace("Bq/cm²", "").replace("Bq", "").strip()
+    return p.replace("Bq/m2", "").replace("Bq/cm2", "").replace("Bq", "").strip()
 
 
 def valider_nom_appareil(name: str, device_type: str):
@@ -125,13 +125,7 @@ def on_connect_mqtt_cpo(client, userdata, flags, rc):
     if result_conta != mqtt.MQTT_ERR_SUCCESS:
         print(f"MQTT subscribe failed for {TOPIC_CPO_CONTAMINATION_WILDCARD}: {result_conta}")
 
-    # Cleanup des anciens topics zero-padded (CPO_01..CPO_09) pour eviter les doublons.
-    for cpo_id in range(1, 10):
-        client.publish(topic_contamination_legacy(cpo_id), "", retain=True)
-
-    # Publier tous les CPO actifs dès la connexion établie
-    for cpo_id in ids_cpo_actifs():
-        client.publish(topic_contamination(cpo_id), f"{last_values.get(cpo_id, entree_par_defaut())['NivContamination']}", retain=True)
+    # Aucun publish automatique ici: on se contente de s'abonner.
 
 
 def traiter_message_mqtt(client, userdata, msg):
@@ -153,14 +147,14 @@ def traiter_message_mqtt(client, userdata, msg):
         if cpo_id < 1:
             return
 
-        # Ne pas recreer automatiquement un ID explicitement supprime.
+        # Ne pas recreer automatiquement un ID explicitement supprime ou inconnu.
         if cpo_id in deleted_cpo_ids:
+            return
+        if cpo_id not in cpo_names:
             return
 
         if cpo_id not in last_values:
             last_values[cpo_id] = entree_par_defaut()
-        if cpo_id not in cpo_names:
-            cpo_names[cpo_id] = f"CPO ID {cpo_id}"
 
         if msg.topic.lower().endswith("/nivcontamination"):
             last_values[cpo_id]["NivContamination"] = payload
@@ -198,8 +192,6 @@ def afficher_page_cpo(cpo_id: int):
     if cpo_id not in cpo_names:
         cpo_names[cpo_id] = f"CPO ID {cpo_id}"
 
-    initialiser_mqtt_cpo(cpo_id)
-
     return render_template(
         "cpo/CPO.html",
         cpo_id=cpo_id,
@@ -217,8 +209,6 @@ def traiter_jauge(cpo_id: int):
 
     if cpo_id not in last_values:
         last_values[cpo_id] = entree_par_defaut()
-
-    initialiser_mqtt_cpo(cpo_id)
 
     value = request.form.get("value")
     equip = request.form.get("equip")
@@ -264,7 +254,7 @@ def ajouter_appareil():
         last_values[cpo_id] = entree_par_defaut()
     initialiser_mqtt_cpo(cpo_id)
 
-    print(f"CPO ID {cpo_id} a été créé")
+    print(f"CPO ID {cpo_id} a ete cree")
 
     return jsonify(ok=True)
 
@@ -286,7 +276,7 @@ def supprimer_appareil():
     last_values.pop(cpo_id, None)
     deconnecter_mqtt_cpo(cpo_id)
 
-    print(f"CPO ID {cpo_id} a été supprimé")
+    print(f"CPO ID {cpo_id} a ete supprime")
 
     return jsonify(ok=True)
 

@@ -10,7 +10,7 @@ if USE_MQTT:
 
 c2_bp = Blueprint("c2", __name__, url_prefix="/C2")
 
-BROKER_HOST = "192.168.190.38"
+BROKER_HOST = "192.168.190.58"
 BROKER_PORT = 1883
 
 mqtt_client = None
@@ -250,7 +250,7 @@ def publier_capteurs_complet():
 	if not c2_id:
 		c2_id = "C2_1"
 
-	# Compatibilité double format :
+	# Compatibilite double format:
 	# 1) ancien format {"F": [...], "D": [...]} ;
 	# 2) nouveau format {"capteurs": {"FACE": {"c1": true}, "DOS": {"dos1": true}}}
 	f_list = data.get("F")
@@ -308,7 +308,7 @@ def ajouter_appareil():
 	if c2_id not in c2_values:
 		c2_values[c2_id] = entree_c2_defaut()
 
-	print(f"C2 N°{c2_id} a ete cree")
+	print(f"C2 No{c2_id} a ete cree")
 
 	return jsonify(ok=True)
 
@@ -328,7 +328,7 @@ def supprimer_appareil():
 	c2_names.pop(c2_id, None)
 	c2_values.pop(c2_id, None)
 
-	print(f"C2 N°{c2_id} a ete supprime")
+	print(f"C2 No{c2_id} a ete supprime")
 
 	return jsonify(ok=True)
 

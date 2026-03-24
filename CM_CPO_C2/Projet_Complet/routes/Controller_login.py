@@ -36,8 +36,8 @@ def formater_temps_restant(seconds: int) -> str:
 
 def message_erreur_verrou(remaining_seconds: int) -> str:
     return (
-        "Trop de tentatives échouées. "
-        f"Réessaie dans {formater_temps_restant(remaining_seconds)}."
+        "Trop de tentatives \u00e9chou\u00e9es. "
+        f"R\u00e9essaie dans {formater_temps_restant(remaining_seconds)}."
     )
 
 
@@ -90,9 +90,9 @@ def authentifier_utilisateur(username: str, password: str) -> tuple:
         if user is None:
             return False, None
 
-        # Vérifier le mot de passe (comparaison directe ou avec hachage si nécessaire)
+        # Verifier le mot de passe (comparaison directe ou avec hachage si necessaire)
         if str(user.get("password")) == password:
-            # Retourner True et le dict utilisateur avec le rôle
+            # Retourner True et le dict utilisateur avec le role
             return True, user
 
         return False, None
@@ -102,7 +102,6 @@ def authentifier_utilisateur(username: str, password: str) -> tuple:
         return False, None
 
 
-@login_bp.route("/", methods=["GET", "POST"])
 @login_bp.route("/login", methods=["GET", "POST"])
 def connexion():
     remaining = obtenir_secondes_verrou_restantes()
@@ -113,14 +112,15 @@ def connexion():
     if request.method == "POST":
         remaining = obtenir_secondes_verrou_restantes()
         if remaining > 0:
-            return render_template(
-                "login/login.html",
-                error=message_erreur_verrou(remaining),
-                locked=True,
-            )
+            session["login_error"] = message_erreur_verrou(remaining)
+            session["login_locked"] = True
+            return redirect(url_for("login.connexion"))
 
         username = request.form.get("login", "").strip()
         password = request.form.get("password", "")
+
+        if not username or not password:
+            return redirect(url_for("login.connexion"))
 
         auth_success, user_data = authentifier_utilisateur(username, password)
         
@@ -130,35 +130,37 @@ def connexion():
             session["username"] = user_data.get("username")
             session["role"] = normaliser_role(user_data.get("role", "user"))
             reinitialiser_tentatives_connexion()
+            session.pop("login_error", None)
+            session.pop("login_locked", None)
             return redirect(url_for("accueil.menu"))
 
         enregistrer_tentative_echec()
         remaining = obtenir_secondes_verrou_restantes()
         session.pop("is_authenticated", None)
         if remaining > 0:
-            return render_template(
-                "login/login.html",
-                error=message_erreur_verrou(remaining),
-                locked=True,
-            )
+            session["login_error"] = message_erreur_verrou(remaining)
+            session["login_locked"] = True
+        else:
+            remaining_attempts = max(0, MAX_LOGIN_ATTEMPTS - int(session.get("login_attempts", 0) or 0))
+            session["login_error"] = message_identifiants_invalides(remaining_attempts)
+            session["login_locked"] = False
 
-        remaining_attempts = max(0, MAX_LOGIN_ATTEMPTS - int(session.get("login_attempts", 0) or 0))
-        return render_template(
-            "login/login.html",
-            error=message_identifiants_invalides(remaining_attempts),
-            locked=False,
-        )
+        return redirect(url_for("login.connexion"))
 
-    session.pop("is_authenticated", None)
+    # If user is already authenticated, avoid showing login again.
+    if session.get("is_authenticated"):
+        return redirect(url_for("accueil.menu"))
+
+    # Recover flash-style error from session (set during POST, consumed on GET)
+    error = session.pop("login_error", None)
+    locked = session.pop("login_locked", False)
+
     remaining = obtenir_secondes_verrou_restantes()
     if remaining > 0:
-        return render_template(
-            "login/login.html",
-            error=message_erreur_verrou(remaining),
-            locked=True,
-        )
+        error = message_erreur_verrou(remaining)
+        locked = True
 
-    return render_template("login/login.html", locked=False)
+    return render_template("login/login.html", error=error, locked=locked)
 
 
 @login_bp.route("/logout")
@@ -169,19 +171,19 @@ def deconnexion():
 
 
 def is_admin():
-    """Vérifier si l'utilisateur connecté a le rôle admin"""
+    """Verifier si l'utilisateur connecte a le role admin"""
     return session.get("role") == "admin"
 
 
 def require_admin_role():
-    """Décorateur pour protéger les routes admin"""
+    """Decorateur pour proteger les routes admin"""
     from functools import wraps
     
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not session.get("is_authenticated") or not is_admin():
-                return {"error": "Permission refusée"}, 403
+                return {"error": "Permission refus\u00e9e"}, 403
             return f(*args, **kwargs)
         return decorated_function
     return decorator

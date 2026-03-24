@@ -38,7 +38,7 @@ def ids_triees(values) -> list[int]:
     return sorted(values, key=cle_tri)
 
 
-BROKER_HOST = "192.168.190.38"
+BROKER_HOST = "192.168.190.58"
 BROKER_PORT = 1883
 TOPIC_CM_CONTAMINATION_WILDCARD = "FormaReaEDF/ControllerMobile/+/NivContamination"
 TOPIC_CM_STATUS_WILDCARD = "FormaReaEDF/ControllerMobile/+/Status"
@@ -75,7 +75,7 @@ def ids_cm_actifs() -> list[int]:
 
 def nettoyer_donnees(payload: str) -> str:
     p = (payload or "").strip()
-    return p.replace("Bq/m²", "").replace("Bq/cm²", "").replace("Bq", "").strip()
+    return p.replace("Bq/m2", "").replace("Bq/cm2", "").replace("Bq", "").strip()
 
 
 def valider_nom_appareil(name: str, device_type: str):
@@ -149,16 +149,7 @@ def on_connect_mqtt_cm(client, userdata, flags, rc):
     if result_status != mqtt.MQTT_ERR_SUCCESS:
         print(f"MQTT subscribe failed for {TOPIC_CM_STATUS_WILDCARD}: {result_status}")
 
-    # Cleanup des anciens topics zero-padded (CM_01..CM_09) pour éviter les doublons.
-    for cm_id in range(1, 10):
-        client.publish(topic_contamination_legacy(cm_id), "", retain=True)
-        client.publish(topic_status_legacy(cm_id), "", retain=True)
-
-    # Publier tous les CM actifs dès la connexion établie
-    for cm_id in ids_cm_actifs():
-        entry = last_values.get(cm_id, entree_par_defaut())
-        client.publish(topic_contamination(cm_id), f"{entry['NivContamination']}", retain=True)
-        client.publish(topic_status(cm_id), f"{entry.get('Status', '0')}", retain=True)
+    # Aucun publish automatique ici: on se contente de s'abonner.
 
 
 def traiter_message_mqtt(client, userdata, msg):
@@ -180,14 +171,14 @@ def traiter_message_mqtt(client, userdata, msg):
         if cm_id < 1:
             return
 
-        # Ne pas recréer automatiquement un ID explicitement supprimé.
+        # Ne pas recreer automatiquement un ID explicitement supprime ou inconnu.
         if cm_id in deleted_cm_ids:
+            return
+        if cm_id not in cm_names:
             return
 
         if cm_id not in last_values:
             last_values[cm_id] = entree_par_defaut()
-        if cm_id not in cm_names:
-            cm_names[cm_id] = f"CM ID {cm_id}"
 
         if "NivContamination" in msg.topic:
             last_values[cm_id]["NivContamination"] = payload
@@ -228,8 +219,6 @@ def afficher_page_cm(cm_id: int):
         cm_names[cm_id] = f"CM ID {cm_id}"
     last_values[cm_id].setdefault("Status", "0")
 
-    initialiser_mqtt_cm(cm_id)
-
     return render_template(
         "cm/CM.html",
         cm_id=cm_id,
@@ -248,8 +237,6 @@ def slider(cm_id: int):
     if cm_id not in last_values:
         last_values[cm_id] = entree_par_defaut()
     last_values[cm_id].setdefault("Status", "0")
-
-    initialiser_mqtt_cm(cm_id)
 
     value = request.form.get("value")
     type_ = request.form.get("type")
@@ -306,7 +293,7 @@ def ajouter_appareil():
         last_values[cm_id] = entree_par_defaut()
     initialiser_mqtt_cm(cm_id)
 
-    print(f"Controller Mobile N°{cm_id} a été créé")
+    print(f"Controller Mobile No{cm_id} a ete cree")
 
     return jsonify(ok=True)
 
@@ -328,7 +315,7 @@ def supprimer_appareil():
     last_values.pop(cm_id, None)
     deconnecter_mqtt_cm(cm_id)
 
-    print(f"Controller Mobile N°{cm_id} a été supprimé")
+    print(f"Controller Mobile No{cm_id} a ete supprime")
 
     return jsonify(ok=True)
 
