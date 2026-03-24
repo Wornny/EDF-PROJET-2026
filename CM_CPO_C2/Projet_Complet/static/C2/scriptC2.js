@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			stateCapteurs[mode][id] = active;
 		});
 
+		updateAllZoneVisuals();
 		updateDrawer();
 	}
 
@@ -204,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
 			applyModeUI(currentMode);
+			updateAllZoneVisuals();
 
             updateDrawer();
             return true;
@@ -269,6 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             btn.classList.toggle('active');
             stateCapteurs[currentMode][id] = btn.classList.contains('active');
+            updateAllZoneVisuals();
             // persist for this station
             try { saveStateForId(C2_ID); } catch(e) {}
             publishFullState();
@@ -303,14 +306,32 @@ document.addEventListener('DOMContentLoaded', () => {
 		updateDrawer();
 	}
 
+	// Met à jour le visuel rouge de toutes les zones SVG
+	// en se basant sur l'état réel des capteurs du mode courant
+	function updateAllZoneVisuals() {
+		const GROUPS = getGroupsForMode(currentMode);
+		const state = stateCapteurs[currentMode] || {};
+		const allHits = document.querySelectorAll('.zone-hit[data-group]');
+		allHits.forEach(hit => {
+			const groupName = hit.dataset.group;
+			const capteursGroup = GROUPS[groupName] || [];
+			if (capteursGroup.length === 0) {
+				hit.classList.remove('zone-active');
+				return;
+			}
+			const allActive = capteursGroup.every(id => !!state[id]);
+			hit.classList.toggle('zone-active', allActive);
+		});
+	}
+
 	// clic sur les formes SVG uniquement (pas sur les rectangles)
-	// Ancien handler direct (fonctionne pour les zones dont le SVG ne déborde pas)
 	const zoneHits = document.querySelectorAll('.zone-hit[data-group]');
 	zoneHits.forEach(hit => {
 		hit.addEventListener('click', (event) => {
 			event.preventDefault();
 			event.stopPropagation();
 			toggleCapteurGroup(hit.dataset.group);
+			updateAllZoneVisuals();
 		});
 	});
 
@@ -329,6 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					e.preventDefault();
 					e.stopPropagation();
 					toggleCapteurGroup(hit.dataset.group);
+					updateAllZoneVisuals();
 					return;
 				}
 			}
@@ -347,6 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // basculer le mode (SANS réinitialiser l'état)
             currentMode = mode;
 			applyModeUI(currentMode);
+			updateAllZoneVisuals();
 
 
             // persist mode and send
@@ -369,6 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				btn.classList.remove('active');
 			});
 
+			updateAllZoneVisuals();
 			try { saveStateForId(C2_ID); } catch (e) {}
 			publishFullState();
 			updateDrawer();
@@ -378,6 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	// appliquer l'UI du mode courant (FACE par défaut au premier chargement)
 	applyModeUI(currentMode);
+	updateAllZoneVisuals();
 
 
     // ===== GLOBAL SCALING (one-time) =====
