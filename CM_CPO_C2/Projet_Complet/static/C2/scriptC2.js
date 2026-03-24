@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			stateCapteurs[mode][id] = active;
 		});
 
+		updateAllZoneVisuals();
 		updateDrawer();
 	}
 
@@ -204,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
 			applyModeUI(currentMode);
+			updateAllZoneVisuals();
 
             updateDrawer();
             return true;
@@ -216,8 +218,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	let lastPublishedStateSignature = null;
 
 	// envoi de l'état compact au backend (Flask -> MQTT)
-	// Format souhaité dans MQTT : { "F": [..], "D": [..] }
-	// avec uniquement les numéros des capteurs actifs, sans le "c" ou "dos".
+	// Format MQTT cible (non JSON):
+	// - FormaReaEDF/C2/C2_X/CapteursFace -> "[1; 2; 3]"
+	// - FormaReaEDF/C2/C2_X/CapteursDos  -> "[4; 5]"
 	function publishFullState() {
 		// transforme un objet { id: bool } en tableau de numéros actifs
 		const toNums = (capsById) => {
@@ -241,16 +244,14 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		lastPublishedStateSignature = signature;
 
+		const form = new FormData();
+		form.append('c2_id', C2_ID);
+		form.append('F', payloadCapteurs.F.join(';'));
+		form.append('D', payloadCapteurs.D.join(';'));
+
 		fetch('/C2/publish_capteurs_full', {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			// on envoie { c2_id, F, D } au backend,
-			// mais côté MQTT seul {F,D} sera publié.
-			body: JSON.stringify({
-				c2_id: C2_ID,
-				F: payloadCapteurs.F,
-				D: payloadCapteurs.D
-			})
+			body: form
 		}).catch(err => {
 			lastPublishedStateSignature = null;
 			console.error('Erreur fetch MQTT:', err);
@@ -270,6 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             btn.classList.toggle('active');
             stateCapteurs[currentMode][id] = btn.classList.contains('active');
+            updateAllZoneVisuals();
             // persist for this station
             try { saveStateForId(C2_ID); } catch(e) {}
             publishFullState();
@@ -277,52 +279,83 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    // clic sur une zone du corps
-    const zones = document.querySelectorAll('.body-zone');
+	function toggleCapteurGroup(groupName) {
+		const GROUPS = getGroupsForMode(currentMode);
+		const capteursGroup = GROUPS[groupName] || [];
+		if (capteursGroup.length === 0) return;
 
+		let allActive = true;
+		capteursGroup.forEach(id => {
+			const btn = document.querySelector(`.cap[data-capteur="${id}"]`);
+			if (!btn || !btn.classList.contains('active')) {
+				allActive = false;
+			}
+		});
 
-    zones.forEach(zone => {
-        zone.addEventListener('click', () => {
-            const groupName = zone.dataset.group;   // ex "tete"
-            const GROUPS = getGroupsForMode(currentMode);
-            const capteursGroup = GROUPS[groupName] || [];
+		const targetState = !allActive;
 
+		capteursGroup.forEach(id => {
+			const btn = document.querySelector(`.cap[data-capteur="${id}"]`);
+			if (!btn) return;
+			btn.classList.toggle('active', targetState);
+			stateCapteurs[currentMode][id] = targetState;
+		});
 
-            // 1) on regarde si le groupe est actuellement "tout actif"
-            let allActive = true;
-            capteursGroup.forEach(id => {
-                const btn = document.querySelector(`.cap[data-capteur="${id}"]`);
-                if (!btn || !btn.classList.contains('active')) {
-                    allActive = false;
-                }
-            });
+		try { saveStateForId(C2_ID); } catch (e) {}
+		publishFullState();
+		updateDrawer();
+	}
 
+	// Met à jour le visuel rouge de toutes les zones SVG
+	// en se basant sur l'état réel des capteurs du mode courant
+	function updateAllZoneVisuals() {
+		const GROUPS = getGroupsForMode(currentMode);
+		const state = stateCapteurs[currentMode] || {};
+		const allHits = document.querySelectorAll('.zone-hit[data-group]');
+		allHits.forEach(hit => {
+			const groupName = hit.dataset.group;
+			const capteursGroup = GROUPS[groupName] || [];
+			if (capteursGroup.length === 0) {
+				hit.classList.remove('zone-active');
+				return;
+			}
+			const allActive = capteursGroup.every(id => !!state[id]);
+			hit.classList.toggle('zone-active', allActive);
+		});
+	}
 
-            // 2) si tout est actif → on désactive tout
-            //    sinon → on active tout
-            const targetState = !allActive;
+	// clic sur les formes SVG uniquement (pas sur les rectangles)
+	const zoneHits = document.querySelectorAll('.zone-hit[data-group]');
+	zoneHits.forEach(hit => {
+		hit.addEventListener('click', (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			toggleCapteurGroup(hit.dataset.group);
+			updateAllZoneVisuals();
+		});
+	});
 
-
-            capteursGroup.forEach(id => {
-            const btn = document.querySelector(`.cap[data-capteur="${id}"]`);
-            if (!btn) return;
-
-
-            btn.classList.toggle('active', targetState);
-
-
-            // ✅ on met à jour l'état dans le bon sous-objet (FACE ou DOS)
-            stateCapteurs[currentMode][id] = targetState;
-            });
-
-
-			// persist group change for this station
-			try { saveStateForId(C2_ID); } catch(e) {}			// envoyer changement au backend (MQTT)
-			publishFullState();
-			// mettre à jour le drawer
-			updateDrawer();            // removed per-click resize to avoid shifting the layout
-        });
-    });
+	// Hit-test géométrique au niveau du container : corrige les zones (buste, jambes)
+	// dont le SVG déborde visuellement du bouton mais où les clics overflow
+	// ne sont pas captés par le handler direct ci-dessus.
+	const bodyContainer = document.querySelector('.body-container');
+	if (bodyContainer) {
+		bodyContainer.addEventListener('click', function(e) {
+			const allHits = document.querySelectorAll('.zone-hit[data-group]');
+			for (const hit of allHits) {
+				const ctm = hit.getScreenCTM();
+				if (!ctm) continue;
+				const svgPt = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse());
+				if (hit.isPointInFill(svgPt)) {
+					e.preventDefault();
+					e.stopPropagation();
+					toggleCapteurGroup(hit.dataset.group);
+					updateAllZoneVisuals();
+					return;
+				}
+			}
+		});
+	}
 
 
 	    // gestion des boutons de contrôle FACE/DOS
@@ -336,6 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // basculer le mode (SANS réinitialiser l'état)
             currentMode = mode;
 			applyModeUI(currentMode);
+			updateAllZoneVisuals();
 
 
             // persist mode and send
@@ -358,6 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				btn.classList.remove('active');
 			});
 
+			updateAllZoneVisuals();
 			try { saveStateForId(C2_ID); } catch (e) {}
 			publishFullState();
 			updateDrawer();
@@ -367,6 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	// appliquer l'UI du mode courant (FACE par défaut au premier chargement)
 	applyModeUI(currentMode);
+	updateAllZoneVisuals();
 
 
     // ===== GLOBAL SCALING (one-time) =====

@@ -12,6 +12,9 @@ c2_bp = Blueprint("c2", __name__, url_prefix="/C2")
 
 BROKER_HOST = "192.168.190.58"
 BROKER_PORT = 1883
+TOPIC_C2_CAPTEURS_LEGACY = "FormaReaEDF/C2/+/Capteurs"
+TOPIC_C2_CAPTEURS_FACE = "FormaReaEDF/C2/+/CapteursFace"
+TOPIC_C2_CAPTEURS_DOS = "FormaReaEDF/C2/+/CapteursDos"
 
 mqtt_client = None
 c2_names = {1: "C2 ID 1", 2: "C2 ID 2"}
@@ -30,6 +33,21 @@ def normaliser_liste_numerique(values):
 			continue
 
 	return sorted(set(result))
+
+
+def parser_liste_capteurs_texte(raw: str):
+	text = (raw or "").strip()
+	if not text:
+		return []
+
+	values = []
+	for token in re.findall(r"\d+", text):
+		try:
+			values.append(int(token))
+		except (TypeError, ValueError):
+			continue
+
+	return sorted(set(values))
 
 
 def extraire_ids_capteurs_numeriques(values: dict, prefix: str):
@@ -185,7 +203,9 @@ if USE_MQTT:
 
 	def connecter_mqtt(client, userdata, flags, rc):
 		try:
-			client.subscribe("FormaReaEDF/C2/+/Capteurs")
+			client.subscribe(TOPIC_C2_CAPTEURS_LEGACY)
+			client.subscribe(TOPIC_C2_CAPTEURS_FACE)
+			client.subscribe(TOPIC_C2_CAPTEURS_DOS)
 			print(f"C2 MQTT connected (rc={rc}) and subscribed", flush=True)
 		except Exception as exc:
 			print("MQTT on_connect subscribe error:", exc)
@@ -200,8 +220,19 @@ if USE_MQTT:
 				return
 
 			payload = msg.payload.decode("utf-8", errors="ignore")
-			f_values, d_values = analyser_charge_capteurs(payload)
-			c2_values[c2_id] = {"F": f_values, "D": d_values}
+			topic_suffix = parts[3].strip().lower()
+
+			if c2_id not in c2_values:
+				c2_values[c2_id] = entree_c2_defaut()
+
+			if topic_suffix == "capteursface":
+				c2_values[c2_id]["F"] = parser_liste_capteurs_texte(payload)
+			elif topic_suffix == "capteursdos":
+				c2_values[c2_id]["D"] = parser_liste_capteurs_texte(payload)
+			else:
+				# Compatibilite avec l'ancien topic unique "Capteurs".
+				f_values, d_values = analyser_charge_capteurs(payload)
+				c2_values[c2_id] = {"F": f_values, "D": d_values}
 
 			if c2_id not in c2_names:
 				c2_names[c2_id] = f"C2 ID {c2_id}"
@@ -244,46 +275,62 @@ def afficher_page_c2(c2_id: int):
 
 @c2_bp.route("/publish_capteurs_full", methods=["POST"])
 def publier_capteurs_complet():
-	data = request.get_json(silent=True) or {}
+	# Nouveau format attendu: requete non-JSON (FormData / x-www-form-urlencoded)
+	raw_c2_id = request.form.get("c2_id") or request.values.get("c2_id")
+	raw_f = request.form.get("F")
+	raw_d = request.form.get("D")
 
-	c2_id = data.get("c2_id")
-	if not c2_id:
-		c2_id = "C2_1"
+	if raw_c2_id is None and request.is_json:
+		# Compatibilite legacy JSON.
+		data = request.get_json(silent=True) or {}
+		raw_c2_id = data.get("c2_id")
 
-	# Compatibilite double format:
-	# 1) ancien format {"F": [...], "D": [...]} ;
-	# 2) nouveau format {"capteurs": {"FACE": {"c1": true}, "DOS": {"dos1": true}}}
-	f_list = data.get("F")
-	d_list = data.get("D")
+		f_list = data.get("F")
+		d_list = data.get("D")
 
-	if f_list is None or d_list is None:
-		capteurs = data.get("capteurs", {}) or {}
-		face_values = capteurs.get("FACE", {}) or {}
-		dos_values = capteurs.get("DOS", {}) or {}
+		if f_list is None or d_list is None:
+			capteurs = data.get("capteurs", {}) or {}
+			face_values = capteurs.get("FACE", {}) or {}
+			dos_values = capteurs.get("DOS", {}) or {}
 
-		f_list = extraire_ids_capteurs_numeriques(face_values, "c")
-		d_list = extraire_ids_capteurs_numeriques(dos_values, "dos")
+			f_list = extraire_ids_capteurs_numeriques(face_values, "c")
+			d_list = extraire_ids_capteurs_numeriques(dos_values, "dos")
+		else:
+			f_list = normaliser_liste_numerique(f_list)
+			d_list = normaliser_liste_numerique(d_list)
 	else:
-		f_list = normaliser_liste_numerique(f_list)
-		d_list = normaliser_liste_numerique(d_list)
+		f_list = parser_liste_capteurs_texte(raw_f)
+		d_list = parser_liste_capteurs_texte(raw_d)
 
-	c2_numeric_id = extraire_id_numerique_c2(str(c2_id))
+	c2_token_input = str(raw_c2_id or "C2_1")
+	c2_numeric_id = extraire_id_numerique_c2(c2_token_input)
+	c2_token = f"C2_{c2_numeric_id}" if c2_numeric_id is not None and c2_numeric_id >= 1 else c2_token_input
+
 	if c2_numeric_id is not None and c2_numeric_id >= 1:
 		c2_values[c2_numeric_id] = {"F": f_list, "D": d_list}
 		if c2_numeric_id not in c2_names:
 			c2_names[c2_numeric_id] = f"C2 ID {c2_numeric_id}"
 
-	topic = f"FormaReaEDF/C2/{c2_id}/Capteurs"
-	payload = json.dumps({"F": f_list, "D": d_list}, ensure_ascii=False)
+	topic_face = f"FormaReaEDF/C2/{c2_token}/CapteursFace"
+	topic_dos = f"FormaReaEDF/C2/{c2_token}/CapteursDos"
+	payload_face = formater_tableau(f_list)
+	payload_dos = formater_tableau(d_list)
 
 	if USE_MQTT and mqtt_client:
 		try:
-			mqtt_client.publish(topic, payload, qos=1, retain=True)
+			mqtt_client.publish(topic_face, payload_face, qos=1, retain=True)
+			mqtt_client.publish(topic_dos, payload_dos, qos=1, retain=True)
 		except Exception as exc:
 			print("MQTT publish error:", exc)
 			return jsonify({"status": "error", "error": "mqtt_publish_failed"}), 500
 
-	return jsonify({"status": "ok"}), 200
+	return jsonify({
+		"status": "ok",
+		"topic_face": topic_face,
+		"topic_dos": topic_dos,
+		"payload_face": payload_face,
+		"payload_dos": payload_dos,
+	}), 200
 
 
 @c2_bp.route("/ajouter-appareil", methods=["POST"])
