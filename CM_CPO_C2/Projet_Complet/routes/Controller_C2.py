@@ -10,8 +10,8 @@ if USE_MQTT:
 
 c2_bp = Blueprint("c2", __name__, url_prefix="/C2")
 
-BROKER_HOST = "192.168.190.58"
-BROKER_PORT = 1883
+BROKER_HOST = "192.168.191.14"
+BROKER_PORT = 51883
 TOPIC_C2_CAPTEURS_LEGACY = "FormaReaEDF/C2/+/Capteurs"
 TOPIC_C2_CAPTEURS_FACE = "FormaReaEDF/C2/+/CapteursFace"
 TOPIC_C2_CAPTEURS_DOS = "FormaReaEDF/C2/+/CapteursDos"
@@ -241,6 +241,7 @@ if USE_MQTT:
 
 	mqtt_client.on_connect = connecter_mqtt
 	mqtt_client.on_message = traiter_message_mqtt
+	mqtt_client.username_pw_set("client", "normandie765")
 	mqtt_client.reconnect_delay_set(min_delay=1, max_delay=30)
 	try:
 		mqtt_client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)

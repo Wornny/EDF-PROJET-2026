@@ -1,6 +1,7 @@
 import os
 import time
 
+import bcrypt
 from flask import Blueprint, redirect, render_template, request, session, url_for
 import mysql.connector
 from mysql.connector import Error
@@ -90,10 +91,16 @@ def authentifier_utilisateur(username: str, password: str) -> tuple:
         if user is None:
             return False, None
 
-        # Verifier le mot de passe (comparaison directe ou avec hachage si necessaire)
-        if str(user.get("password")) == password:
-            # Retourner True et le dict utilisateur avec le role
-            return True, user
+        # Verifier le mot de passe avec bcrypt
+        stored_password = str(user.get("password", ""))
+        if stored_password.startswith("$2b$") or stored_password.startswith("$2a$"):
+            # Mot de passe hache avec bcrypt
+            if bcrypt.checkpw(password.encode("utf-8"), stored_password.encode("utf-8")):
+                return True, user
+        else:
+            # Fallback: mot de passe en clair (ancien format)
+            if stored_password == password:
+                return True, user
 
         return False, None
 

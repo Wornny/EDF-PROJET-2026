@@ -37,8 +37,8 @@ def ids_triees(values) -> list[int]:
     return sorted(values, key=cle_tri)
 
 
-BROKER_HOST = "192.168.190.58"
-BROKER_PORT = 1883
+BROKER_HOST = "192.168.191.14"
+BROKER_PORT = 51883
 TOPIC_CPO_CONTAMINATION_WILDCARD = "FormaReaEDF/CPO/+/NivContamination"
 
 
@@ -125,7 +125,10 @@ def on_connect_mqtt_cpo(client, userdata, flags, rc):
     if result_conta != mqtt.MQTT_ERR_SUCCESS:
         print(f"MQTT subscribe failed for {TOPIC_CPO_CONTAMINATION_WILDCARD}: {result_conta}")
 
-    # Aucun publish automatique ici: on se contente de s'abonner.
+    # Publier les valeurs par defaut de tous les CPO au demarrage (une seule fois)
+    for cpo_id in list(last_values.keys()):
+        if cpo_id not in deleted_cpo_ids:
+            initialiser_mqtt_cpo(cpo_id)
 
 
 def traiter_message_mqtt(client, userdata, msg):
@@ -167,6 +170,7 @@ if USE_MQTT:
     mqtt_client = mqtt.Client(client_id="IHM_CPO", protocol=mqtt.MQTTv311)
     mqtt_client.on_connect = on_connect_mqtt_cpo
     mqtt_client.on_message = traiter_message_mqtt
+    mqtt_client.username_pw_set("client", "normandie765")
     mqtt_client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
 
     mqtt_client.loop_start()

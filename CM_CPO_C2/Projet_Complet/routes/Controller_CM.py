@@ -38,8 +38,8 @@ def ids_triees(values) -> list[int]:
     return sorted(values, key=cle_tri)
 
 
-BROKER_HOST = "192.168.190.58"
-BROKER_PORT = 1883
+BROKER_HOST = "192.168.191.14"
+BROKER_PORT = 51883
 TOPIC_CM_CONTAMINATION_WILDCARD = "FormaReaEDF/ControllerMobile/+/NivContamination"
 TOPIC_CM_STATUS_WILDCARD = "FormaReaEDF/ControllerMobile/+/Status"
 
@@ -149,7 +149,10 @@ def on_connect_mqtt_cm(client, userdata, flags, rc):
     if result_status != mqtt.MQTT_ERR_SUCCESS:
         print(f"MQTT subscribe failed for {TOPIC_CM_STATUS_WILDCARD}: {result_status}")
 
-    # Aucun publish automatique ici: on se contente de s'abonner.
+    # Publier les valeurs par defaut de tous les CM au demarrage (une seule fois)
+    for cm_id in list(last_values.keys()):
+        if cm_id not in deleted_cm_ids:
+            initialiser_mqtt_cm(cm_id)
 
 
 def traiter_message_mqtt(client, userdata, msg):
@@ -193,6 +196,7 @@ if USE_MQTT:
     mqtt_client = mqtt.Client(client_id="IHM_ControllerMobile", protocol=mqtt.MQTTv311)
     mqtt_client.on_connect = on_connect_mqtt_cm
     mqtt_client.on_message = traiter_message_mqtt
+    mqtt_client.username_pw_set("client", "normandie765")
     mqtt_client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
 
     mqtt_client.loop_start()
