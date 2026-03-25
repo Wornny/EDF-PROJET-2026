@@ -332,12 +332,14 @@ body > *{ position: relative; z-index: 0; }
 .body-img-face {
   opacity: 1;
   transition: opacity 0.3s ease;
+  transform: scale(1.19);
 }
 
 .body-img-dos {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
+  transform: scale(1.2);
 }
 
 .body-img-dos.show-mode {
@@ -394,7 +396,7 @@ body > *{ position: relative; z-index: 0; }
   stroke-width: 0;
   overflow: visible;
   display: block;
-  transform: scaleY(1.08);
+  transform: scale(1.082);
   transform-origin: center center;
 }
 
@@ -404,13 +406,12 @@ body > *{ position: relative; z-index: 0; }
 }
 
 .zone-placeholder-buste {
-  width: 100%;
-  height: 100%;
+  width: 280%;
+  height: 280%;
   fill: none;
   stroke: none;
   stroke-width: 0;
   overflow: visible;
-  transform: scaleX(0.92) scaleY(0.92);
   transform-origin: center center;
 }
 
@@ -427,6 +428,7 @@ body > *{ position: relative; z-index: 0; }
   stroke-width: 0;
   overflow: visible;
   display: block;
+  transform: scale(1.18);
 }
 
 .zone-placeholder-bras path {
@@ -442,7 +444,7 @@ body > *{ position: relative; z-index: 0; }
   stroke-width: 0;
   overflow: visible;
   display: block;
-  transform: scaleX(0.96) scaleY(0.89);
+  transform: scaleX(0.88) scaleY(0.82);
   transform-origin: center center;
 }
 
@@ -460,6 +462,7 @@ body > *{ position: relative; z-index: 0; }
   overflow: visible;
   display: block;
   transform-origin: center center;
+  transform: scaleY(1.2) scaleX(0.92);
 }
 
 .zone-placeholder-pieds path {
@@ -467,12 +470,202 @@ body > *{ position: relative; z-index: 0; }
   stroke: none;
 }
 
-/* placements */
-.zone-tete  { left: 41%; top: 11%; width: 18%; height: 10%; }
-.zone-buste { left: 34%; top: 23%; width: 32%; height: 20%; }
-.zone-jambes{ left: 34%; top: 45%; width: 32%; height: 37%; }
-.zone-bras  { left: 11%; top: 25%; width: 14%; height: 30%;transform: scaleY(0.98) scaleX(1.01); }
-.zone-pieds{ left: 34%; top: 82%; width: 32%; height: 7%; }
+/* placements HOMME */
+.zones-homme .zone-tete  { left: 41%; top: 11%; width: 18%; height: 10%; }
+.zones-homme .zone-buste { left: 34%; top: 23%; width: 32%; height: 20%; }
+.zones-homme .zone-jambes{ left: 34%; top: 45%; width: 32%; height: 37%; }
+.zones-homme .zone-bras  { left: 11%; top: 25%; width: 14%; height: 30%;transform: scaleY(0.98) scaleX(1.01); }
+.zones-homme .zone-pieds{ left: 34%; top: 82%; width: 32%; height: 7%; }
+
+/* placements FEMME */
+.zones-femme .zone-tete  { left: 38%; top: 13%; width: 24%; height: 8%; }
+.zones-femme .zone-buste { left: 28%; top: 22%; width: 44%; height: 24%; }
+.zones-femme .zone-jambes{ left: 30%; top: 48%; width: 40%; height: 33%; }
+.zones-femme .zone-bras  { left: 18%; top: 24%; width: 12%; height: 28%; }
+.zones-femme .zone-pieds { left: 30%; top: 81%; width: 40%; height: 8%; }
+
+/* placements DOS HOMME */
+.zones-homme.zones-dos .zone-tete  { left: 40%; top: 10%; width: 20%; height: 10%; }
+.zones-homme.zones-dos .zone-buste { left: 30%; top: 21%; width: 40%; height: 24%; }
+.zones-homme.zones-dos .zone-jambes{ left: 31%; top: 46%; width: 38%; height: 34%; }
+.zones-homme.zones-dos .zone-bras  { left: 12%; top: 24%; width: 76%; height: 31%; transform: none; }
+.zones-homme.zones-dos .zone-pieds { left: 30%; top: 81%; width: 40%; height: 8%; }
+
+/* placeholders DOS HOMME */
+.zones-homme.zones-dos .zone-placeholder-head {
+  width: 180%;
+  height: 180%;
+  transform: none;
+}
+.zones-homme.zones-dos .zone-placeholder-bras {
+  width: 110%;
+  height: 110%;
+  transform: scaleY(1.02);
+}
+.zones-homme.zones-dos .zone-placeholder-buste {
+  width: 145%;
+  height: 145%;
+  transform: none;
+}
+.zones-homme.zones-dos .zone-placeholder-jambes {
+  width: 145%;
+  height: 145%;
+  transform: none;
+}
+.zones-homme.zones-dos .zone-placeholder-pieds {
+  width: 85%;
+  height: 85%;
+  transform: scaleY(0.94);
+}
+
+/* placements DOS FEMME */
+.zones-femme.zones-dos .zone-tete  { left: 39%; top: 12%; width: 22%; height: 8%; }
+.zones-femme.zones-dos .zone-buste { left: 29%; top: 22%; width: 42%; height: 24%; }
+.zones-femme.zones-dos .zone-jambes{ left: 31%; top: 47%; width: 38%; height: 33%; }
+.zones-femme.zones-dos .zone-bras  { left: 16%; top: 24%; width: 68%; height: 30%; }
+.zones-femme.zones-dos .zone-pieds { left: 31%; top: 81%; width: 38%; height: 8%; }
+
+/* ===== GENDER SWITCHING ===== */
+
+/* placeholders DOS FEMME — formes simples en 0-100, tailles indépendantes du FACE */
+.zones-femme.zones-dos .zone-placeholder-head-f {
+  width: 175%;
+  height: 175%;
+  transform: none;
+}
+.zones-femme.zones-dos .zone-placeholder-bras-f {
+  width: 66%;
+  height: 66%;
+  transform: none;
+}
+.zones-femme.zones-dos .zone-placeholder-buste-f {
+  width: 130%;
+  height: 126%;
+  transform: none;
+}
+.zones-femme.zones-dos .zone-placeholder-jambes-f {
+  width: 137%;
+  height: 137%;
+  transform: scaleX(1.05);
+}
+.zones-femme.zones-dos .zone-placeholder-pieds-f {
+  width: 95%;
+  height: 115%;
+  transform: scaleY(1.12);
+}
+.hidden-gender { display: none !important; }
+.hidden-zone-mode { display: none !important; }
+
+.zones-homme,
+.zones-femme {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.zones-homme .body-zone,
+.zones-femme .body-zone {
+  pointer-events: auto;
+}
+
+/* images femme : visibilité gérée par .hidden-gender */
+.body-img-femme {
+  transform: scale(1.23);
+  transform-origin: center center;
+}
+.body-img-femme.body-img-dos {
+  transform: scale(1.6) scaleX(1.03);
+  transform-origin: center center;
+}
+
+/* zone SVG placeholders femme */
+.zone-placeholder-head-f {
+  width: 160%;
+  height: 160%;
+  fill: none;
+  stroke: none;
+  overflow: visible;
+  display: block;
+}
+.zone-placeholder-bras-f {
+  width: 495%;
+  height: 495%;
+  fill: none;
+  stroke: none;
+  overflow: visible;
+  display: block;
+}
+.zone-placeholder-buste-f {
+  width: 106%;
+  height: 106%;
+  fill: none;
+  stroke: none;
+  overflow: visible;
+  transform: scaleX(0.95) scaleY(0.95);
+  transform-origin: center center;
+}
+.zone-placeholder-jambes-f {
+  width: 140%;
+  height: 140%;
+  fill: none;
+  stroke: none;
+  overflow: visible;
+  display: block;
+  transform: scaleX(0.95) scaleY(0.92);
+  transform-origin: center center;
+}
+.zone-placeholder-pieds-f {
+  width: 85%;
+  height: 85%;
+  transform:scaleY(1.14);
+  fill: none;
+  stroke: none;
+  overflow: visible;
+  display: block;
+}
+
+/* ===== BOUTONS HOMME/FEMME ===== */
+.banner-footer {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 30px;
+  align-items: center;
+  z-index: 150;
+}
+.banner-footer .control-group {
+  position: static;
+  transform: none;
+}
+.control-btn-gender {
+  height: 50px;
+  width: 150px;
+  min-width: 150px;
+  max-width: 150px;
+  padding: 0;
+  background: linear-gradient(0deg, rgb(47, 16, 30) 0%, rgb(91, 31, 58) 100%);
+  border: 5px solid rgb(12, 2, 7);
+  box-shadow: inset 0 0 0 2.5px #2f101e, 0 5px 0 5px rgba(47, 16, 30, .20);
+  color: var(--ui-text);
+  font-weight: 750;
+  font-size: clamp(20px, 1.1vw, 18px);
+  cursor: pointer;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.control-btn-gender:hover {
+  background: linear-gradient(0deg, rgb(121, 59, 86) 0%, rgb(145, 52, 99) 100%);
+  border-color: rgb(12, 2, 7);
+}
+.control-btn-gender.active {
+  background: linear-gradient(0deg, rgb(158, 127, 143) 20%, rgb(182, 182, 182) 100%);
+  border-color: rgb(12, 2, 7);
+  box-shadow: 0 5px 0 4px rgba(47, 16, 30, .20);
+  transform: scale(1.05);
+}
 
 /* ===== BANNIÈRE HAUT ===== */
 .banner {

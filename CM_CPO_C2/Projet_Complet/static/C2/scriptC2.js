@@ -102,6 +102,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // mode actuel (FACE ou DOS)
     let currentMode = 'FACE';
 
+    // genre actuel (homme ou femme)
+    let currentGender = 'homme';
+
 
     // mapping zones du corps → liste d'ID de capteurs (FACE)
     const GROUPS_FACE = {
@@ -139,18 +142,25 @@ document.addEventListener('DOMContentLoaded', () => {
 			else cap.classList.add('hidden-mode');
 		});
 
+		// couches de zones visibles selon le mode (FACE/DOS)
+		document.querySelectorAll('.zones-face, .zones-dos').forEach(layer => {
+			const isFaceLayer = layer.classList.contains('zones-face');
+			const shouldShow = (mode === 'FACE' && isFaceLayer) || (mode === 'DOS' && !isFaceLayer);
+			layer.classList.toggle('hidden-zone-mode', !shouldShow);
+		});
+
+		// securite: cache aussi les boutons de zone hors mode
+		document.querySelectorAll('.body-zone[data-mode]').forEach(zone => {
+			zone.classList.toggle('hidden-zone-mode', zone.dataset.mode !== mode);
+		});
+
 		// image corps
-		const bodyImgFace = document.querySelector('.body-img-face');
-		const bodyImgDos = document.querySelector('.body-img-dos');
-		if (bodyImgFace && bodyImgDos) {
-			if (mode === 'FACE') {
-				bodyImgFace.classList.remove('hide-mode');
-				bodyImgDos.classList.remove('show-mode');
-			} else {
-				bodyImgFace.classList.add('hide-mode');
-				bodyImgDos.classList.add('show-mode');
-			}
-		}
+		document.querySelectorAll('.body-img-face').forEach(function(img) {
+			img.classList.toggle('hide-mode', mode !== 'FACE');
+		});
+		document.querySelectorAll('.body-img-dos').forEach(function(img) {
+			img.classList.toggle('show-mode', mode === 'DOS');
+		})
 
 		// boutons FACE/DOS
 		document.querySelectorAll('.control-btn').forEach(b => {
@@ -177,6 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const toSave = {
                 mode: currentMode,
+                gender: currentGender,
                 capteurs: stateCapteurs
             };
             localStorage.setItem(storageKey(c2Id), JSON.stringify(toSave));
@@ -195,6 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 stateCapteurs.DOS = data.capteurs.DOS || stateCapteurs.DOS;
             }
             if (data.mode) currentMode = data.mode || currentMode;
+            if (data.gender) currentGender = data.gender || currentGender;
 
             // apply to DOM
             caps.forEach(btn => {
@@ -206,6 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			applyModeUI(currentMode);
 			updateAllZoneVisuals();
+			applyGenderUI(currentGender);
 
             updateDrawer();
             return true;
@@ -313,6 +326,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		const state = stateCapteurs[currentMode] || {};
 		const allHits = document.querySelectorAll('.zone-hit[data-group]');
 		allHits.forEach(hit => {
+			const zoneButton = hit.closest('.body-zone[data-mode]');
+			if (zoneButton && zoneButton.dataset.mode !== currentMode) {
+				hit.classList.remove('zone-active');
+				return;
+			}
 			const groupName = hit.dataset.group;
 			const capteursGroup = GROUPS[groupName] || [];
 			if (capteursGroup.length === 0) {
@@ -324,10 +342,19 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
+	function isZoneHitInteractive(hit) {
+		const zoneButton = hit.closest('.body-zone');
+		if (!zoneButton) return false;
+		if (zoneButton.classList.contains('hidden-zone-mode')) return false;
+		if (zoneButton.closest('.hidden-gender')) return false;
+		return true;
+	}
+
 	// clic sur les formes SVG uniquement (pas sur les rectangles)
 	const zoneHits = document.querySelectorAll('.zone-hit[data-group]');
 	zoneHits.forEach(hit => {
 		hit.addEventListener('click', (event) => {
+			if (!isZoneHitInteractive(hit)) return;
 			event.preventDefault();
 			event.stopPropagation();
 			toggleCapteurGroup(hit.dataset.group);
@@ -343,6 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		bodyContainer.addEventListener('click', function(e) {
 			const allHits = document.querySelectorAll('.zone-hit[data-group]');
 			for (const hit of allHits) {
+				if (!isZoneHitInteractive(hit)) continue;
 				const ctm = hit.getScreenCTM();
 				if (!ctm) continue;
 				const svgPt = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse());
@@ -400,9 +428,50 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 
+
+	// ===== GESTION DU GENRE (HOMME/FEMME) =====
+	function applyGenderUI(gender) {
+		// toggle body images per gender
+		document.querySelectorAll('.body-img-homme').forEach(function(img) {
+			img.classList.toggle('hidden-gender', gender !== 'homme');
+		});
+		document.querySelectorAll('.body-img-femme').forEach(function(img) {
+			img.classList.toggle('hidden-gender', gender !== 'femme');
+		});
+
+		// toggle zone containers
+		document.querySelectorAll('.zones-homme').forEach(function(zonesH) {
+			zonesH.classList.toggle('hidden-gender', gender !== 'homme');
+		});
+		document.querySelectorAll('.zones-femme').forEach(function(zonesF) {
+			zonesF.classList.toggle('hidden-gender', gender !== 'femme');
+		});
+
+		// toggle gender buttons
+		document.querySelectorAll('.control-btn-gender').forEach(function(b) {
+			b.classList.toggle('active', b.dataset.gender === gender);
+		});
+
+		// re-apply mode UI for the new gender images
+		applyModeUI(currentMode);
+		updateAllZoneVisuals();
+	}
+
+	// gender toggle button listeners
+	var genderBtns = document.querySelectorAll('.control-btn-gender[data-gender]');
+	genderBtns.forEach(function(btn) {
+		btn.addEventListener('click', function() {
+			var gender = btn.dataset.gender;
+			if (gender === currentGender) return;
+			currentGender = gender;
+			applyGenderUI(currentGender);
+			try { saveStateForId(C2_ID); } catch(e) {}
+		});
+	});
 	// appliquer l'UI du mode courant (FACE par défaut au premier chargement)
 	applyModeUI(currentMode);
 	updateAllZoneVisuals();
+	applyGenderUI(currentGender);
 
 
     // ===== GLOBAL SCALING (one-time) =====
