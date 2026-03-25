@@ -10,8 +10,8 @@ if USE_MQTT:
 
 c2_bp = Blueprint("c2", __name__, url_prefix="/C2")
 
-BROKER_HOST = "192.168.191.14"
-BROKER_PORT = 51883
+BROKER_HOST = "192.168.190.38"
+BROKER_PORT = 1883
 TOPIC_C2_CAPTEURS_LEGACY = "FormaReaEDF/C2/+/Capteurs"
 TOPIC_C2_CAPTEURS_FACE = "FormaReaEDF/C2/+/CapteursFace"
 TOPIC_C2_CAPTEURS_DOS = "FormaReaEDF/C2/+/CapteursDos"
@@ -40,10 +40,19 @@ def parser_liste_capteurs_texte(raw: str):
 	if not text:
 		return []
 
+	# Nouveau format trame: "$01;02;...;28,00"
+	# On retire le '$' de debut puis on ne garde que la partie avant la virgule de fin.
+	if text.startswith("$"):
+		text = text[1:]
+	if "," in text:
+		text = text.split(",", 1)[0]
+
 	values = []
-	for token in re.findall(r"\d+", text):
+	for token in re.findall(r"\d+",text):
 		try:
-			values.append(int(token))
+			value = int(token)
+			if value >= 1:
+				values.append(value)
 		except (TypeError, ValueError):
 			continue
 
@@ -72,9 +81,10 @@ def extraire_ids_capteurs_numeriques(values: dict, prefix: str):
 
 def formater_tableau(values):
 	if not values:
-		return "[]"
-	joined = "; ".join(str(int(v)) for v in values)
-	return f"[{joined}]"
+		return "$00"
+
+	formatted = [f"{int(v):02d}" for v in values]
+	return f"${';'.join(formatted)};00"
 
 
 def entree_c2_defaut():
