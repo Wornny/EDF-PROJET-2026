@@ -1,5 +1,6 @@
 import re
 import json
+import random
 import uuid
 from flask import Blueprint, jsonify, redirect, render_template, request, session, url_for
 from .Controller_login import require_admin_role
@@ -15,6 +16,7 @@ BROKER_PORT = 1883
 TOPIC_C2_CAPTEURS_LEGACY = "FormaReaEDF/C2/+/Capteurs"
 TOPIC_C2_CAPTEURS_FACE = "FormaReaEDF/C2/+/CapteursFace"
 TOPIC_C2_CAPTEURS_DOS = "FormaReaEDF/C2/+/CapteursDos"
+TOPIC_C2_GENRE = "FormaReaEDF/C2/+/Genre"
 
 mqtt_client = None
 c2_names = {1: "C2 ID 1", 2: "C2 ID 2"}
@@ -87,8 +89,35 @@ def formater_tableau(values):
 	return f"${';'.join(formatted)};00"
 
 
+def normaliser_genre(value, default="M"):
+	text = str(value or "").strip().upper()
+	if text in {"M", "H", "HOMME"}:
+		return "M"
+	if text in {"F", "FEMME"}:
+		return "F"
+	return default
+
+
+def genre_ui(value):
+	return "femme" if normaliser_genre(value) == "F" else "homme"
+
+
+def genre_aleatoire():
+	return random.choice(["M", "F"])
+
+
+def garantir_genre_entry(entry):
+	if not isinstance(entry, dict):
+		entry = {"F": [], "D": []}
+
+	entry.setdefault("F", [])
+	entry.setdefault("D", [])
+	entry["genre"] = normaliser_genre(entry.get("genre"), None) or genre_aleatoire()
+	return entry
+
+
 def entree_c2_defaut():
-	return {"F": [], "D": []}
+	return garantir_genre_entry({"F": [], "D": []})
 
 
 def analyser_charge_capteurs(payload: str):
@@ -216,6 +245,7 @@ if USE_MQTT:
 			client.subscribe(TOPIC_C2_CAPTEURS_LEGACY)
 			client.subscribe(TOPIC_C2_CAPTEURS_FACE)
 			client.subscribe(TOPIC_C2_CAPTEURS_DOS)
+			client.subscribe(TOPIC_C2_GENRE)
 			print(f"C2 MQTT connected (rc={rc}) and subscribed", flush=True)
 		except Exception as exc:
 			print("MQTT on_connect subscribe error:", exc)
@@ -234,15 +264,23 @@ if USE_MQTT:
 
 			if c2_id not in c2_values:
 				c2_values[c2_id] = entree_c2_defaut()
+			else:
+				c2_values[c2_id] = garantir_genre_entry(c2_values[c2_id])
 
 			if topic_suffix == "capteursface":
 				c2_values[c2_id]["F"] = parser_liste_capteurs_texte(payload)
 			elif topic_suffix == "capteursdos":
 				c2_values[c2_id]["D"] = parser_liste_capteurs_texte(payload)
+			elif topic_suffix == "genre":
+				c2_values[c2_id]["genre"] = normaliser_genre(payload, c2_values[c2_id].get("genre", "M"))
 			else:
 				# Compatibilite avec l'ancien topic unique "Capteurs".
 				f_values, d_values = analyser_charge_capteurs(payload)
-				c2_values[c2_id] = {"F": f_values, "D": d_values}
+				c2_values[c2_id] = {
+					"F": f_values,
+					"D": d_values,
+					"genre": c2_values[c2_id].get("genre", "M"),
+				}
 
 			if c2_id not in c2_names:
 				c2_names[c2_id] = f"C2 ID {c2_id}"
@@ -274,12 +312,15 @@ def afficher_page_c2(c2_id: int):
 		c2_names[c2_id] = f"C2 ID {c2_id}"
 	if c2_id not in c2_values:
 		c2_values[c2_id] = entree_c2_defaut()
+	else:
+		c2_values[c2_id] = garantir_genre_entry(c2_values[c2_id])
 
 	return render_template(
 		"c2/C2.html",
 		c2_id=c2_id,
 		c2_names=c2_names,
 		c2_ids=sorted(c2_names.keys()),
+		current_gender=genre_ui(c2_values[c2_id].get("genre", "M")),
 		role=session.get("role", "user")
 	)
 
@@ -313,24 +354,34 @@ def publier_capteurs_complet():
 		f_list = parser_liste_capteurs_texte(raw_f)
 		d_list = parser_liste_capteurs_texte(raw_d)
 
+	raw_genre = request.form.get("genre") or request.values.get("genre")
+	if raw_genre is None and request.is_json:
+		data = request.get_json(silent=True) or {}
+		raw_genre = data.get("genre")
+
 	c2_token_input = str(raw_c2_id or "C2_1")
 	c2_numeric_id = extraire_id_numerique_c2(c2_token_input)
 	c2_token = f"C2_{c2_numeric_id}" if c2_numeric_id is not None and c2_numeric_id >= 1 else c2_token_input
+	existing_entry = c2_values.get(c2_numeric_id) if c2_numeric_id is not None and c2_numeric_id >= 1 else None
+	genre_code = normaliser_genre(raw_genre, garantir_genre_entry(existing_entry or {}).get("genre", genre_aleatoire()))
 
 	if c2_numeric_id is not None and c2_numeric_id >= 1:
-		c2_values[c2_numeric_id] = {"F": f_list, "D": d_list}
+		c2_values[c2_numeric_id] = garantir_genre_entry({"F": f_list, "D": d_list, "genre": genre_code})
 		if c2_numeric_id not in c2_names:
 			c2_names[c2_numeric_id] = f"C2 ID {c2_numeric_id}"
 
 	topic_face = f"FormaReaEDF/C2/{c2_token}/CapteursFace"
 	topic_dos = f"FormaReaEDF/C2/{c2_token}/CapteursDos"
+	topic_genre = f"FormaReaEDF/C2/{c2_token}/Genre"
 	payload_face = formater_tableau(f_list)
 	payload_dos = formater_tableau(d_list)
+	payload_genre = genre_code
 
 	if USE_MQTT and mqtt_client:
 		try:
 			mqtt_client.publish(topic_face, payload_face, qos=1, retain=True)
 			mqtt_client.publish(topic_dos, payload_dos, qos=1, retain=True)
+			mqtt_client.publish(topic_genre, payload_genre, qos=1, retain=True)
 		except Exception as exc:
 			print("MQTT publish error:", exc)
 			return jsonify({"status": "error", "error": "mqtt_publish_failed"}), 500
@@ -339,8 +390,10 @@ def publier_capteurs_complet():
 		"status": "ok",
 		"topic_face": topic_face,
 		"topic_dos": topic_dos,
+		"topic_genre": topic_genre,
 		"payload_face": payload_face,
 		"payload_dos": payload_dos,
+		"genre": payload_genre,
 	}), 200
 
 
@@ -348,11 +401,14 @@ def publier_capteurs_complet():
 @require_admin_role()
 def ajouter_appareil():
 	name = request.form.get("name", "")
-	device_type = request.form.get("type", "")
+	genre_code = normaliser_genre(request.form.get("gender"), None)
+	device_type = "C2"
 
 	ok, error = valider_nom_appareil(name, device_type)
 	if not ok:
 		return jsonify(ok=False, error=error), 400
+	if genre_code is None:
+		return jsonify(ok=False, error="Le genre est obligatoire."), 400
 
 	c2_id = extraire_id_appareil(name, device_type)
 	if c2_id is None:
@@ -363,12 +419,20 @@ def ajouter_appareil():
 		return jsonify(ok=False, error="ID C2 invalide (1 a 99)."), 400
 
 	c2_names[c2_id] = f"C2 ID {c2_id}"
-	if c2_id not in c2_values:
-		c2_values[c2_id] = entree_c2_defaut()
+	entry = garantir_genre_entry(c2_values.get(c2_id, entree_c2_defaut()))
+	entry["genre"] = genre_code
+	c2_values[c2_id] = entry
+
+	if USE_MQTT and mqtt_client:
+		try:
+			mqtt_client.publish(f"FormaReaEDF/C2/C2_{c2_id}/Genre", genre_code, qos=1, retain=True)
+		except Exception as exc:
+			print("MQTT publish error:", exc)
+			return jsonify(ok=False, error="Publication MQTT impossible."), 500
 
 	print(f"C2 No{c2_id} a ete cree")
 
-	return jsonify(ok=True)
+	return jsonify(ok=True, genre=genre_code)
 
 
 @c2_bp.route("/supprimer-appareil", methods=["POST"])
@@ -399,13 +463,16 @@ def obtenir_etat(c2_id: int):
 	entry = c2_values.get(c2_id)
 	if entry is None:
 		entry = entree_c2_defaut()
-		c2_values[c2_id] = entry
+	else:
+		entry = garantir_genre_entry(entry)
+	c2_values[c2_id] = entry
 
 	response = jsonify(
 		ok=True,
 		c2_id=f"C2_{c2_id}",
 		F=normaliser_liste_numerique(entry.get("F", [])),
 		D=normaliser_liste_numerique(entry.get("D", [])),
+		genre=normaliser_genre(entry.get("genre", "M")),
 	)
 	response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
 	response.headers["Pragma"] = "no-cache"

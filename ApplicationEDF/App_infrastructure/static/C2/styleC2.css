@@ -955,7 +955,7 @@ body > *{ position: relative; z-index: 0; }
   transform: scaleX(-1);
 }
 
-.cm-modal {
+.c2-modal {
   position: fixed;
   inset: 0;
   display: none;
@@ -965,11 +965,11 @@ body > *{ position: relative; z-index: 0; }
   z-index: 1500;
 }
 
-.cm-modal.open {
+.c2-modal.open {
   display: flex;
 }
 
-.cm-modal-card {
+.c2-modal-card {
   width: min(460px, 92vw);
   background: linear-gradient(#0b4a85, #07335e);
   border: 2px solid rgba(127, 134, 158, 0.45);
@@ -979,7 +979,7 @@ body > *{ position: relative; z-index: 0; }
   position: relative;
 }
 
-.cm-modal-title {
+.c2-modal-title {
   margin: 6px 0 14px;
   text-align: center;
   font-size: 18px;
@@ -988,20 +988,20 @@ body > *{ position: relative; z-index: 0; }
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
 }
 
-.cm-modal-row {
+.c2-modal-row {
   display: grid;
   grid-template-columns: 1fr;
   gap: 8px;
   margin-bottom: 12px;
 }
 
-.cm-modal-label {
+.c2-modal-label {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.92);
 }
 
-.cm-modal-input,
-.cm-modal-select {
+.c2-modal-input,
+.c2-modal-select {
   width: 100%;
   height: 40px;
   border-radius: 8px;
@@ -1013,17 +1013,17 @@ body > *{ position: relative; z-index: 0; }
   box-sizing: border-box;
 }
 
-.cm-modal-input::placeholder {
+.c2-modal-input::placeholder {
   color: rgba(255, 255, 255, 0.55);
 }
 
-.cm-modal-error {
+.c2-modal-error {
   min-height: 18px;
   color: #ffb4b4;
   font-size: 13px;
 }
 
-.cm-modal-submit {
+.c2-modal-submit {
   width: 100%;
   height: 42px;
   border-radius: 10px;
@@ -1035,7 +1035,7 @@ body > *{ position: relative; z-index: 0; }
   box-shadow: 0 8px 0 3px rgba(16, 25, 47, .14);
 }
 
-.cm-modal-submit:hover {
+.c2-modal-submit:hover {
   filter: brightness(1.06);
 }
 

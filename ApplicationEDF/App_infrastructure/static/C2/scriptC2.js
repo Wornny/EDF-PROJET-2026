@@ -7,6 +7,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let C2_ID = document.body.dataset.c2Id || 'C2_1';
 	const apiBase = '/C2';
 
+	function normalizeGenderValue(value) {
+		const raw = String(value || '').trim().toLowerCase();
+		if (raw === 'f' || raw === 'femme') return 'femme';
+		return 'homme';
+	}
+
+	function normalizeGenderCode(value) {
+		return normalizeGenderValue(value) === 'femme' ? 'F' : 'M';
+	}
+
 	function formatC2DisplayId(value) {
 		const n = extractC2NumericId(value);
 		if (!Number.isFinite(n) || n < 1) return '1';
@@ -29,9 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		return Number.isFinite(n) ? n : 1;
 	}
 
-	function applyServerCapteursState(fValues, dValues) {
+	function applyServerCapteursState(fValues, dValues, genderCode) {
 		const setF = new Set((fValues || []).map(v => Number(v)).filter(Number.isFinite));
 		const setD = new Set((dValues || []).map(v => Number(v)).filter(Number.isFinite));
+		currentGender = normalizeGenderValue(genderCode || currentGender);
 
 		caps.forEach(btn => {
 			const id = btn.dataset.capteur;
@@ -46,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			stateCapteurs[mode][id] = active;
 		});
 
+		applyGenderUI(currentGender);
 		updateAllZoneVisuals();
 		updateDrawer();
 	}
@@ -68,15 +80,17 @@ document.addEventListener('DOMContentLoaded', () => {
 				const nextC2Id = `C2_${normalizedDisplay}`;
 				const fList = Array.isArray(json.F) ? json.F : [];
 				const dList = Array.isArray(json.D) ? json.D : [];
-				const signature = `${nextC2Id}|${fList.join(',')}|${dList.join(',')}`;
+				const genderCode = normalizeGenderCode(json.genre || document.body.dataset.c2Gender);
+				const signature = `${nextC2Id}|${fList.join(',')}|${dList.join(',')}|${genderCode}`;
 
 				if (signature === lastServerSignature) return;
 				lastServerSignature = signature;
 
 				C2_ID = nextC2Id;
+				document.body.dataset.c2Gender = normalizeGenderValue(genderCode);
 				const banner = document.querySelector('.c2-id-display');
 				if (banner) banner.textContent = `C2 Id : ${normalizedDisplay}`;
-				applyServerCapteursState(fList, dList);
+				applyServerCapteursState(fList, dList, genderCode);
 			})
 			.catch(() => {});
 	}
@@ -103,26 +117,26 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentMode = 'FACE';
 
     // genre actuel (homme ou femme)
-    let currentGender = 'homme';
+	let currentGender = normalizeGenderValue(document.body.dataset.c2Gender || 'homme');
 
 
     // mapping zones du corps → liste d'ID de capteurs (FACE)
     const GROUPS_FACE = {
-        tete:  ['c1', 'c2', 'c3','c25','c28'],
-        buste: ['c4', 'c5', 'c6', 'c7', 'c8', 'c9','c16','c26'],
-        jambes:['c10', 'c11', 'c12', 'c13', 'c14', 'c15','c17', 'c18','c27'],
-        bras: ['c19', 'c20', 'c21'],
-		pieds: ['c22', 'c23', 'c24']
+        tete:  ['c15', 'c16', 'c17','c24','c27'],
+        buste: ['c9', 'c10', 'c11', 'c12', 'c13', 'c14','c18','c28'],
+        jambes:['c3', 'c4', 'c5', 'c6', 'c7', 'c8','c19', 'c20','c29'],
+        bras: ['c21', 'c22', 'c23'],
+		pieds: ['c1', 'c2', 'c25']
     };
 
 
     // mapping zones du corps → liste d'ID de capteurs (DOS)
     const GROUPS_DOS = {
-        tete:  ['dos1', 'dos2', 'dos3','dos25','dos28'],
-        buste: ['dos4', 'dos5', 'dos6', 'dos7', 'dos8', 'dos9','dos16','dos26'],
-        jambes:['dos10', 'dos11', 'dos12', 'dos13', 'dos14', 'dos15', 'dos17', 'dos18','dos27'],
-        bras: ['dos19', 'dos20', 'dos21'],
-		pieds: ['dos22', 'dos23', 'dos24']
+        tete:  ['dos15', 'dos16', 'dos17','dos24','dos27'],
+        buste: ['dos9', 'dos10', 'dos11', 'dos12', 'dos13', 'dos14','dos18','dos28'],
+        jambes:['dos3', 'dos4', 'dos5', 'dos6', 'dos7', 'dos8','dos19', 'dos20','dos29'],
+        bras: ['dos21', 'dos22', 'dos23'],
+		pieds: ['dos1', 'dos2', 'dos25']
     };
 
 
@@ -250,8 +264,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			F: toNums(stateCapteurs.FACE),
 			D: toNums(stateCapteurs.DOS)
 		};
+		const genderCode = normalizeGenderCode(currentGender);
 
-		const signature = `${C2_ID}|${payloadCapteurs.F.join(',')}|${payloadCapteurs.D.join(',')}`;
+		const signature = `${C2_ID}|${payloadCapteurs.F.join(',')}|${payloadCapteurs.D.join(',')}|${genderCode}`;
 		if (signature === lastPublishedStateSignature) {
 			return;
 		}
@@ -261,6 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		form.append('c2_id', C2_ID);
 		form.append('F', payloadCapteurs.F.join(';'));
 		form.append('D', payloadCapteurs.D.join(';'));
+		form.append('genre', genderCode);
 
 		fetch('/C2/publish_capteurs_full', {
 			method: 'POST',
@@ -431,6 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	// ===== GESTION DU GENRE (HOMME/FEMME) =====
 	function applyGenderUI(gender) {
+		document.body.dataset.c2Gender = normalizeGenderValue(gender);
 		// toggle body images per gender
 		document.querySelectorAll('.body-img-homme').forEach(function(img) {
 			img.classList.toggle('hidden-gender', gender !== 'homme');
@@ -447,27 +464,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			zonesF.classList.toggle('hidden-gender', gender !== 'femme');
 		});
 
-		// toggle gender buttons
-		document.querySelectorAll('.control-btn-gender').forEach(function(b) {
-			b.classList.toggle('active', b.dataset.gender === gender);
-		});
-
 		// re-apply mode UI for the new gender images
 		applyModeUI(currentMode);
 		updateAllZoneVisuals();
 	}
-
-	// gender toggle button listeners
-	var genderBtns = document.querySelectorAll('.control-btn-gender[data-gender]');
-	genderBtns.forEach(function(btn) {
-		btn.addEventListener('click', function() {
-			var gender = btn.dataset.gender;
-			if (gender === currentGender) return;
-			currentGender = gender;
-			applyGenderUI(currentGender);
-			try { saveStateForId(C2_ID); } catch(e) {}
-		});
-	});
 	// appliquer l'UI du mode courant (FACE par défaut au premier chargement)
 	applyModeUI(currentMode);
 	updateAllZoneVisuals();
@@ -640,18 +640,20 @@ const c2Buttons = document.querySelectorAll('.id-btn[href^="/C2/"]');
 
 	// --- BOUTON + POUR AJOUTER UN APPAREIL
 	const addBtn = document.getElementById('id-add');
-	const modal = document.getElementById('modal');
-	const modalClose = document.getElementById('modal-close');
-	const modalSubmit = document.getElementById('modal-submit');
-	const modalInput = document.getElementById('modal-input');
-	const modalType = document.getElementById('modal-type');
-	const modalError = document.getElementById('modal-error');
-
-	const updatePlaceholder = () => {
-		if (!modalInput || !modalType) return;
-		const type = modalType.value || 'C2';
-		modalInput.placeholder = 'Ex: ' + type + ' 3';
+	const pick = (...selectors) => {
+		for (const selector of selectors) {
+			const el = document.querySelector(selector);
+			if (el) return el;
+		}
+		return null;
 	};
+
+	const modal = pick('#c2-modal', '#modal', '.c2-modal');
+	const modalClose = pick('#c2-modal-close', '#modal-close', '.c2-modal-close');
+	const modalSubmit = pick('#c2-modal-submit', '#modal-submit', '.c2-modal-submit');
+	const modalInput = pick('#c2-modal-input', '#modal-input', '.c2-modal-input');
+	const modalGender = pick('#c2-modal-gender', '#modal-gender', '.c2-modal-select');
+	const modalError = pick('#c2-modal-error', '#modal-error', '.c2-modal-error');
 
 	const setError = (message) => {
 		if (!modalError) return;
@@ -663,8 +665,8 @@ const c2Buttons = document.querySelectorAll('.id-btn[href^="/C2/"]');
 		modal.classList.add('open');
 		modal.setAttribute('aria-hidden', 'false');
 		modalInput.value = '';
+		if (modalGender) modalGender.value = currentGender;
 		setError('');
-		updatePlaceholder();
 		modalInput.focus();
 	};
 
@@ -681,6 +683,10 @@ const c2Buttons = document.querySelectorAll('.id-btn[href^="/C2/"]');
 		});
 	}
 
+	if (addBtn && (!modal || !modalInput || !modalSubmit || !modalGender)) {
+		console.warn('Modal C2 introuvable ou incomplet: verifie les ids/classes c2-modal*');
+	}
+
 	if (modalClose) {
 		modalClose.addEventListener('click', closeModal);
 	}
@@ -694,7 +700,7 @@ const c2Buttons = document.querySelectorAll('.id-btn[href^="/C2/"]');
 	if (modalSubmit) {
 		modalSubmit.addEventListener('click', () => {
 			const name = (modalInput?.value || '').trim();
-			const type = (modalType?.value || 'C2').trim();
+			const gender = normalizeGenderValue(modalGender?.value || 'homme');
 			if (!name) {
 				setError('Le nom est obligatoire.');
 				modalInput?.focus();
@@ -704,16 +710,28 @@ const c2Buttons = document.querySelectorAll('.id-btn[href^="/C2/"]');
 
 			const data = new FormData();
 			data.append('name', name);
-			data.append('type', type);
+			data.append('gender', normalizeGenderCode(gender));
 
 			fetch(`${apiBase}/ajouter-appareil`, {
 				method: 'POST',
 				body: data
 			})
-				.then((res) => res.json().then((json) => ({ ok: res.ok, json })))
-				.then(({ ok, json }) => {
+				.then(async (res) => {
+					let json = null;
+					try {
+						json = await res.json();
+					} catch (_) {
+						json = null;
+					}
+					return { ok: res.ok, status: res.status, json };
+				})
+				.then(({ ok, status, json }) => {
 					if (!ok || !json?.ok) {
-						setError(json?.error || 'Nom invalide.');
+						if (status === 401 || status === 403) {
+							setError('Droits admin requis ou session expiree.');
+						} else {
+							setError(json?.error || 'Requete refusee, verifie le nom.');
+						}
 						modalInput?.focus();
 						return;
 					}
@@ -725,10 +743,6 @@ const c2Buttons = document.querySelectorAll('.id-btn[href^="/C2/"]');
 					modalInput?.focus();
 				});
 		});
-	}
-
-	if (modalType) {
-		modalType.addEventListener('change', updatePlaceholder);
 	}
 
 	if (modalInput) {
