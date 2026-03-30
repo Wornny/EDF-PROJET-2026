@@ -1,0 +1,41 @@
+blinker==1.9.0
+click==8.3.1
+colorama==0.4.6
+Flask==3.1.2
+itsdangerous==2.2.0
+Jinja2==3.1.6
+MarkupSafe==3.0.3
+paho-mqtt==2.1.0
+Werkzeug==3.1.5
+mysql-connector-python==8.0.33
+bcrypt==4.2.1
+
+
+# ==============================
+# COMMANDES MANUELLES (anciennes, plus necessaires grace au service systemd)
+# ==============================
+# su -                                              # Passer en root
+# cd /home/utilisateur/EDF-Projet/web/app/          # Aller dans le dossier de l'app
+# python3 -m venv venv                              # Creer le venv
+# source venv/bin/activate                          # Activer le venv
+# python3 app.py                                    # Lancer l'app
+
+
+
+# ==============================
+# INSTALLATION DU SERVICE (a faire une seule fois)
+# ==============================
+# su -
+# chmod +x /home/utilisateur/EDF-Projet/web/app/start.sh
+# cp /home/utilisateur/EDF-Projet/web/app/edf-flask.service /etc/systemd/system/
+# systemctl enable edf.service
+# systemctl start edf.service
+
+
+
+# ==============================
+# GESTION AU QUOTIDIEN
+# ==============================
+# systemctl status edf                        # Voir si l'app tourne
+# systemctl restart edf                      # Redemarrer l'app
+# systemctl stop edf                   # Arreter l'app

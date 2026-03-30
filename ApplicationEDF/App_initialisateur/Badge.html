@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Badge</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="css/badge.css">
+</head>
+<body>
+<!-- Bouton retour -->
+<button class="back" id="backBadge" aria-label="Retour">←</button>
+
+<div class="container">
+  <h1>Badge</h1>
+
+  <button id="fullscreenBtn" onclick="toggleFullscreen()">Plein écran</button>
+
+  <select id="badgeSelect" onchange="loadSelectedbadge()">
+    <option value="">-- Sélectionner un badge --</option>
+  </select>
+
+  <div class="switch-container">
+    <label>
+      Formation valide
+      <div class="switch">
+        <input type="checkbox" id="formationCheck" disabled>
+        <span class="slider"></span>
+      </div>
+    </label>
+
+    <input type="text" id="display" placeholder="Numéro de badge">
+
+    <label>
+      Visite médicale valide
+      <div class="switch">
+        <input type="checkbox" id="visiteCheck" disabled>
+        <span class="slider"></span>
+      </div>
+    </label>
+  </div>
+
+  <div class="main-zone">
+    <div class="keypad">
+      <button onclick="addNumber('1')">1</button>
+      <button onclick="addNumber('2')">2</button>
+      <button onclick="addNumber('3')">3</button>
+      <button onclick="addNumber('4')">4</button>
+      <button onclick="addNumber('5')">5</button>
+      <button onclick="addNumber('6')">6</button>
+      <button onclick="addNumber('7')">7</button>
+      <button onclick="addNumber('8')">8</button>
+      <button onclick="addNumber('9')">9</button>
+      <button onclick="clearDisplay()">⌫</button>
+      <button onclick="addNumber('0')">0</button>
+    </div>
+
+    <div class="action-buttons">
+      <button id="searchbtn"    class="search-btn"   onclick="searchbadge()">Rechercher</button>
+      <button id="savebtn"      class="savebtn"       onclick="savebadge()">Enregistrer</button>
+      <button id="deletebtn"    class="deletebtn"     onclick="deletebadge()">Supprimer</button>
+      <button id="deleteallbtn" class="deleteallbtn"  onclick="deleteallbadges()">Supprimer tous les badges</button>
+    </div>
+  </div>
+
+  <p id="result"></p>
+</div>
+<!-- POPUP CONFIRM -->
+<div id="customConfirm">
+  <div class="confirm-box">
+    <div id="confirmMsg"></div>
+    <div class="confirm-row">
+      <button class="btn-non" id="confirmNon">Non</button>
+      <button class="btn-oui" id="confirmOui">Oui</button>
+    </div>
+  </div>
+</div>
+<script src="js/badge.js"></script>
+</body>
+</html>

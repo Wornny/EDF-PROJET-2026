@@ -1,0 +1,132 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: url("../images/Background.png") center/cover no-repeat;
+    background-size: cover;
+    background-position: center;
+    overflow: auto;
+  }
+  body.fullscreen { overflow: hidden; height: 100vh; width: 100vw; }
+
+  .container {
+    width: 90%; max-width: 900px; margin: auto;
+    background: rgba(255,255,255,0.9);
+    border-radius: 30px; padding: 20px;
+    text-align: center; height: auto;
+  }
+
+  body.fullscreen .keypad { grid-template-columns: repeat(3,70px); gap: 15px; }
+  body.fullscreen .keypad button { width: 70px; height: 70px; font-size: 25px; }
+  body.fullscreen .action-buttons { gap: 10px; }
+  body.fullscreen .action-buttons button { width: 180px; height: 70px; font-size: 18px; }
+
+  h1 { margin: 0; font-size: 42px; font-weight: bold; color: #222; }
+  body.fullscreen h1 { font-size: 32px; }
+
+  #fullscreenBtn {
+    margin-top: 20px; padding: 10px 20px; font-size: 18px;
+    background-color: #4CAF50; color: white;
+    border: none; border-radius: 8px; cursor: pointer;
+  }
+  #fullscreenBtn:hover { background-color: #45a049; }
+
+  select { margin-top: 40px; padding: 12px; font-size: 18px; border-radius: 8px; border: none; }
+
+  .switch-container {
+    display: flex; justify-content: space-around;
+    width: 100%; margin-top: 20px;
+  }
+  label { font-size: 22px; font-weight: bold; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+  .switch { position: relative; width: 90px; height: 50px; }
+  .switch input { display: none; }
+  .slider { position: absolute; inset: 0; background-color: #bbb; border-radius: 50px; transition: 0.3s; }
+  .slider:before {
+    content: ""; position: absolute;
+    width: 38px; height: 38px; left: 6px; top: 6px;
+    background: white; border-radius: 50%; transition: 0.3s;
+  }
+  input:checked + .slider { background-color: #4CAF50; }
+  input:checked + .slider:before { left: calc(100% - 44px); }
+  input:disabled + .slider { background-color: #999; }
+
+  #display {
+    margin: 20px auto; padding: 12px; width: 240px;
+    font-size: 24px; text-align: center;
+    border-radius: 12px; border: 1px solid #ccc;
+  }
+
+  .main-zone { display: flex; justify-content: center; align-items: center; gap: 40px; margin-top: 10px; }
+
+  .keypad { display: grid; grid-template-columns: repeat(3,80px); gap: 20px; }
+  .keypad button {
+    width: 80px; height: 80px; font-size: 30px; font-weight: bold;
+    border-radius: 15px; border: 2px solid black; background: white;
+  }
+
+  .action-buttons { display: flex; flex-direction: column; gap: 15px; }
+  .action-buttons button {
+    width: 200px; height: 80px; font-size: 20px; font-weight: bold;
+    border-radius: 15px; border: none;
+  }
+
+  .search-btn  { background: #1e73e8; color: white; }
+  .savebtn     { background: #18a118; color: white; }
+  .deletebtn   { background: #FF2C2C; color: white; }
+  .deleteallbtn{ background: #FF7518; color: white; }
+
+  .back {
+    position: fixed; left: 18px; bottom: 18px;
+    width: 110px; height: 110px; border-radius: 50%;
+    background: rgba(220,220,220,0.92); border: 2px solid #ccc;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.2); color: #4aa3ff;
+    display: grid; place-items: center;
+    font-size: 62px; font-weight: 900; z-index: 50; cursor: pointer;
+  }
+  .back:hover { background: rgba(200,200,200,1); }
+
+  button:disabled { background: #bbb !important; cursor: not-allowed; }
+
+  #result { font-size: 18px; font-weight: bold; min-height: 24px; }
+  body.fullscreen #result { font-size: 24px; color: #000; }
+
+  /* ===== POPUP CONFIRM ===== */
+  #customConfirm {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: none; place-items: center;
+    z-index: 999999;
+  }
+  #customConfirm.show { display: grid; }
+  #customConfirm .confirm-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 36px 48px;
+    text-align: center;
+    font-size: 26px;
+    font-weight: 700;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 320px;
+  }
+  #customConfirm .confirm-row {
+    display: flex; gap: 16px; justify-content: center;
+  }
+  #customConfirm .btn-oui {
+    background: #FF7518; color: white;
+    font-weight: 900; font-size: 22px;
+    border: none; border-radius: 8px;
+    padding: 14px 40px; cursor: pointer;
+  }
+  #customConfirm .btn-non {
+    background: #555; color: white;
+    font-weight: 900; font-size: 22px;
+    border: none; border-radius: 8px;
+    padding: 14px 40px; cursor: pointer;
+  }

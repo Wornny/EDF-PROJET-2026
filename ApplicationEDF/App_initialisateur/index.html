@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <link rel="preload" as="image" href="images/Background.png">
+  <link rel="preload" as="image" href="images/Remmetre a zero.png">
+  <link rel="preload" as="image" href="images/Ouvrir barrièes.png">
+  <link rel="preload" as="image" href="images/définir scénario.png">
+  <link rel="icon" type="image/png" href="images/EDF.jpg">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/styles.css">
+  <meta name="theme-color" content="#4aa3ff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Initialisateur</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
+  <style>
+  </style>
+</head>
+<body>
+
+  <!-- ======================================= BOUTON PLEIN ECRAN ======================================= -->
+  <div id="topControls" aria-label="Navigation rapide">
+    <button id="btnFS" aria-label="Plein écran">⛶ Plein écran</button>
+    <a id="btnHome" href="/menu" title="Accueil" aria-label="Accueil">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M3 10.5L12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5v-9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="M9 20v-6h6v6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+      </svg>
+    </a>
+  </div>
+  <!-- ======================================= PAGE : ACCUEIL ======================================= -->
+   
+  <div id="page-index" class="page active">
+    <section class="panel" aria-label="Menu initialisateur">
+      <div class="topbar" role="group" aria-label="Choisir initialisateur">
+        <div class="select-wrap">
+          <select id="initSelect">
+            <option value="">Choisir initialisateur</option>
+            <option value="initialisateur1">Initialisateur 1</option>
+            <option value="initialisateur2">Initialisateur 2</option>
+          </select>
+        </div>
+        <button class="plus" type="button" aria-label="Ajouter">+</button>
+      </div>
+      <div class="actions">
+        <button class="action-btn" type="button" id="btnReset">
+          <div class="tile"><img src="images/Remmetre a zero.png" alt="Remettre les étapes à 0" width="200" height="200" fetchpriority="high" decoding="async" /></div>
+          <div class="label">Remettre les étapes à 0</div>
+        </button>
+        <button class="action-btn" type="button" id="btnBarrier">
+          <div class="tile"><img id="barrierImg" src="images/Ouvrir barrièes.png" alt="Barrière" width="200" height="200" fetchpriority="high" decoding="async" /></div>
+          <div class="label" id="barrierLabel">Ouvrir la barrière</div>
+        </button>
+        <button class="action-btn" type="button" id="btnScenario">
+          <div class="tile"><img src="images/définir scénario.png" alt="Définir un scénario" width="200" height="200" decoding="async" /></div>
+          <div class="label">Définir un scénario</div>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <!-- ======================================= PAGE : BARRIERE ======================================= -->
+  <div id="page-barriere" class="page">
+    <div class="card">
+      <div class="emoji" id="barEmoji"></div>
+      <div class="message" id="barMessage"></div>
+      <div class="progress-bar"><div class="progress-fill" id="barProgressFill"></div></div>
+      <div class="countdown">Retour dans 2s…</div>
+    </div>
+  </div>
+
+  <!-- ======================================= PAGE : SCENARIO ======================================= -->
+  <div id="page-scenario" class="page">
+    <button class="back" id="backScenario" aria-label="Retour">←</button>
+    <section class="panel" aria-label="Définir un scénario">
+      <div class="actions">
+        <button class="action-btn" type="button" onclick="window.location.href='Badge.html'">
+          <div class="tile"><img src="images/Badge.png" alt="Badge" /></div>
+          <div class="label">Badge</div>
+        </button>
+        <button class="action-btn" type="button" id="btnAttestation">
+          <div class="tile"><img src="images/attestation de travail.png" alt="Autorisation de travail" /></div>
+          <div class="label">Autorisation de travail</div>
+        </button>
+        <button class="action-btn" type="button" onclick="window.location.href='Dosimetre.html'">
+          <div class="tile"><img src="images/Dosimètre.png" alt="Dosimètre" /></div>
+          <div class="label">Dosimètre</div>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <!-- ======================================= PAGE : ATTESTATION ======================================= -->
+  <div id="page-attestation" class="page">
+    <button class="back" id="backAttestation" aria-label="Retour">←</button>
+    <section class="panel" aria-label="Attestation de travail">
+      <div class="title">Attestation de travail</div>
+      <div class="main-row">
+        <div class="switch-wrap">
+          <div class="switch disabled" id="swDate" role="switch" aria-checked="false" tabindex="-1"><div class="knob"></div></div>
+          <div class="switch-label" id="lblDate">Date non valide</div>
+        </div>
+        <div class="scan-col">
+          <button class="barcode-btn" id="btnScan" type="button" aria-label="Scanner un badge">
+            <img alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='90' viewBox='0 0 220 90'%3E%3Crect width='220' height='90' fill='none'/%3E%3Cg fill='%23111111'%3E%3Crect x='14' y='14' width='4' height='62'/%3E%3Crect x='22' y='14' width='2' height='62'/%3E%3Crect x='28' y='14' width='6' height='62'/%3E%3Crect x='40' y='14' width='2' height='62'/%3E%3Crect x='46' y='14' width='4' height='62'/%3E%3Crect x='56' y='14' width='2' height='62'/%3E%3Crect x='62' y='14' width='8' height='62'/%3E%3Crect x='76' y='14' width='2' height='62'/%3E%3Crect x='82' y='14' width='4' height='62'/%3E%3Crect x='92' y='14' width='2' height='62'/%3E%3Crect x='98' y='14' width='6' height='62'/%3E%3Crect x='110' y='14' width='2' height='62'/%3E%3Crect x='116' y='14' width='10' height='62'/%3E%3Crect x='132' y='14' width='2' height='62'/%3E%3Crect x='138' y='14' width='6' height='62'/%3E%3Crect x='150' y='14' width='2' height='62'/%3E%3Crect x='156' y='14' width='4' height='62'/%3E%3Crect x='166' y='14' width='2' height='62'/%3E%3Crect x='172' y='14' width='8' height='62'/%3E%3Crect x='186' y='14' width='2' height='62'/%3E%3Crect x='192' y='14' width='4' height='62'/%3E%3Crect x='202' y='14' width='2' height='62'/%3E%3C/g%3E%3C/svg%3E" />
+          </button>
+          <div class="barcode-hint" id="scanHint">Appuyez pour scanner</div>
+          <div class="code-pill" id="codePill">CODE: <span id="codeTxt"></span></div>
+        </div>
+        <div class="switch-wrap">
+          <div class="switch disabled" id="swZone" role="switch" aria-checked="false" tabindex="-1"><div class="knob"></div></div>
+          <div class="switch-label" id="lblZone">Zone non valide</div>
+        </div>
+      </div>
+      <button class="save" id="btnSave" type="button" disabled>Enregistrer</button>
+    </section>
+  </div>
+
+  <!-- ======================================= SCANNER MODAL ======================================= -->
+  <div class="scanner-modal" id="scannerModal" aria-hidden="true">
+    <div class="scanner-card">
+      <div class="scanner-top">
+        <div>📷 Scan badge</div>
+        <button class="scanner-close" id="btnCloseScan" type="button">Fermer</button>
+      </div>
+      <div id="interactive"><div class="scan-frame"></div></div>
+      <div class="scan-status" id="scanStatus">Cadrez le code-barres…</div>
+    </div>
+  </div>
+
+  <!-- ======================================= POPUP ALERT ======================================= -->
+  <div id="customAlert">
+    <div class="alert-box">
+      <div id="alertMsg"></div>
+      <button class="alert-ok" id="alertOk">OK</button>
+    </div>
+  </div>
+
+  <!-- ======================================= POPUP PROMPT / CONFIRM ======================================= -->
+  <div id="customPrompt">
+    <div class="alert-box">
+      <div id="promptMsg"></div>
+      <input id="promptInput" type="text" autocomplete="off" />
+      <button class="alert-ok" id="promptOk">OK</button>
+      <div class="confirm-row" id="confirmRow" style="display:none">
+        <button class="btn-non" id="confirmNon">Non</button>
+        <button class="alert-ok" id="confirmOui">Oui</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,478 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>C2 - Capteurs</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='C2/styleC2.css') }}?v=2">
+    <script>
+        if (localStorage.getItem("drawerOpen") === "true") {
+            document.documentElement.style.setProperty('--drawer-initial', 'translateX(0)');
+            document.documentElement.style.setProperty('--toggle-initial', '220px');
+            document.documentElement.style.setProperty('--arrow-initial', 'scaleX(-1)');
+        }
+        if (localStorage.getItem("drawerRightOpen") === "true") {
+            document.documentElement.style.setProperty('--drawer-right-initial', 'translateX(0)');
+            document.documentElement.style.setProperty('--toggle-right-initial', '220px');
+            document.documentElement.style.setProperty('--arrow-right-initial', 'scaleX(-1)');
+        }
+    </script>
+</head>
+<body data-c2-id="C2_{{ c2_id }}">
+<!-- DRAWER GAUCHE -->
+<div class="drawer" id="drawer">
+    <div class="drawer-content">
+        <h2>Panneau de Contrôle</h2>
+        <div class="drawer-section">
+            <div class="id-list">
+                {% for i in c2_ids %}
+                <div class="id-item">
+                    <a class="id-btn {% if c2_id == i %}active{% endif %}" href="/C2/{{ i }}">{{ c2_names[i] }}</a>
+                    {% if role == "admin" %}<button class="id-delete" type="button" data-id="{{ i }}" title="Supprimer"><span class="id-delete-mark">-</span></button>{% endif %}
+                </div>
+                {% endfor %}
+                {% if role == "admin" %}<a class="id-btn id-add" id="id-add" href="#" title="Ajouter un appareil">+</a>{% endif %}
+            </div>
+        </div>
+        <div class="drawer-section">
+        </div>
+    </div>
+</div>
+
+<!-- TOGGLE BUTTON (Rectangle avec triangle) -->
+<button class="drawer-toggle-btn" id="drawerToggle"></button>
+
+<!-- DRAWER DROIT (vide pour l'instant) -->
+<div class="drawer-right" id="drawerRight">
+    <div class="drawer-content">
+        <!-- vide pour l'instant -->
+    </div>
+</div>
+
+<!-- TOGGLE BUTTON DROIT (Rectangle avec triangle) -->
+<button class="drawer-toggle-btn-right" id="drawerToggleRight"></button>
+
+<div class="banner">
+    <div class="banner-text"></div>
+    <p class="c2-id-display">C2 Id : {{ c2_id }}</p>
+    <a class="home-link" href="{{ url_for('accueil.menu') }}" title="Accueil" aria-label="Accueil">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M3 10.5L12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5v-9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+      <path d="M9 20v-6h6v6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+    </svg>
+  </a>
+  <button class="control-btn-reset" id="resetCapsBtn" type="button" title="Réinitialiser les capteurs" aria-label="Réinitialiser les capteurs">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                            focusable="false"
+                        >
+                            <path d="M6 7a7 7 0 1 1 2.05 9.9" />
+                            <polyline points="6 3 6 7 10 7" />
+                            <line x1="4" y1="20" x2="20" y2="4" />
+                        </svg>
+                </button>
+</div>
+<div class="c2-wrapper">
+    <div class="c2-container">
+        <div id="page"></div>
+
+        <div class="c2-container">
+            <!-- fond : ton image / animation -->
+            <!-- <img src="" class="c2-bg" alt="C2 fond"> -->
+
+            <!-- CAPTEURS FACE -->
+            <!-- COLONNE 3x5 Ã  gauche -->
+            <!-- colonne 1 -->
+            <button class="cap cap-c1 cap-c1r1" data-capteur="c1" data-mode="FACE"><i>1</i></button>
+            <button class="cap cap-c1 cap-c1r2" data-capteur="c4" data-mode="FACE"><i>4</i></button>
+            <button class="cap cap-c1 cap-c1r3" data-capteur="c7" data-mode="FACE"><i>7</i></button>
+            <button class="cap cap-c1 cap-c1r4" data-capteur="c10" data-mode="FACE"><i>10</i></button>
+            <button class="cap cap-c1 cap-c1r5" data-capteur="c13" data-mode="FACE"><i>13</i></button>
+
+            <!-- colonne 2 -->
+            <button class="cap cap-c2 cap-c2r1" data-capteur="c2" data-mode="FACE"><d>2</d></button>
+            <button class="cap cap-c2 cap-c2r2" data-capteur="c5" data-mode="FACE"><d>5</d></button>
+            <button class="cap cap-c2 cap-c2r3" data-capteur="c8" data-mode="FACE"><d>8</d></button>
+            <button class="cap cap-c2 cap-c2r4" data-capteur="c11" data-mode="FACE"><d>11</d></button>
+            <button class="cap cap-c2 cap-c2r5" data-capteur="c14" data-mode="FACE"><d>14</d></button>
+
+            <!-- colonne 3 -->
+            <button class="cap cap-c3 cap-c3r1" data-capteur="c3" data-mode="FACE"><i>3</i></button>
+            <button class="cap cap-c3 cap-c3r2" data-capteur="c6" data-mode="FACE"><i>6</i></button>
+            <button class="cap cap-c3 cap-c3r3" data-capteur="c9" data-mode="FACE"><i>9</i></button>
+            <button class="cap cap-c3 cap-c3r4" data-capteur="c12" data-mode="FACE"><i>12</i></button>
+            <button class="cap cap-c3 cap-c3r5" data-capteur="c15" data-mode="FACE"><i>15</i></button>
+
+            <!-- PETITE COLONNE DE 3 (verte au centre) -->
+            <button class="cap cap-colS-r1" data-capteur="c16" data-mode="FACE"><d>16</d></button>
+            <button class="cap cap-colS-r2" data-capteur="c17" data-mode="FACE"><d>17</d></button>
+            <button class="cap cap-colS-r3" data-capteur="c18" data-mode="FACE"><d>18</d></button>
+
+            <!-- TRIANGLE DE 3 (marron Ã  droite) -->
+            <button class="cap cap-tri-top" data-capteur="c19" data-mode="FACE"><i>19</i></button>
+            <button class="cap cap-tri-left" data-capteur="c20" data-mode="FACE"><i>20</i></button>
+            <button class="cap cap-tri-right" data-capteur="c21" data-mode="FACE"><i>21</i></button>
+
+            <!-- COLONNE DE GAUCHE (3 capteurs) -->
+            <button class="cap cap-left-r1" data-capteur="c25" data-mode="FACE"><i>25</i></button>
+            <button class="cap cap-left-r2" data-capteur="c26" data-mode="FACE"><i>26</i></button>
+            <button class="cap cap-left-r3" data-capteur="c27" data-mode="FACE"><i>27</i></button>
+
+            <!-- RANGÃ‰E DU HAUT (1 capteur au centre) -->
+            <button class="cap cap-horizontal cap-top-center" data-capteur="c28" data-mode="FACE"><d>28</d></button>
+
+            <!-- RANGÃ‰E DU BAS (3 capteurs losanges) -->
+            <button class="cap cap-bottom-c1" data-capteur="c22" data-mode="FACE"><d>22</d></button>
+            <button class="cap cap-horizontal cap-bottom-c2" data-capteur="c23" data-mode="FACE"><d>23</d></button>
+            <button class="cap cap-bottom-c3" data-capteur="c24" data-mode="FACE"><d>24</d></button>
+
+            <!-- CAPTEURS DOS (cachÃ©s par dÃ©faut) -->
+            <!-- COLONNE 3x5 Ã  gauche -->
+            <!-- colonne 1 -->
+            <button class="cap cap-c1 cap-c1r1 hidden-mode" data-capteur="dos1" data-mode="DOS"><i>1</i></button>
+            <button class="cap cap-c1 cap-c1r2 hidden-mode" data-capteur="dos4" data-mode="DOS"><i>4</i></button>
+            <button class="cap cap-c1 cap-c1r3 hidden-mode" data-capteur="dos7" data-mode="DOS"><i>7</i></button>
+            <button class="cap cap-c1 cap-c1r4 hidden-mode" data-capteur="dos10" data-mode="DOS"><i>10</i></button>
+            <button class="cap cap-c1 cap-c1r5 hidden-mode" data-capteur="dos13" data-mode="DOS"><i>13</i></button>
+
+            <!-- colonne 2 -->
+            <button class="cap cap-c2 cap-c2r1 hidden-mode" data-capteur="dos2" data-mode="DOS"><d>2</d></button>
+            <button class="cap cap-c2 cap-c2r2 hidden-mode" data-capteur="dos5" data-mode="DOS"><d>5</d></button>
+            <button class="cap cap-c2 cap-c2r3 hidden-mode" data-capteur="dos8" data-mode="DOS"><d>8</d></button>
+            <button class="cap cap-c2 cap-c2r4 hidden-mode" data-capteur="dos11" data-mode="DOS"><d>11</d></button>
+            <button class="cap cap-c2 cap-c2r5 hidden-mode" data-capteur="dos14" data-mode="DOS"><d>14</d></button>
+
+            <!-- colonne 3 -->
+            <button class="cap cap-c3 cap-c3r1 hidden-mode" data-capteur="dos3" data-mode="DOS"><i>3</i></button>
+            <button class="cap cap-c3 cap-c3r2 hidden-mode" data-capteur="dos6" data-mode="DOS"><i>6</i></button>
+            <button class="cap cap-c3 cap-c3r3 hidden-mode" data-capteur="dos9" data-mode="DOS"><i>9</i></button>
+            <button class="cap cap-c3 cap-c3r4 hidden-mode" data-capteur="dos12" data-mode="DOS"><i>12</i></button>
+            <button class="cap cap-c3 cap-c3r5 hidden-mode" data-capteur="dos15" data-mode="DOS"><i>15</i></button>
+
+            <!-- PETITE COLONNE DE 3 (verte au centre) -->
+            <button class="cap cap-colS-r1 hidden-mode" data-capteur="dos16" data-mode="DOS"><d>16</d></button>
+            <button class="cap cap-colS-r2 hidden-mode" data-capteur="dos17" data-mode="DOS"><d>17</d></button>
+            <button class="cap cap-colS-r3 hidden-mode" data-capteur="dos18" data-mode="DOS"><d>18</d></button>
+
+
+            <!-- TRIANGLE DE 3 (marron Ã  droite) -->
+            <button class="cap cap-tri-top hidden-mode" data-capteur="dos19" data-mode="DOS"><i>19</i></button>
+            <button class="cap cap-tri-left hidden-mode" data-capteur="dos20" data-mode="DOS"><i>20</i></button>
+            <button class="cap cap-tri-right hidden-mode" data-capteur="dos21" data-mode="DOS"><i>21</i></button>
+
+            <!-- COLONNE DE GAUCHE (3 capteurs) DOS -->
+            <button class="cap cap-left-r1 hidden-mode" data-capteur="dos25" data-mode="DOS"><i>25</i></button>
+            <button class="cap cap-left-r2 hidden-mode" data-capteur="dos26" data-mode="DOS"><i>26</i></button>
+            <button class="cap cap-left-r3 hidden-mode" data-capteur="dos27" data-mode="DOS"><i>27</i></button>
+
+            <!-- RANGÃ‰E DU HAUT (1 capteur au centre) DOS -->
+            <button class="cap cap-horizontal cap-top-center hidden-mode" data-capteur="dos28" data-mode="DOS"><d>28</d></button>
+
+            <!-- RANGÃ‰E DU BAS (3 capteurs losanges) DOS -->
+            <button class="cap cap-bottom-c1 hidden-mode" data-capteur="dos22" data-mode="DOS"><d>22</d></button>
+            <button class="cap cap-horizontal cap-bottom-c2 hidden-mode" data-capteur="dos23" data-mode="DOS"><d>23</d></button>
+            <button class="cap cap-bottom-c3 hidden-mode" data-capteur="dos24" data-mode="DOS"><d>24</d></button>
+        </div>
+
+        <!-- Image / silhouette du corps Ã  droite -->
+        <div class="body-container">
+            <!-- Images HOMME -->
+            <img src="{{ url_for('static', filename='C2/img/homme_face_svg.svg') }}" class="body-img body-img-face body-img-homme" alt="corps face">
+            <img src="{{ url_for('static', filename='C2/img/homme_dos_svg.svg') }}" class="body-img body-img-dos body-img-homme hidden-mode" alt="corps dos">
+            <!-- Images FEMME (masquées par défaut) -->
+            <img src="{{ url_for('static', filename='C2/img/femme_face_svg.svg') }}" class="body-img body-img-face body-img-femme hidden-gender" alt="corps femme face">
+            <img src="{{ url_for('static', filename='C2/img/femme_dos_svg.svg') }}" class="body-img body-img-dos body-img-femme hidden-gender" alt="corps femme dos">
+
+            <!-- ====== ZONES HOMME ====== -->
+            <div class="zones-homme zones-face">
+            <button class="body-zone zone-tete" data-group="tete" data-mode="FACE" data-gender="homme" aria-label="Zone tete">
+                <svg
+                    class="zone-placeholder zone-placeholder-head"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="512"
+                    height="1536"
+                    viewBox="1180 5450 650 700"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    preserveAspectRatio="xMidYMid meet"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <g transform="translate(0,11300) scale(1,-1)">
+                    <path class="zone-hit" data-group="tete" d="m 1446.123,5918.4814 c -40.5,-0.7968 -57.3779,-6.2314 -91.1279,-23.4814 -59,-31 -79.9912,-52.9961 -110.9912,-120.9961 -27,-58 -28.0098,-72.0039 -20.0098,-254.0039 8,-203 17.0049,-231.9961 85.0049,-300.9961 109,-109 200.003,-129.0029 288.003,-63.0029 55,42 67.996,55 105.996,105 22,30 29.002,52 37.002,135 6,54 9.9941,129 8.9941,165 -1,36 1.0098,70.9922 5.0098,76.9922 12,20 -12.9971,125.0019 -41.9971,172.0019 -16,26 -48.0107,57 -76.0107,75 -44,27 -58.9951,30.0029 -139.9951,33.0029 -20.25,0.5 -36.378,0.7491 -49.878,0.4834 z m 335.4493,-359.6191 c -6.7899,-0.3004 -11.5723,-13.2568 -11.5723,-37.8662 0,-21 -2.0059,-66.9971 -6.0059,-101.9971 l -4.9951,-63.999 19.9951,34.9951 c 26,45 35.002,107.9981 22.002,142.9981 -6.7969,17.6718 -13.7979,26.118 -19.4238,25.8691 z m -590.6543,-4.4092 c -2.2968,0.029 -5.1397,-2.3349 -8.9209,-6.4599 -23,-29 -23.9922,-71.9864 -1.9922,-130.9864 12,-31 25,-57.0117 30,-57.0117 4,0 5.9883,28.0029 2.9883,63.0029 -3,34 -7.9971,80.001 -11.9971,101.001 -3.2813,21.6563 -5.6933,30.3984 -10.0781,30.4541 z"></path>
+                    </g>
+                </svg>
+            </button>
+            <button class="body-zone zone-bras" data-group="bras" data-mode="FACE" data-gender="homme" aria-label="Zone bras">
+                <svg
+                    class="zone-placeholder zone-placeholder-bras"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="512"
+                    height="1536"
+                    viewBox="200 -440 980 3800"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    preserveAspectRatio="xMidYMid meet"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+
+                    <g transform="translate(0,5200) scale(1,-1)">
+                    <path class="zone-hit" data-group="bras" d="m 929.89082,4355.7139 c -7,4 -9,-19 -4,-72 5,-64 1,-99 -20,-193 -33,-151 -44,-222 -52,-355 -7,-116 -32,-219 -86,-360 -71,-185 -99,-286 -108,-388 -11,-128 -76,-340 -115,-377 -14,-13 -27,-21 -30,-18 -3,3 6,43 19,89 13,46 23,86 21,87 -12,12 -25,-18 -41,-95 -18,-86 -39,-123 -69,-123 -19,0 -20,-2 14,113 16,53 25,100 20,103 -10,6 -9,9 -40,-111 -12,-49 -27,-96 -32,-102 -10,-14 -47,-18 -47,-5 0,11 48,205 56,226 5,13 3,17 -6,14 -12,-4 -60,-171 -60,-212 0,-15 -3,-16 -15,-6 -8,7 -15,29 -15,49 0,42 24,172 40,218 17,47 6,64 -15,23 -24,-48 -55,-80 -77,-80 -26,0 -23,12 28,110 43,84 77,124 148,175 36,25 50,96 65,320 16,221 26,279 66,384 34,91 35,94 44,319 9,202 13,236 36,312 23,72 26,95 20,153"></path>
+                    </g>
+                </svg>
+            </button>
+            <button class="body-zone zone-buste" data-group="buste" data-mode="FACE" data-gender="homme" aria-label="Zone buste">
+                <svg
+                    class="zone-placeholder zone-placeholder-buste"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="512"
+                    height="1536"
+                    viewBox="825 3470 1350 1850"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <g transform="translate(0,8650) scale(1,-1)">
+                    <path class="zone-hit" data-group="buste" d="m 1406,5120 c 60,-30 130,-27 185,8 24,16 51,37 59,47 14,17 15,12 20,-56 6,-86 -6,-76 179,-152 l 104,-42 -129,-12 c -141,-13 -246,-32 -239,-43 2,-3 39,0 82,8 46,9 142,16 233,16 154,1 155,1 220,-30 131,-63 170,-130 181,-309 0,0 -251.505,-197.5416 -256,-195 -1.7409,0.9844 -9,-26 -15,-57 -7,-32 -17,-64 -23,-71 -21,-26 -83,-50 -147,-56 -71,-7 -205,8 -227,26 -15,12 -29,5 -19,-10 12,-19 105,-37 196,-37 96,0 146,12 183,44 18,15 18,14 11,-24 -4,-22 -25,-94 -47,-160 l -40,-120 -4,-234 c -4,-210 3,-322 23,-374 18,-48 -515,-72 -786,-36 -47,6 -91,12 -97,12 -16,0 -16,13 2,112 10,60 12,132 8,285 -5,215 -4,207 -71,435 -17,55 -29,101 -28,103 2,1 25,-8 52,-20 78,-36 280,-29 344,11 28,18 3,21 -36,5 -28,-12 -70,-17 -149,-18 -95,0 -116,3 -157,22 -36,18 -50,32 -62,63 -9,22 -16,50 -16,64 0,13 -5,27 -10,30 -0.0186,-6.6507 -255,198 -255,198 -13,137 49,249 172,309 62,29 78,33 178,36 69,3 150,-2 218,-12 59,-9 118,-16 130,-15 86,3 -184,46 -283,45 -33,-1 -60,2 -60,5 0,3 57,30 128,59 70,30 133,58 140,63 7,6 12,35 12,79 v 69 l 28,-26 c 15,-14 45,-34 68,-45 z"></path>
+                    </g>
+                </svg>
+            </button>
+            <button class="body-zone zone-jambes" data-group="jambes" data-mode="FACE" data-gender="homme" aria-label="Zone jambes">
+                <svg
+                    class="zone-placeholder zone-placeholder-jambes"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="512"
+                    height="1536"
+                    viewBox="970 300 1060 2860"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    preserveAspectRatio="xMidYMid meet"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+
+                    <g transform="translate(0,3700) scale(1,-1)">
+                    <path class="zone-hit" data-group="jambes" d="m 1931.9971,3258.999 c -4,-1 -34.002,-8 -67.002,-15 -169,-37 -497.999,-40.998 -723.999,-7.998 -57,8 -106.0029,13.0049 -108.0029,10.0049 -12,-11 -51.99027,-378.0118 -54.99027,-507.0118 l -5.00977,-136.9921 56.00094,-11.001 c 84,-17 245.0039,-24.9961 344.0039,-15.9961 l 88.0079,7.0019 -3.003,135.9961 c -3,131 -4.0049,136.002 -25.0049,142.002 -25,6 -72.9931,45 -72.9931,60 0,16 9.9883,11.9892 32.9883,-16.0108 16,-19 36.0088,-26.9961 69.0088,-30.9961 61,-7 88.996,1.003 120.996,33.003 19,18 26.9971,21.997 26.9971,11.997 0,-20 -31.9912,-47.997 -65.9912,-56.997 l -28.0078,-7.002 1.0107,-135 0.9961,-134.0039 59.0039,-7.998 c 72,-10 299.9971,-1.9961 371.9971,14.0039 l 53.9941,11.001 -5.9912,136.9921 c -6,129 -41.0127,466.0088 -53.0127,504.0088 -3,9 -7.997,15.9961 -11.997,15.9961 z M 985.01953,2586.4453 c -7.45001,-0.4955 -6.73926,-18.8564 -6.02051,-91.4502 4,-197 34.99608,-397.998 90.99608,-592.998 60,-210 64,-244.003 45,-408.003 -28,-239 -11.999,-417.9912 71.001,-755.99117 18,-75 38,-172.00586 45,-216.00586 l 11.9971,-79.99512 c 0,0 187.0019,-23.222 187.0019,-22.99804 0,26 -5.001,108.99121 -11.001,185.99121 -10,119 -9.9902,167.00488 5.0098,325.00488 26,279 29.9961,404.0049 15.9961,505.0049 -21,159 -23.002,260.0019 -7.002,502.0019 9,131 19.002,326.9961 22.002,435.9961 l 4.9951,196.9922 -37.998,-3.999 c -108,-14 -161.9942,-14.9951 -278.9942,-4.9951 -70,6 -136.0049,14.9951 -145.00485,19.9951 -5.90625,3.0937 -10.0633,5.6431 -12.97852,5.4492 z m 1007.66597,-1.626 c -2.8859,-0.097 -6.9169,-2.5273 -12.4951,-5.4492 -9,-5 -75.0049,-13.9951 -145.0049,-19.9951 -117,-10 -170.9941,-9.0049 -278.9941,4.9951 l -37.998,3.999 4.9951,-196.9921 c 3,-109 13.0019,-305.0108 22.0019,-436.0108 16,-242 13.9981,-343.0019 -7.0019,-502.0019 -14,-101 -10.0039,-225.9902 15.9961,-504.99028 15,-158 15.0097,-206.00488 5.0097,-325.00488 -6,-77 -11.0009,-159.99121 -11.0009,-185.99121 0,-0.22396 187.0019,22.99805 187.0019,22.99805 l 11.9971,79.99511 c 7,44 27,141.00586 45,216.00586 83,337.99995 99.001,516.99125 71.001,755.99125 -19,164 -15,198.0029 45,408.0029 56,195 86.9961,395.998 90.9961,592.998 0.7343,74.1719 1.4748,91.7195 -6.504,91.4502 z"></path>
+                    </g>
+                </svg>
+            </button>
+            <button class="body-zone zone-pieds" data-group="pieds" data-mode="FACE" data-gender="homme" aria-label="Zone pieds">
+                <svg
+                    class="zone-placeholder zone-placeholder-pieds"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="512"
+                    height="1536"
+                    viewBox="930 138 1150 760"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    preserveAspectRatio="xMidYMid meet"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <g transform="translate(0,840) scale(1,-1)">
+                    <path class="zone-hit" data-group="pieds" d="m 1243.4033,442.79297 -42.9931,-73.00781 c -107,-182 -116.0079,-208.99707 -88.0079,-236.99707 17,-17 28.0079,-14.99805 28.0079,7.00195 0,11 3.9941,22.00098 8.9941,26.00098 6,3 7.999,-8.00782 3.999,-28.00782 -4,-28 -2,-34.99414 15,-38.994138 26,-7 32.0069,-0.996094 32.0069,29.003908 0,14 6,22.99805 15,22.99805 12,0 12.999,-5.00098 3.999,-26.00098 -11,-31.000002 -10.0088,-33.00586 20.9912,-36.00586 19,-2 25.0068,3.003905 32.0068,29.00391 13,48 26.9912,49.00683 20.9912,2.00683 l -5.9912,-40.004881 33.9991,3.00293 c 31,3 33.9941,6.000975 38.9941,41.000981 3,21 10,35.99511 15,34.99511 6,-2 9.0088,-6.99316 9.0088,-12.99316 -1,-5 -3.0098,-21.00977 -5.0098,-35.00977 -3,-20.999998 0,-25.993161 22.9981,-27.993161 15,-2 36.0029,1.998047 48.0029,7.998047 26,14.000004 26,74.003904 0,194.003904 -11,50 -19.9951,110 -19.9951,135 z m 491.7627,-0.044 -187.0019,-22.99804 c 0,-25 -8.9952,-85 -19.9952,-135 -26,-120 -26,-180.00391 0,-194.00391 12,-6 33.003,-9.998047 48.003,-7.998047 23,2 25.998,7.007816 22.998,28.007817 -2,14 -3.9951,29.99511 -4.9951,34.99511 0,6 2.9941,10.99317 8.9941,12.99317 5,1 12,-13.99512 15,-34.99512 5,-34.999997 7.9942,-38.000977 38.9942,-41.000977 l 33.999,-3.002929 -5.9912,40.004886 c -6,47 7.9912,46.00781 20.9912,-1.99219 7,-25.999998 13.0068,-31.003907 32.0068,-29.003907 31,3 32.0059,4.991214 21.0059,35.991207 -9,21 -8.001,26.00098 3.999,26.00098 9,0 15,-8.99805 15,-22.99805 0,-29.999994 5.9922,-36.003903 31.9922,-29.003903 17,3.999993 19,11.008793 15,39.008793 -4,20 -2.001,30.99316 3.999,27.99316 5,-4 9.0088,-15.00098 9.0088,-26.00098 0,-22 10.9932,-23.9873 27.9932,-6.9873 28,28 19.0068,54.99707 -87.9932,236.99707 z"></path>
+                    </g>
+                </svg>
+            </button>
+            </div><!-- /zones-homme -->
+
+            <!-- ====== ZONES FEMME (masquées par défaut) ====== -->
+            <div class="zones-femme zones-face hidden-gender">
+            <button class="body-zone zone-tete zone-f" data-group="tete" data-mode="FACE" data-gender="femme" aria-label="Zone tete">
+                <svg class="zone-placeholder zone-placeholder-head-f"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="228 45 142 171"
+                    preserveAspectRatio="xMidYMid meet"
+                    aria-hidden="true" focusable="false">
+                    <g transform="matrix(0.1,0,0,-0.1,0,1201)">
+                    <path class="zone-hit" data-group="tete" d="M 2981.8799 11718.511 C 2887.2412 11715.815 2791.3818 11693.003 2717.0068 11653.003 C 2629.0068 11605.003 2548.001 11521.003 2501.001 11428.003 C 2451.001 11327.003 2433.001 11255 2426.001 11125 L 2421.0059 11024.995 L 2444.0039 11095 C 2486.0039 11225 2551.9971 11306.004 2651.9971 11349.004 C 2726.9971 11382.004 2763.0059 11384.005 2886.0059 11360.005 L 3000.9961 11337.007 L 3108.999 11360.005 C 3182.999 11375.005 3232.0059 11380.001 3261.0059 11376.001 C 3327.0059 11366.001 3402.9961 11327.003 3450.9961 11278.003 C 3490.9961 11237.003 3559.9951 11112 3559.9951 11080 C 3559.9951 11072 3563.9932 11060.003 3567.9932 11053.003 C 3578.9932 11036.003 3572.0029 11185.005 3558.0029 11255.005 C 3514.0029 11482.005 3364.001 11645.006 3146.001 11701.006 C 3095.001 11714.506 3038.6631 11720.128 2981.8799 11718.511 z M 3231.1084 11359.419 C 3195.5332 11360.362 3157.7432 11355.938 3117.9932 11346.001 C 3038.9932 11326.001 2963.9951 11326.005 2884.9951 11345.005 C 2658.9951 11399.005 2511.0039 11296.995 2444.0039 11039.995 C 2429.0039 10982.995 2428.9941 10962.998 2438.9941 10877.998 C 2466.9941 10649.998 2542.0039 10446.998 2639.0039 10337.998 C 2746.0039 10218.998 2914.0059 10109.995 2991.0059 10109.995 C 3127.0059 10109.995 3362.9932 10295.995 3447.9932 10469.995 C 3494.9932 10565.995 3541.9951 10739.001 3559.9951 10881.001 C 3570.9951 10969.001 3570.0049 10981.998 3550.0049 11057.998 C 3498.0049 11250.561 3385.2676 11355.331 3231.1084 11359.419 z M 3610.6348 10899.004 C 3595.5059 10898.937 3586.4648 10867.671 3570.9961 10783.999 C 3558.9961 10719.999 3543.0049 10648.997 3535.0049 10626.997 C 3514.0049 10566.997 3516.001 10563.001 3551.001 10596.001 C 3645.001 10683.001 3687.999 10831.004 3633.999 10884.004 C 3624.499 10893.504 3617.0225 10899.032 3610.6348 10899.004 z M 2389.2041 10898.374 C 2382.7112 10898.301 2374.6191 10893.809 2363.9941 10885.996 C 2333.9941 10862.996 2338.0068 10759.995 2372.0068 10694.995 C 2401.0068 10638.995 2486.9961 10549.007 2475.9961 10587.007 C 2450.9961 10669.007 2429.999 10755.993 2418.999 10822.993 C 2410.0615 10877.306 2403.4885 10898.535 2389.2041 10898.374 z "/>
+                    </g>
+                </svg>
+            </button>
+            <button class="body-zone zone-bras zone-f" data-group="bras" data-mode="FACE" data-gender="femme" aria-label="Zone bras">
+                <svg class="zone-placeholder zone-placeholder-bras-f"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="102 216 143 427"
+                    preserveAspectRatio="xMidYMid meet"
+                    aria-hidden="true" focusable="false">
+                    <g transform="matrix(0.1,0,0,-0.1,0,1201)">
+                    <path class="zone-hit" data-group="bras" d="m 2256,9558 c -8,-268 -20,-403 -51,-585 -24,-138 -24,-147 -9,-211 8,-37 15,-74 15,-82 0,-8 -15,-103 -35,-210 -19,-107 -51,-303 -71,-435 -66,-442 -110,-620 -240,-970 -138,-372 -156,-432 -165,-545 -19,-238 -105,-543 -203,-715 -21,-37 -89,-87 -102,-74 -3,3 20,76 50,161 56,158 61,178 48,178 -5,0 -35,-79 -68,-176 -41,-123 -66,-180 -80,-189 -29,-18 -75,-27 -75,-15 0,5 29,96 65,202 56,163 69,217 51,197 -2,-2 -34,-94 -71,-204 -37,-110 -72,-206 -77,-212 -13,-16 -60,-17 -76,-1 -7,7 -8,17 -3,27 21,39 138,422 131,426 -4,3 -40,-95 -80,-217 l -72,-223 -25,30 c -23,26 -25,35 -20,94 3,37 22,125 42,196 58,201 68,245 60,253 -4,4 -15,-4 -24,-18 -35,-53 -77,-94 -115,-111 -41,-18 -66,-16 -66,6 0,18 104,209 165,303 50,75 60,85 219,199 62,45 67,62 137,518 38,243 73,387 165,680 71,227 86,330 164,1114 24,242 35,318 56,414 32,142 107,271 192,329 43,30 145,77 166,78 5,0 6,-87 2,-212 z"/>
+                    </g>
+                </svg>
+            </button>
+            <button class="body-zone zone-buste zone-f" data-group="buste" data-mode="FACE" data-gender="femme" aria-label="Zone buste">
+                <svg class="zone-placeholder zone-placeholder-buste-f"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="207 205 187 339"
+                    preserveAspectRatio="xMidYMid meet"
+                    aria-hidden="true" focusable="false">
+                    <g transform="matrix(0.1,0,0,-0.1,0,1201)">
+                    <path class="zone-hit" data-group="buste" d="M 2740.0049 10212.007 L 2741.9971 10107.007 C 2744.9971 9958.0068 2740.0059 9950.0049 2616.0059 9890.0049 C 2560.0059 9863.0049 2499.998 9837.0039 2482.998 9834.0039 L 2449.9951 9827.998 L 2449.9951 9745.9961 C 2449.9951 9532.9961 2548.0029 9279.0029 2673.0029 9163.0029 C 2853.0029 8997.0029 3182.0059 9006.002 3351.0059 9182.002 C 3455.0059 9291.002 3536.002 9511.0029 3547.002 9718.0029 C 3553.002 9827.0029 3552.002 9830.0049 3532.002 9830.0049 C 3505.002 9830.0049 3356.9941 9893 3308.9941 9925 C 3259.9941 9957 3246.9971 9998.998 3251.9971 10112.998 C 3253.9971 10160.998 3253.9971 10199.995 3251.9971 10199.995 C 3249.9971 10199.995 3229.9971 10187.006 3206.9971 10171.006 C 3066.9971 10075.006 2988.0039 10063 2879.0039 10120 C 2844.0039 10138 2798.0029 10166.007 2778.0029 10182.007 L 2740.0049 10212.007 z M 3572.0068 9816.9971 L 3570.9961 9727.9932 C 3569.9961 9626.9932 3545.0049 9499.0049 3505.0049 9395.0049 C 3411.0049 9144.0049 3244.9951 9020.0049 3004.9951 9020.0049 C 2716.9951 9020.0049 2529.9951 9196.9971 2449.9951 9546.9971 C 2438.9951 9594.9971 2426.002 9675.9971 2422.002 9726.9971 C 2416.002 9805.9971 2413 9817.9951 2400 9809.9951 C 2392 9804.9951 2360.998 9795.0039 2332.998 9789.0039 L 2280 9777.0068 L 2280 9606.001 C 2280 9386.001 2264.9932 9192.0049 2232.9932 9005.0049 C 2203.9932 8831.0049 2205.9941 8764.002 2243.9941 8687.002 C 2322.9941 8525.002 2477.9971 8454.9941 2636.9971 8508.9941 C 2706.9971 8532.9941 2710.0049 8533.002 2710.0049 8522.002 C 2710.0049 8517.002 2697.9932 8507 2682.9932 8500 C 2568.9932 8448 2438.9932 8460.0068 2337.9932 8532.0068 C 2314.9932 8548.0068 2308.0068 8549.998 2312.0068 8537.998 C 2316.0068 8529.998 2322 8485.0039 2325 8439.0039 C 2329 8393.0039 2334.001 8352.0039 2336.001 8349.0039 C 2338.001 8346.0039 2361.0068 8346.9961 2387.0068 8350.9961 C 2675.0068 8399.9961 3284.002 8402.0059 3577.002 8356.0059 L 3659.0039 8342.998 L 3663.999 8379.0039 C 3666.999 8399.0039 3671.9961 8444.0049 3675.9961 8480.0049 L 3682.002 8544.0039 L 3659.0039 8526.9971 C 3606.0039 8489.9971 3563.0039 8476.0068 3479.0039 8472.0068 C 3406.0039 8469.0068 3384.9971 8471.9951 3341.9971 8489.9951 C 3312.9971 8501.9951 3289.9951 8517.002 3289.9951 8522.002 C 3289.9951 8528.002 3297.998 8529.0049 3307.998 8525.0049 C 3399.998 8485.0049 3511.998 8482.0029 3592.998 8518.0029 C 3692.998 8562.0029 3777.002 8684 3787.002 8800 C 3790.002 8835 3785.0059 8896 3771.0059 8965 C 3760.0059 9026 3745.9951 9116.998 3739.9951 9167.998 C 3729.9951 9257.998 3707.998 9739.0068 3712.998 9762.0068 C 3713.998 9768.0068 3682.9932 9782.9951 3642.9932 9794.9951 L 3572.0068 9816.9971 z M 3255 8369.9951 C 3050 8380.9951 2913.9951 8380.999 2719.9951 8368.999 C 2586.9951 8360.999 2351.0029 8334.0059 2343.0029 8326.0059 C 2341.0029 8324.0059 2346 8261.999 2355 8188.999 C 2364 8114.999 2374.002 7975.9941 2377.002 7878.9941 C 2384.002 7670.9941 2379.9951 7652.9951 2269.9951 7394.9951 C 2181.9951 7190.9951 2119.998 7036.9951 2122.998 7034.9951 C 2128.998 7029.9951 2750.9951 6949.0039 2854.9951 6939.0039 C 2999.9951 6925.0039 3331.0049 6932.0039 3520.0049 6954.0039 C 3652.0049 6969.0039 3853.002 6997.9951 3877.002 7004.9951 C 3889.002 7008.9951 3829 7161.9951 3720 7409.9951 C 3668 7527.9951 3634.9951 7620.999 3619.9951 7693.999 C 3607.9951 7751.999 3617.0039 7933.9971 3644.0039 8196.9971 C 3652.0039 8266.9971 3657.001 8326.002 3656.001 8327.002 C 3648.001 8336.002 3405 8361.9951 3255 8369.9951 z "/>
+                    </g>
+                </svg>
+            </button>
+            <button class="body-zone zone-jambes zone-f" data-group="jambes" data-mode="FACE" data-gender="femme" aria-label="Zone jambes">
+                <svg class="zone-placeholder zone-placeholder-jambes-f"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="192 515 216 597"
+                    preserveAspectRatio="xMidYMid meet"
+                    aria-hidden="true" focusable="false">
+                    <g transform="matrix(0.1,0,0,-0.1,0,1201)">
+                    <path class="zone-hit" data-group="jambes" d="M 2115.9961 7010.0049 C 2106.9961 7010.0049 2010 6695.0039 2010 6669.0039 C 2010 6667.0039 2062.9932 6664.9941 2127.9932 6663.9941 C 2206.9932 6663.9941 2266.9951 6657.9951 2314.9951 6644.9951 C 2471.9951 6603.9951 2643.998 6513.0029 2827.998 6373.0029 C 2971.998 6265.0029 2985.0068 6257.0039 3017.0068 6264.0039 C 3033.0068 6268.0039 3077.0049 6296.0068 3115.0049 6327.0068 C 3382.0049 6542.0068 3664.001 6659.9951 3911.001 6659.9951 C 3954.001 6659.9951 3990 6663.001 3990 6666.001 C 3990 6692.001 3903.0049 6980.0049 3895.0049 6980.0049 C 3894.0049 6980.0049 3856.999 6973.0049 3813.999 6965.0049 C 3564.999 6919.0049 3420 6906.001 3135 6906.001 C 2836 6906.001 2821.002 6907.9951 2362.002 6974.9951 C 2229.002 6993.9951 2117.9961 7010.0049 2115.9961 7010.0049 z M 3927.4951 6636.748 C 3896.2451 6636.748 3857.5049 6634.4951 3820.0049 6629.9951 C 3612.0049 6602.9951 3411.9932 6515.0039 3192.9932 6354.0039 L 3092.0068 6280 L 3085.0049 6183.9941 C 3076.0049 6068.9941 3085.0049 5549.9951 3100.0049 5249.9951 C 3107.0049 5103.9951 3109.0039 4697.0049 3104.0039 3980.0049 C 3099.0879 2942.1155 3097.191 2657.327 3096.46 2596.1377 C 3116.9003 1745.4351 3109.7127 1368.3152 3070.0049 1139.9951 L 3443.9063 1138.4131 C 3445.0779 1137.2737 3400.0049 1254.0029 3400.0049 1393.0029 C 3400.0049 1602.0029 3417.9961 1715 3525.9961 2200 C 3722.9961 3079 3743.999 3273 3693.999 3805 C 3678.999 3965 3677.9932 4012.9951 3687.9932 4109.9951 C 3702.9932 4254.9951 3750.0049 4511.0049 3835.0049 4895.0049 C 3997.0049 5633.0049 4020.002 5778 4027.002 6100 C 4032.002 6351 4014 6614.9951 3990 6629.9951 C 3982.5 6634.4951 3958.7451 6636.748 3927.4951 6636.748 z M 3096.46 2596.1377 C 3096.3096 2602.397 3096.1592 2608.6941 3096.0059 2615.0049 C 3096.0059 2615.0049 3095.9682 2554.9755 3096.46 2596.1377 z M 2072.6807 6635.8545 C 2041.4307 6635.8545 2017.6904 6633.6162 2010.1904 6629.1162 C 1986.1904 6614.1162 1968.1885 6350.1064 1973.1885 6099.1064 C 1980.1885 5777.1064 2003.1855 5632.1113 2165.1855 4894.1113 C 2250.1855 4510.1113 2297.1826 4254.1162 2312.1826 4109.1162 C 2322.1826 4012.1162 2321.1914 3964.1064 2306.1914 3804.1064 C 2256.1914 3272.1064 2277.1797 3078.1064 2474.1797 2199.1064 C 2582.1797 1714.1064 2600.1855 1601.1094 2600.1855 1392.1094 C 2600.1855 1253.1094 2555.1126 1136.3948 2556.2842 1137.5342 L 2930.1855 1139.1162 C 2890.4777 1367.4363 2883.2902 1744.5562 2903.7305 2595.2588 C 2902.9995 2656.4481 2901.1025 2941.2219 2896.1865 3979.1113 C 2891.1865 4696.1113 2893.1855 5103.1162 2900.1855 5249.1162 C 2915.1855 5549.1162 2924.1855 6068.1152 2915.1855 6183.1152 L 2908.1836 6279.1064 L 2807.1826 6353.1104 C 2588.1826 6514.1104 2388.1855 6602.1162 2180.1855 6629.1162 C 2142.6855 6633.6162 2103.9307 6635.8545 2072.6807 6635.8545 z M 2903.7305 2595.2588 C 2904.2222 2554.0966 2904.1846 2614.1113 2904.1846 2614.1113 C 2904.0312 2607.8006 2903.8809 2601.5181 2903.7305 2595.2588 z M 3064.5117 6257.1924 C 3062.8102 6257.0432 3056.9121 6254.3711 3051.0059 6250.9961 C 3036.0059 6241.9961 3034.0029 6014.9951 3048.0029 5804.9951 C 3054.0029 5696.9951 3055 5712.9951 3060 5969.9951 C 3063 6126.9951 3064.9951 6256.002 3064.9951 6257.002 C 3064.9943 6257.0093 3064.9968 6257.0391 3064.9951 6257.0459 L 3064.9951 6257.0605 C 3064.9918 6257.0664 3064.97 6257.0991 3064.9658 6257.1045 L 3064.9512 6257.1191 L 3064.9365 6257.1338 C 3064.9299 6257.1378 3064.9 6257.1449 3064.8926 6257.1484 C 3064.8105 6257.1792 3064.6693 6257.2062 3064.5117 6257.1924 z M 2944.1602 6257.0312 C 2938.1606 6256.9373 2939.1865 6247.1914 2943.999 6219.0039 C 2946.999 6195.0039 2953.0068 6089.0029 2957.0068 5983.0029 C 2960.0068 5877.0029 2967.0068 5793.001 2972.0068 5796.001 C 2976.0068 5799.001 2978.998 5900.001 2977.998 6021.001 C 2976.998 6229.001 2976.0068 6242.0068 2957.0068 6252.0068 C 2951.0693 6255.1318 2946.8872 6257.074 2944.1602 6257.0312 z "/>
+                    </g>
+                </svg>
+            </button>
+            <button class="body-zone zone-pieds zone-f" data-group="pieds" data-mode="FACE" data-gender="femme" aria-label="Zone pieds">
+                <svg class="zone-placeholder zone-placeholder-pieds-f"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="230 1068 140 74"
+                    preserveAspectRatio="xMidYMid meet"
+                    aria-hidden="true" focusable="false">
+                    <g transform="matrix(0.1,0,0,-0.1,0,1201)">
+                    <path class="zone-hit" data-group="pieds" d="M 2557.0898 1144.8877 C 2556.2492 1142.8999 2540.8423 1116.401 2465.5225 928.41309 C 2349.5225 647.41309 2348.5244 643.41895 2412.5244 604.41895 C 2456.5244 577.41895 2458.5205 577.41602 2458.5205 616.41602 C 2458.5205 649.41602 2481.5195 693.42187 2492.5195 682.42187 C 2496.5195 679.42187 2494.5205 664.41895 2488.5205 649.41895 C 2471.5205 604.41895 2476.5244 577.41016 2502.5244 565.41016 C 2525.5244 555.41016 2526.5244 556.42285 2532.5244 603.42285 C 2538.5244 646.42285 2552.5205 673.41602 2563.5205 661.41602 C 2565.5205 660.41602 2561.5225 636.41016 2555.5225 610.41016 C 2543.5225 558.41016 2549.5254 547.41602 2588.5254 541.41602 C 2608.5254 539.41602 2614.5186 543.41797 2616.5186 563.41797 C 2624.5186 622.41797 2639.5313 663.42285 2654.5313 663.42285 C 2665.5313 663.42285 2668.5254 658.41602 2663.5254 646.41602 C 2660.5254 636.41602 2651.5225 609.41992 2645.5225 585.41992 C 2635.5225 549.41992 2636.5254 540.42187 2648.5254 532.42187 C 2671.5254 517.42187 2743.5273 525.42285 2745.5273 543.42285 C 2751.5273 604.42285 2773.5225 705.41895 2780.5225 709.41895 C 2798.5225 720.41895 2798.5254 705.41699 2783.5254 627.41699 C 2768.5254 548.41699 2768.5273 548.41895 2790.5273 529.41895 C 2817.5273 507.41895 2879.5205 512.41309 2908.5205 538.41309 C 2976.5205 599.41309 2984.3652 828.34559 2929.3652 1144.3457 L 2557.0898 1144.8877 z M 3442.4561 1144.6973 L 3070.1807 1144.1553 C 3015.1807 828.15521 3023.0107 599.22266 3091.0107 538.22266 C 3120.0107 512.22266 3182.0186 507.22852 3209.0186 529.22852 C 3231.0186 548.22852 3231.0205 548.22656 3216.0205 627.22656 C 3201.0205 705.22656 3201.0088 720.22852 3219.0088 709.22852 C 3226.0088 705.22852 3248.0186 604.23242 3254.0186 543.23242 C 3256.0186 525.23242 3328.0205 517.23145 3351.0205 532.23145 C 3363.0205 540.23145 3364.0088 549.22949 3354.0088 585.22949 C 3348.0088 609.22949 3339.0205 636.22559 3336.0205 646.22559 C 3331.0205 658.22559 3334.0146 663.23242 3345.0146 663.23242 C 3360.0146 663.23242 3375.0127 622.22754 3383.0127 563.22754 C 3385.0127 543.22754 3391.0205 539.22559 3411.0205 541.22559 C 3450.0205 547.22559 3456.0088 558.23438 3444.0088 610.23437 C 3438.0088 636.23437 3434.0107 660.22559 3436.0107 661.22559 C 3447.0107 673.22559 3461.0215 646.23242 3467.0215 603.23242 C 3473.0215 556.23242 3474.0215 555.23438 3497.0215 565.23437 C 3523.0215 577.23438 3528.0107 604.22852 3511.0107 649.22852 C 3505.0107 664.22852 3503.0117 679.23145 3507.0117 682.23145 C 3518.0117 693.23145 3541.0107 649.22559 3541.0107 616.22559 C 3541.0107 577.22559 3543.0215 577.22852 3587.0215 604.22852 C 3651.0215 643.22852 3650.0088 647.22266 3534.0088 928.22266 C 3458.689 1116.2105 3443.2967 1142.7095 3442.4561 1144.6973 z "/>
+                    </g>
+                </svg>
+            </button>
+            </div><!-- /zones-femme -->
+
+            <!-- ====== ZONES HOMME DOS ====== -->
+            <div class="zones-homme zones-dos hidden-zone-mode">
+            <button class="body-zone zone-tete zone-dos" data-group="tete" data-mode="DOS" data-gender="homme" aria-label="Zone tete dos homme">
+                <svg class="zone-placeholder zone-placeholder-head" xmlns="http://www.w3.org/2000/svg" viewBox="1185 5320 620 640" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+                    <g transform="translate(0,11200) scale(1,-1)">
+                    <path class="zone-hit" data-group="tete" d="m 1487.5049,5888.6279 c -33.5,-0.125 -67.0078,-4.623 -95.5078,-13.623 -112,-35 -162.9951,-119.0049 -169.9951,-280.0049 -2,-56 1.0019,-137.999 7.0019,-183.999 11,-82 10.9941,-83.0059 68.9941,-141.0059 68,-69 126.9961,-98.9902 195.9961,-99.9902 67,0 119.0127,27.0019 188.0127,97.0019 L 1740,5325 l 11.001,131.9971 c 22,260 -25.003,376.0039 -168.003,419.0039 -28.5,8.5 -61.9931,12.7519 -95.4931,12.6269 z m 294.7998,-357.2607 c -1.1418,-0.084 -1.9561,-1.1348 -2.2998,-3.3692 -1,-2 -3.0098,-24.998 -5.0098,-52.998 -2,-27 -6.9902,-69.999 -9.9902,-93.999 -6,-39 -5.002,-43.0069 7.998,-32.0069 21,16 39.9922,103.0098 31.9922,140.0098 -4.1406,20.7031 -17.1889,42.7697 -22.6904,42.3633 z m -591.6943,-5.874 c -2.2097,-0.069 -4.754,-5.667 -8.6133,-12.4952 -22,-39 -8.9912,-126.997 24.0088,-161.997 10,-11 11.998,-6.9951 7.998,25.0049 -14.7656,118.8281 -18.1603,149.6514 -23.3935,149.4873 z m 64.2041,-231.1084 c -5.5921,-0.1407 3.2314,-19.9073 26.2939,-59.2823 26,-43 30,-59.999 30,-123.999 0,-58 4.0029,-76.9971 18.0029,-86.9971 16,-13 293.9971,5.9913 326.9971,5.9913 12,0 15,15 15,75 0,65 4,82.0127 30,128.0127 17,30 30,57 30,60 0,4 -28.0068,-21.001 -62.0068,-56.001 -48,-49 -73.9912,-67.0069 -110.9912,-77.0069 -66,-18 -140.0059,-6.999 -186.0059,26.001 -20,15 -55.0029,47.0078 -78.0029,73.0078 -21.875,23.625 -34.9378,35.3828 -39.2871,35.2735 z"></path>
+                    </g>
+                </svg>
+            </button>
+            <button class="body-zone zone-bras zone-dos" data-group="bras" data-mode="DOS" data-gender="homme" aria-label="Zone bras dos homme">
+                <svg class="zone-placeholder zone-placeholder-bras" xmlns="http://www.w3.org/2000/svg" viewBox="1295 1470 450 2500" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+                    <g transform="translate(0,6500) scale(1,-1)">
+                    <path class="zone-hit" data-group="bras" d="m 907.85982,4417.0029 c -14,15 -6,-62 13,-126 22,-72 22,-83 -16,-265 -13,-66 -31,-193 -39,-282 -15,-178 -24,-216 -98,-413 -70,-191 -87,-252 -97,-361 -5,-52 -20,-129 -34,-170 -13,-40 -29,-93 -35,-116 -12,-44 -57,-107 -71,-98 -4,3 3,42 16,87 12,45 21,85 18,87 -9,10 -21,-20 -39,-100 -14,-60 -25,-85 -43,-100 -13,-10 -28,-17 -32,-14 -4,2 6,48 21,102 32,109 33,113 20,113 -4,0 -20,-46 -35,-102 -28,-104 -48,-137 -72,-117 -10,8 -10,18 1,50 8,21 12,39 10,39 -2,0 5,32 16,71 11,39 17,74 14,77 -11,11 -21,-17 -40,-113 -10,-53 -22,-98 -26,-101 -35,-21 -27,130 12,243 21,63 23,73 11,73 -5,0 -17,-18 -27,-40 -20,-43 -58,-75 -81,-66 -23,9 78,199 124,234 91,70 93,73 102,147 5,39 16,150 25,249 20,219 27,259 66,361 30,77 32,89 40,290 8,212 16,269 45,359 12,36 15,67 10,116"></path>
+                    </g>
+                </svg>
+            </button>
+            <button class="body-zone zone-buste zone-dos" data-group="buste" data-mode="DOS" data-gender="homme" aria-label="Zone buste dos homme">
+                <svg class="zone-placeholder zone-placeholder-buste" xmlns="http://www.w3.org/2000/svg" viewBox="880 4210 1230 1200" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+                    <g transform="translate(0,9060) scale(1,-1)">
+                    <path class="zone-hit" data-group="buste" d="m 1655,5030 c 0,0 -12,-17 34,-28 27,-6 91,-30 142,-53 52,-23 137,-56 189,-74 157,-53 195,-81 248,-180 24,-45 26,-60 25,-145 0.9377,-2.705 -211,-136 -211,-136 -10,11 -22,-6 -22,-31 0,-14 -34,-141 -76,-282 l -75,-256 4,-260 c 3,-221 7,-272 25,-340 0,0 -84.127,5.0969 -159,-1 -164,-19 -516,-15 -651,6 -87,14 -88,15 -67,95 5,22 9,144 9,270 -1,255 1,244 -91,550 -23,77 -47,163 -53,192 -6,28 -15,55 -19,59 -0.32099,-0.592 -221,114 -221,114 -7,79 10,145 53,210 39,58 98,95 205,129 50,16 123,44 161,61 90,42 194,80 220,80 19,1 19,1 3,14 0,0 316.8525,9.2469 327,6 z"></path>
+                    </g>
+                </svg>
+            </button>
+            <button class="body-zone zone-jambes zone-dos" data-group="jambes" data-mode="DOS" data-gender="homme" aria-label="Zone jambes dos homme">
+                <svg class="zone-placeholder zone-placeholder-jambes" xmlns="http://www.w3.org/2000/svg" viewBox="930 1000 1150 2320" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+                    <g transform="translate(0,4220) scale(1,-1)">
+                    <path class="zone-hit" data-group="jambes" d="m 1047.9346,3248.4668 c -2.8594,0.094 -4.6709,-0.1006 -5.1709,-0.6006 -8,-7 -43.99417,-298.9971 -53.99417,-431.9971 -13,-173 -11.00976,-217.0009 9.99024,-221.0009 121.00003,-20 179.00483,-24.002 310.00483,-22.002 l 154.9952,3.0029 1.0107,58.0079 c 0.9844,30.5156 0.019,56.1876 -1.9189,56.9824 -0.01,0 -0.036,0.013 -0.044,0.015 -0.01,8e-4 -0.036,0 -0.044,0 -3,0 -14.9932,-7 -27.9932,-15 -13,-9 -62.0098,-19.997 -110.0098,-26.997 -102,-13 -175.9882,-1.9981 -242.9882,37.0019 -66,39 -51.001,47.9971 18.999,11.9971 56,-29 68.9873,-32.0069 156.9873,-32.0069 66,0 112.0117,6.003 147.0117,18.003 57,20 73.9893,44.0068 73.9893,107.0068 0,22 5.0048,39.9902 10.0048,39.9902 6,0 10.0049,-17.9902 10.0049,-39.9902 0,-62 15.9932,-84.0107 72.9932,-106.0107 98,-36 274.0039,-22.9912 329.0039,24.0088 9,8 21.9932,11.9902 27.9932,9.9902 21,-7 -72.9942,-56.9942 -128.9942,-68.9942 -67,-14 -200.001,-0.9951 -251.001,25.0049 -18,9 -33.999,15.9961 -33.999,15.9961 -1,0 0.01,-26.0039 2.0069,-59.0039 l 3.999,-57.9931 151.9922,-2.0069 c 83,-1 183.0009,3.0088 221.0009,9.0088 119,18 109.001,1.9941 101.001,158.9941 -3,75 -10.9961,165.0059 -15.9961,201.0059 -5,36 -12,100.9902 -15,144.9902 -4,44 -15.997,116.0049 -26.997,160.0049 l -30,1.9922 c -177,-45 -611.0069,-47.9873 -812.0069,-6.9873 -20.25,4.5 -38.2529,7.3066 -46.831,7.5879 z m 939.3896,-665.9766 c -2.1328,0.012 -4.5742,-0.8652 -7.3242,-2.4902 -33,-18 -197.9971,-31.9932 -326.9971,-27.9932 l -133.0078,4.9952 v -135.9961 c 1,-75 5.0049,-199.0059 10.0049,-276.0059 32,-498 32.9961,-519.0049 15.9961,-640.0049 -20,-148 -20,-279.9961 0,-480.9961 20,-193.99998 14.0029,-501.5283 -11.9971,-626.5283 -1.7712,-1.40094 214.9951,-14.0039 214.9951,-14.0039 -17,33 -4.9941,205.5332 21.0059,291.5332 26,87 74.9961,322.00391 90.9961,434.0039 8,60 8.999,135 3.999,255 -16,333 -14.9912,349.9951 39.0088,544.9951 50,180 66.001,274.9961 86.001,495.9961 12.25,133.875 12.249,177.4131 -2.6807,177.4951 z m -995.43455,-4.1894 c -16.40698,0.092 -13.76953,-29.3584 3.10547,-213.2959 15.99998,-168 34.00388,-283 59.00388,-375 80,-287 86.0059,-330.0117 66.0059,-507.0117 -22,-197 -5.9981,-397.9932 52.0019,-642.9932 11,-47 23.9932,-101 27.9932,-120 4,-19 17.0039,-74.99512 29.0039,-124.99512 22,-97 27.001,-195 11.001,-225 -0.1829,-2.11697 210.9961,30 210.9961,30 -32,133 -39.0069,416.99414 -17.0069,623.99412 20,188 20,352.9961 0,480.9961 -16,105 -13.998,243.0049 7.002,475.0049 6,63 14.0068,218 17.0068,345 l 7.002,231.0059 -135,-3.9991 c -75,-2 -174.0049,0.9873 -220.0049,6.9873 -47,6 -95.0068,14.0069 -107.0068,17.0069 -4.37504,1.25 -8.06522,2.2827 -11.10355,2.2998 z"></path>
+                    </g>
+                </svg>
+            </button>
+            <button class="body-zone zone-pieds zone-dos" data-group="pieds" data-mode="DOS" data-gender="homme" aria-label="Zone pieds dos homme">
+                <svg class="zone-placeholder zone-placeholder-pieds" xmlns="http://www.w3.org/2000/svg" viewBox="1130 0 730 440" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+                    <g transform="translate(0,680) scale(1,-1)">
+                    <path class="zone-hit" data-group="pieds" d="m 1748.2379,384.8383 c 7,-12 43,-55.65912 82,-79.65912 69,-45 84,-70 56,-93 -24,-20 -238,-82 -283,-82 -35,0 -51,6 -70,25 -23,23 -25,32 -21,88 2,34 12,111.65912 21,155.65912 m -83,1.34088 c 12,-52 24,-122 26,-155 4,-51 1,-65 -18,-88 -20,-27 -25,-28 -83,-24 -64,5 -247,57 -271,77 -30,25 -16,49 55,96 38,24 74,53 80,64"></path>
+                    </g>
+                </svg>
+            </button>
+            </div><!-- /zones-homme-dos -->
+
+            <!-- ====== ZONES FEMME DOS ====== -->
+            <div class="zones-femme zones-dos hidden-gender hidden-zone-mode">
+            <button class="body-zone zone-tete zone-f zone-dos" data-group="tete" data-mode="DOS" data-gender="femme" aria-label="Zone tete dos femme">
+                <svg class="zone-placeholder zone-placeholder-head-f" xmlns="http://www.w3.org/2000/svg" viewBox="2500 7230 1020 1460" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+                    <g transform="translate(0,16180) scale(1,-1)">
+                    <path class="zone-hit" data-group="tete" d="M 3019.9951 8796.0059 C 2889.9951 8799.0059 2846.0049 8789.0049 2770.0049 8740.0049 C 2692.0049 8690.0049 2631.9941 8601.9951 2603.9941 8494.9951 C 2564.9941 8349.9951 2609.001 8083 2696.001 7935 C 2721.001 7892 2821.0029 7789.9951 2838.0029 7789.9951 C 2843.0029 7789.9951 2841.0039 7811.9941 2834.0039 7838.9941 C 2788.0039 8016.9941 2818.9951 8236.9951 2899.9951 8314.9951 C 2953.9951 8366.9951 3056.002 8366.0029 3112.002 8313.0029 C 3155.002 8273.0029 3175.9961 8225 3195.9961 8130 C 3213.9961 8040 3210.9951 7945.0029 3184.9951 7848.0029 C 3177.9951 7819.0029 3173.0049 7793.0059 3175.0049 7791.0059 C 3185.0049 7782.0059 3263.9932 7852.0049 3297.9932 7900.0049 C 3348.9932 7972.0049 3383.999 8061.9971 3408.999 8186.9971 C 3466.999 8467.9971 3391.9951 8672.999 3199.9951 8763.999 C 3139.9951 8791.999 3124.9951 8794.0059 3019.9951 8796.0059 z M 2983.5645 8326.3477 C 2957.3145 8325.1289 2946.2549 8318.0039 2920.0049 8294.0039 C 2870.0049 8248.0039 2848.998 8188.9971 2842.998 8066.9971 C 2829.998 7831.9971 2914.0059 7555.9941 3036.0059 7433.9941 C 3067.0059 7403.9941 3094.0059 7380.0029 3096.0059 7383.0029 C 3098.0059 7385.0029 3091.998 7402.001 3082.998 7421.001 C 3052.998 7479.001 3060.999 7558.9951 3108.999 7684.9951 C 3165.999 7837.9951 3183.9971 7930.9941 3176.9971 8048.9941 C 3170.9971 8161.9941 3149 8237.002 3105 8287.002 C 3076 8320.002 3068.9961 8323.9961 3015.9961 8325.9961 C 3002.7461 8326.4961 2992.3145 8326.7539 2983.5645 8326.3477 z M 2558.9941 8280 C 2543.9941 8280 2528.9961 8202 2535.9961 8160 C 2542.9961 8118 2595.0059 8028.9932 2616.0059 8022.9932 C 2623.0059 8020.9932 2617.9941 8051 2603.9941 8100 C 2590.9941 8144 2577.9941 8202.0049 2573.9941 8230.0049 C 2569.9941 8257.0049 2563.9941 8280 2558.9941 8280 z M 3457.251 8273.0713 C 3451.5173 8273.0675 3447.7295 8256.1084 3439.9951 8208.999 C 3432.9951 8167.999 3419.9951 8108.998 3409.9951 8077.998 C 3391.9951 8017.998 3395.0068 8006.9932 3422.0068 8037.9932 C 3463.0068 8083.9932 3483.9961 8148.9961 3480.9961 8220.9961 C 3479.9961 8234.9961 3473.9961 8255 3465.9961 8265 C 3462.4336 8270.0469 3459.6719 8273.0729 3457.251 8273.0713 z "></path>
+                    </g>
+                </svg>
+            </button>
+            <button class="body-zone zone-bras zone-f zone-dos" data-group="bras" data-mode="DOS" data-gender="femme" aria-label="Zone bras dos femme">
+                <svg class="zone-placeholder zone-placeholder-bras-f" xmlns="http://www.w3.org/2000/svg" viewBox="2515 5780 980 2100" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+                    <g transform="translate(0,12520) scale(1,-1)">
+                    <path class="zone-hit" data-group="bras" d="m 2210.5385,7277.9122 c -80,-76 -97.998,-136.0117 -127.998,-447.0117 -47,-473 -74.9961,-672.998 -105.9961,-757.998 -77,-207 -97.0098,-279.9922 -155.0098,-571.9922 -43,-211 -68.9873,-323.0049 -81.9873,-340.0049 -10,-14 -40.0019,-38.9971 -67.0019,-56.9971 -77,-51 -122.0049,-101.0039 -160.0049,-179.0039 -20,-40 -48.9951,-92.001 -64.9951,-116.001 -24,-36 -27.0078,-43.996 -13.0078,-45.996 8,-2 26.997,5 41.997,15 27,21 84.9991,92.0048 93.9991,115.0048 2,7 7.0009,9.9873 11.0009,6.9873 3,-3 -6.998,-42.0009 -22.998,-86.0009 -59,-159 -77.9912,-275.9981 -50.9912,-307.9981 19,-23 27.9951,-17.9971 34.9951,18.0029 7,34 75.0059,248.9961 81.0059,255.9961 2,2 6.9902,2.0079 9.9902,-1.9921 3,-3 -15.001,-68.9971 -41.001,-146.9971 -43,-127 -45.9922,-143.002 -31.9922,-157.002 23,-23 54.003,-8 63.003,30 11,54 85.9951,247.002 94.9951,247.002 5,0 8.9941,-1.0029 8.9941,-3.0029 0,-6 -81.9961,-222.004 -90.9961,-239.004 -13,-25 19.999,-33.0009 48.999,-11.0009 16,12 36.9991,54.998 63.9991,127.998 43,116 44.998,120.9981 52.998,112.9981 3,-3 -10.9961,-47.9971 -30.9961,-101.9971 -37,-96 -38.0058,-119.9902 -6.0058,-99.9902 27,17 57.0097,66.998 95.0097,157.998 39,92 61.9922,185.999 76.9922,318.999 8,68 21.0088,110.9951 54.0088,184.9951 24,53 76.001,169.0069 116.001,257.0069 105,233 135.9902,330.9951 174.9902,559.9951 19,110 46,260.9951 60,334.9951 44,232 45.0029,249.0088 18.0029,399.0088 -13,73 -21.999,136.0029 -18.999,138.0029"></path>
+                    </g>
+                </svg>
+            </button>
+            <button class="body-zone zone-buste zone-f zone-dos" data-group="buste" data-mode="DOS" data-gender="femme" aria-label="Zone buste dos femme">
+                <svg class="zone-placeholder zone-placeholder-buste-f" xmlns="http://www.w3.org/2000/svg" viewBox="2150 5500 1710 2570" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+                    <g transform="translate(0,13050) scale(1,-1)">
+                    <path class="zone-hit" data-group="buste" d="M 2790 7800.9961 L 2798.9941 7777.998 C 2831.9941 7689.998 2816.998 7571.0039 2767.998 7514.0039 C 2714.998 7454.0039 2646.0068 7425.0049 2477.0068 7390.0049 C 2333.0068 7360.0049 2271.5518 7335.9443 2210.5518 7277.9443 C 2210.151 7277.5635 2341.4063 6887.8711 2341.4063 6887.8711 C 2355.4063 6902.8711 2368.9951 6866.0029 2389.9951 6738.0029 C 2401.9951 6659.0029 2427 6543 2445 6480 C 2463 6417 2483 6341.9932 2490 6312.9932 L 2501.9971 6262.002 L 2617.998 6252.9932 C 2767.998 6242.9932 3319.001 6241.9932 3431.001 6252.9932 L 3516.0059 6262.002 L 3559.9951 6417.9932 C 3582.9951 6503.9932 3607.001 6601.0029 3611.001 6633.0029 C 3624.001 6718.0029 3658.9951 6879.8311 3664.9951 6886.8311 C 3664.9951 6886.8491 3879.9316 7173.7939 3879.9316 7173.7939 C 3855.9316 7238.7939 3790.999 7306.0068 3723.999 7337.0068 C 3695.999 7350.0068 3627.999 7369.9961 3573.999 7380.9961 C 3371.999 7423.9961 3268.999 7473.0039 3228.999 7544.0039 C 3209.999 7577.0039 3206.001 7600.0049 3206.001 7660.0049 C 3206.001 7701.0049 3209.0029 7747.998 3213.0029 7762.998 L 3221.001 7791.0059 L 3191.9971 7776.0059 C 3167.9971 7764.0059 3155.9941 7743.0029 3128.9941 7668.0029 C 3081.9941 7539.0029 3082.9971 7446.9932 3131.9971 7377.9932 C 3167.9971 7327.9932 3087.9951 7355.0059 3019.9951 7416.0059 C 2963.9951 7467.0059 2915.9932 7551.0039 2877.9932 7664.0039 C 2853.9932 7739.0039 2839.9932 7766.001 2817.9932 7781.001 L 2790 7800.9961 z M 2664.2725 7428.8379 C 2671.1072 7429.0151 2687.3184 7416.2559 2721.0059 7386.0059 C 2800.0059 7315.0059 2911.001 7271.0049 3011.001 7270.0049 C 3102.001 7270.0049 3230.9951 7323.001 3304.9951 7391.001 C 3360.9951 7443.001 3372.0068 7425.998 3317.0068 7372.998 C 3149.0068 7211.998 2878.0049 7208.9961 2710.0049 7365.9961 C 2683.0049 7390.9961 2659.9951 7417.001 2659.9951 7421.001 C 2659.9951 7426.001 2661.1658 7428.7573 2664.2725 7428.8379 z M 3512.373 6246.3721 L 3469.3652 6235.3711 C 3439.3652 6227.3711 3292.3711 6224.3701 3025.3711 6224.3701 C 2782.3711 6224.3701 2602.3623 6228.3711 2566.3623 6235.3711 L 2508.3691 6245.376 L 2513.3643 6199.3799 C 2517.3643 6174.3799 2526.3662 6102.375 2535.3662 6039.375 C 2543.3662 5976.375 2550.3662 5905.373 2550.3662 5882.373 C 2550.3662 5816.373 2410.5361 5491.002 2319.5361 5302.002 C 2375.3649 5285.6611 3697.2148 5279.9952 3695.874 5304.4189 C 3643.874 5412.4189 3511.3613 5711.3779 3500.3613 5742.3779 C 3464.3613 5847.3779 3464.3633 5874.3711 3507.3633 6205.3711 L 3512.373 6246.3721 z "></path>
+                    </g>
+                </svg>
+            </button>
+            <button class="body-zone zone-jambes zone-f zone-dos" data-group="jambes" data-mode="DOS" data-gender="femme" aria-label="Zone jambes dos femme">
+                <svg class="zone-placeholder zone-placeholder-jambes-f" xmlns="http://www.w3.org/2000/svg" viewBox="2230 110 1530 5000" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+                    <g transform="translate(0,5600) scale(1,-1)">
+                    <path class="zone-hit" data-group="jambes" d="m 2306.4793,5262.218 c 0,0 -67.4793,-146.2141 -86.4793,-358.2141 -22,-235 9,-455.0088 135,-984.0088 59,-245 106.0059,-473 126.0059,-615 19,-134 16.9902,-403 -5.0098,-600 -21,-189 -18.002,-384.9961 7.998,-555.9961 8,-52 54.6095,-237.7623 91.0108,-415.0049 144.3905,-703.0563 137.5284,-757.28068 88.0918,-882.57628 l 290.9901,-61.76594 -27.08,95.34812 -1.0107,409.9951 c -1,297 4.0029,492.0098 18.0029,710.0098 21,332 17.9951,518.9902 -10.0049,729.9902 -18,137 -15.997,205 18.003,795 13,228 17.0097,1002.9981 5.0097,1072.9981 -8,44 -10.0039,46.0058 -29.0039,36.0058 -14,-7 -50.0019,-10.0058 -97.0019,-6.0058 -172,12 -350.003,99.0068 -498.003,242.0068 -57,55 -93.0029,97.9951 -93.0029,109.9951 0,15 14.0049,4.999 55.0049,-41.001 99,-112 253.0068,-212.9882 392.0068,-257.9882 70,-23 176.9883,-33.0127 242.9883,-23.0127 59,10 60.0049,10.0107 190.0049,1.0107 49,-3 110.0049,-1.0088 145.0049,5.9912 145,28 311.9883,124.001 437.9883,251.001 43,44 77.0068,72.0029 77.0068,63.0029 0,-23 -124.9971,-149 -191.9971,-195 -170,-116 -405.0058,-186 -501.0058,-150 l -24.9903,10.0049 -7.0019,-137.0068 c -10,-183 0.999,-831.9971 18.999,-1106.9971 29,-435 29.002,-524.998 7.002,-697.998 -26,-195 -27.0098,-402.9961 -5.0098,-720.9961 11,-142 17.0029,-363.0059 18.0029,-576.0059 1,-455 -1.7949,-498.708 -29.7949,-610.708 l 290.0244,52.00195 c -28,61 -29.2236,67.71093 -29.2236,223.71095 1,176 -4.0098,147 129.9902,705 110,456 125.999,661 78.999,1005 -12,90 -15.0009,162.9902 -11.0009,294.9902 8,249 29.0019,367.0069 172.0019,977.0069 93,398 99.0049,440.9931 100.0049,702.9931 0,325 -75.9571,487.7643 -75.9571,487.7643 -58.6291,36.4054 -1376.9979,32.1236 -1412.5636,14.4586 z"></path>
+                    </g>
+                </svg>
+            </button>
+            <button class="body-zone zone-pieds zone-f zone-dos" data-group="pieds" data-mode="DOS" data-gender="femme" aria-label="Zone pieds dos femme">
+                <svg class="zone-placeholder zone-placeholder-pieds-f" xmlns="http://www.w3.org/2000/svg" viewBox="2475 530 1060 370" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+                    <g transform="translate(0,1370) scale(1,-1)">
+                    <path class="zone-hit" data-group="pieds" d="M 2663.1152 851.42578 C 2652.3742 831.36631 2632.972 790.11514 2568.1055 731.74805 C 2531.1055 695.74805 2500.1074 658.75684 2500.1074 650.75684 C 2500.1074 618.75684 2555.1064 597.74512 2774.1064 548.74512 C 2958.1064 506.74514 3013.1064 580.75586 2954.1064 789.75586 L 2663.1152 851.42578 z M 3354.1846 851.33789 L 3064.1895 799.33594 C 3021.1895 632.33594 3036.1875 562.33691 3117.1875 540.33691 C 3161.1875 528.33691 3260.1953 540.33391 3340.1953 567.33398 C 3370.1953 578.33398 3416.1924 589.33496 3442.1924 593.33496 C 3499.1924 602.33496 3526.1836 630.33984 3508.1836 663.33984 C 3502.1836 675.33984 3471.1855 707.34766 3440.1855 736.34766 C 3401.1855 772.34766 3374.1846 807.33789 3354.1846 851.33789 z "></path>
+                    </g>
+                </svg>
+            </button>
+            </div><!-- /zones-femme-dos -->
+        </div>
+    </div>
+</div>
+<footer>
+    <div class="banner-footer">
+        <div class="control-group">
+                <button class="control-btn" data-mode="FACE" type="button">FACE</button>
+                <button class="control-btn" data-mode="DOS" type="button">DOS</button>
+        </div>
+        <div class="control-group gender-group">
+                <button class="control-btn-gender active" data-gender="homme" type="button">HOMME</button>
+                <button class="control-btn-gender" data-gender="femme" type="button">FEMME</button>
+        </div>
+    </div>
+</footer>
+
+<script src="{{ url_for('static', filename='C2/scriptC2.js') }}"></script>
+
+<!-- BOUTON + POUR AJOUTER UN APPAREIL -->
+<div class="cm-modal" id="cm-modal" aria-hidden="true">
+    <div class="cm-modal-card" role="dialog" aria-modal="true" aria-labelledby="cm-modal-title">
+        <button class="cm-modal-close" id="cm-modal-close" aria-label="Fermer">X</button>
+        <h3 class="cm-modal-title" id="cm-modal-title">Ajouter un appareil</h3>
+        <div class="cm-modal-row">
+            <label class="cm-modal-label" for="cm-modal-input">Nom du nouvel appareil :</label>
+            <input class="cm-modal-input" id="cm-modal-input" type="text" placeholder="Ex: C2 3">
+            <div class="cm-modal-error" id="cm-modal-error" aria-live="polite"></div>
+        </div>
+        <div class="cm-modal-row">
+            <label class="cm-modal-label" for="cm-modal-type">Type :</label>
+            <input class="cm-modal-select" id="cm-modal-type" type="text" value="C2" readonly>
+        </div>
+        <button class="cm-modal-submit" id="cm-modal-submit">valider</button>
+    </div>
+</div>
+</body>
+</html>
+

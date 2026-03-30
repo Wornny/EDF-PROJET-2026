@@ -1,0 +1,14 @@
+[Unit]
+Description=Application Flask EDF
+After=network.target mysql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/utilisateur/EDF-Projet/web/app
+ExecStart=/bin/bash /home/utilisateur/EDF-Projet/web/app/start.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
