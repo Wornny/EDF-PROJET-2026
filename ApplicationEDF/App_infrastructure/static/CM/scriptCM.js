@@ -12,6 +12,8 @@ const apiBase = document.body.dataset.apiBase || "";
 let hasPendingContamination = false;
 let hasPendingStatus = false;
 let currentStatus = "0";
+let isSendPressed = false;
+let sendPointerId = null;
 
 const RAW_MAX = 10000;
 const P0 = 0;
@@ -392,21 +394,84 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const sendBtn = document.getElementById("sendBtn");
   if (sendBtn) {
-    sendBtn.addEventListener("click", () => {
+    const sendPressStart = () => {
+      if (isSendPressed) return;
+      isSendPressed = true;
+
       const contaminationRaw = snap(Number(jauge ? jauge.value : 0));
       const contaminationText = formatValue(sliderToValue(contaminationRaw));
-      const nextStatus = currentStatus === "1" ? "0" : "1";
 
       hasPendingContamination = true;
       hasPendingStatus = true;
-      setStatus(nextStatus);
+      setStatus("1");
 
       Promise.all([
         sendValue("Contamination", contaminationText),
-        sendValue("Status", nextStatus),
+        sendValue("Status", "1"),
       ]).catch(() => {
         // Keep optimistic local state until next server poll.
       });
+    };
+
+    const sendPressEnd = () => {
+      if (!isSendPressed) return;
+      isSendPressed = false;
+
+      hasPendingStatus = true;
+      setStatus("0");
+      sendValue("Status", "0").catch(() => {
+        // Keep optimistic local state until next server poll.
+      });
+    };
+
+    sendBtn.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+
+      sendPointerId = event.pointerId;
+      sendPressStart();
+      if (typeof sendBtn.setPointerCapture === "function") {
+        sendBtn.setPointerCapture(event.pointerId);
+      }
+      event.preventDefault();
+    });
+
+    sendBtn.addEventListener("pointerup", (event) => {
+      if (sendPointerId !== event.pointerId) return;
+      sendPointerId = null;
+      sendPressEnd();
+    });
+
+    sendBtn.addEventListener("pointercancel", (event) => {
+      if (sendPointerId !== event.pointerId) return;
+      sendPointerId = null;
+      sendPressEnd();
+    });
+
+    sendBtn.addEventListener("lostpointercapture", () => {
+      sendPointerId = null;
+      sendPressEnd();
+    });
+
+    sendBtn.addEventListener("keydown", (event) => {
+      if (event.repeat) return;
+      if (event.key !== " " && event.key !== "Enter") return;
+      sendPressStart();
+      event.preventDefault();
+    });
+
+    sendBtn.addEventListener("keyup", (event) => {
+      if (event.key !== " " && event.key !== "Enter") return;
+      sendPressEnd();
+      event.preventDefault();
+    });
+
+    sendBtn.addEventListener("blur", () => {
+      sendPressEnd();
+    });
+
+    window.addEventListener("blur", () => {
+      sendPointerId = null;
+      sendPressEnd();
     });
   }
 
