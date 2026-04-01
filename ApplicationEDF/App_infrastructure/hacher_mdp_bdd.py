@@ -11,11 +11,11 @@ import bcrypt
 import mysql.connector
 
 MYSQL_CONFIG = {
-    "host": "192.168.191.14",
+    "host": "192.168.10.3",
     "user": "admin",
     "password": "superbddnormandie765",
     "database": "EDF",
-    "port": 53306,
+    "port": 3306,
 }
 
 

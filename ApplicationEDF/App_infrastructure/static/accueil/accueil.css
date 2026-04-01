@@ -36,7 +36,7 @@
   --carousel-height:468px; /* réduit de 10% */
   --logo-size:144px; 
   --title-pill-font-size:16px;
-  --circle-y: 38%;
+  --circle-y: 40%;
   --circle-left-x: 20%;
   --circle-center-x: 50%;
   --circle-right-x: 80%;
@@ -219,6 +219,7 @@ body.menu-page #root {
 
 .slot-center {
   left: var(--circle-center-x);
+  top : calc(var(--circle-y) + 60px);
   transform: translate(-50%, -50%) translateZ(var(--circle-z)) rotateY(var(--circle-tilt)) scale(var(--circle-scale));
 }
 
@@ -229,7 +230,7 @@ body.menu-page #root {
 
 .slot-top {
   left: var(--circle-center-x);
-  top: calc(var(--circle-y) - 155px);
+  top: calc(var(--circle-y) - 100px);
   transform: translate(-50%, -50%) translateZ(var(--circle-z)) rotateY(var(--circle-tilt)) scale(var(--circle-scale));
 }
 
@@ -293,6 +294,11 @@ body.menu-page #root {
   height: 117px;
   margin-bottom: 0;
   object-fit: contain;
+}
+
+/* Réduit l'image C2 qui est trop grande par défaut. */
+.device[data-label="C2"] img {
+  transform: scale(0.8);
 }
 
 /* Masque le liseré noir présent dans l'image source de l'initialisateur. */
