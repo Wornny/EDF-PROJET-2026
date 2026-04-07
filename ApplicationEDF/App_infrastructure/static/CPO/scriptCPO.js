@@ -148,7 +148,7 @@ function updateGauge(rawValue) {
   const valueText = formatValue(valueNum);
 
   if (valeur) {
-    valeur.textContent = `${valueText} Bq/cm²`;
+    valeur.textContent = `${valueText} Bq`;
   }
   setValueBoxColor(valueBox, valueNum);
   setGaugeTone(valueNum);
@@ -168,7 +168,7 @@ function applyServerState(contamination) {
 
   const normalized = normalizeDisplayValue(contamination);
   if (valeur) {
-    valeur.textContent = `${normalized} Bq/cm²`;
+    valeur.textContent = `${normalized} Bq`;
   }
 
   if (jauge) {
@@ -365,13 +365,44 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalClose = document.getElementById("cm-modal-close");
   const modalSubmit = document.getElementById("cm-modal-submit");
   const modalInput = document.getElementById("cm-modal-input");
-  const modalType = document.getElementById("cm-modal-type");
+  const modalId = document.getElementById("cm-modal-id");
   const modalError = document.getElementById("cm-modal-error");
 
-  const updatePlaceholder = () => {
-    if (!modalInput || !modalType) return;
-    const type = modalType.value || "CPO";
-    modalInput.placeholder = `Ex: ${type} 3`;
+  const buildAssignedCpoIds = () => {
+    const ids = new Set();
+    const links = document.querySelectorAll('.id-list .id-item .id-btn[href^="/CPO/"]');
+    links.forEach((link) => {
+      const href = String(link.getAttribute("href") || "");
+      const match = href.match(/\/CPO\/(\d+)$/);
+      if (!match) return;
+      const id = Number(match[1]);
+      if (Number.isInteger(id) && id >= 1 && id <= 4) {
+        ids.add(id);
+      }
+    });
+    return ids;
+  };
+
+  const refreshAddButtonVisibility = () => {
+    if (!addBtn) return;
+    const assigned = buildAssignedCpoIds();
+    const hasFreeSlot = assigned.size < 4;
+    addBtn.style.display = hasFreeSlot ? "" : "none";
+  };
+
+  const updateIdChoices = () => {
+    if (!modalId) return;
+
+    const assigned = buildAssignedCpoIds();
+    modalId.innerHTML = "";
+
+    for (let id = 1; id <= 4; id += 1) {
+      if (assigned.has(id)) continue;
+      const option = document.createElement("option");
+      option.value = String(id);
+      option.textContent = String(id);
+      modalId.appendChild(option);
+    }
   };
 
   const setError = (message) => {
@@ -385,7 +416,13 @@ document.addEventListener("DOMContentLoaded", () => {
     modal.setAttribute("aria-hidden", "false");
     modalInput.value = "";
     setError("");
-    updatePlaceholder();
+    updateIdChoices();
+
+    if (modalId && modalId.options.length === 0) {
+      setError("Tous les IDs 1 a 4 sont deja utilises.");
+      return;
+    }
+
     modalInput.focus();
   };
 
@@ -402,6 +439,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  refreshAddButtonVisibility();
+
   if (modalClose) {
     modalClose.addEventListener("click", closeModal);
   }
@@ -417,7 +456,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (modalSubmit) {
     modalSubmit.addEventListener("click", () => {
       const name = (modalInput && modalInput.value ? modalInput.value : "").trim();
-      const type = (modalType && modalType.value ? modalType.value : "CPO").trim();
+      const selectedId = Number(modalId && modalId.value ? modalId.value : "");
 
       if (!name) {
         setError("Le nom est obligatoire.");
@@ -425,11 +464,17 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      if (!Number.isInteger(selectedId) || selectedId < 1 || selectedId > 4) {
+        setError("Selectionne un ID valide (1 a 4).");
+        if (modalId) modalId.focus();
+        return;
+      }
+
       setError("");
 
       const data = new FormData();
       data.append("name", name);
-      data.append("type", type);
+      data.append("id", String(selectedId));
 
       fetch(`${apiBase}/ajouter-appareil`, {
         method: "POST",
@@ -444,7 +489,12 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           closeModal();
-          window.location.reload();
+          const createdId = Number(json.cpo_id);
+          if (Number.isInteger(createdId) && createdId >= 1) {
+            window.location.href = `${apiBase}/${createdId}`;
+          } else {
+            window.location.reload();
+          }
         })
         .catch(() => {
           setError("Erreur serveur, reessaie.");

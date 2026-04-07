@@ -15,25 +15,24 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Initialisateur</title>
-  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
   <style>
   </style>
 </head>
 <body>
 
-  <!-- ======================================= BOUTON PLEIN ECRAN ======================================= -->
-  <div id="topControls" aria-label="Navigation rapide">
+  <!-- ======================================= BOUTONS HAUT GAUCHE ======================================= -->
+  <div class="top-buttons">
     <button id="btnFS" aria-label="Plein écran">⛶ Plein écran</button>
-    <a id="btnHome" href="/menu" title="Accueil" aria-label="Accueil">
-      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M3 10.5L12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5v-9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
-        <path d="M9 20v-6h6v6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+    <a class="home-btn" href="http://192.168.191.14:55001/accueil" title="Accueil" aria-label="Accueil">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+        <path d="M3 10.5L12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5v-9Z" fill="none" stroke="white" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="M9 20v-6h6v6" fill="none" stroke="white" stroke-width="1.6" stroke-linejoin="round" />
       </svg>
     </a>
   </div>
+
   <!-- ======================================= PAGE : ACCUEIL ======================================= -->
-   
   <div id="page-index" class="page active">
     <section class="panel" aria-label="Menu initialisateur">
       <div class="topbar" role="group" aria-label="Choisir initialisateur">
@@ -45,6 +44,7 @@
           </select>
         </div>
         <button class="plus" type="button" aria-label="Ajouter">+</button>
+        <button class="minus" type="button" aria-label="Supprimer">−</button>
       </div>
       <div class="actions">
         <button class="action-btn" type="button" id="btnReset">
@@ -63,6 +63,7 @@
     </section>
   </div>
 
+
   <!-- ======================================= PAGE : BARRIERE ======================================= -->
   <div id="page-barriere" class="page">
     <div class="card">
@@ -72,6 +73,7 @@
       <div class="countdown">Retour dans 2s…</div>
     </div>
   </div>
+
 
   <!-- ======================================= PAGE : SCENARIO ======================================= -->
   <div id="page-scenario" class="page">
@@ -94,11 +96,22 @@
     </section>
   </div>
 
+
   <!-- ======================================= PAGE : ATTESTATION ======================================= -->
   <div id="page-attestation" class="page">
     <button class="back" id="backAttestation" aria-label="Retour">←</button>
     <section class="panel" aria-label="Attestation de travail">
       <div class="title">Attestation de travail</div>
+
+      <div class="attestation-select-row">
+        <div class="select-wrap attestation-select-wrap">
+          <select id="attestationSelect" aria-label="Sélectionner une attestation enregistré">
+            <option value="">— Sélectionner une attestation —</option>
+          </select>
+        </div>
+        <button class="refresh-badges-btn" id="btnRefreshBadges" type="button" aria-label="Actualiser la liste des badges" title="Actualiser">↺</button>
+      </div>
+
       <div class="main-row">
         <div class="switch-wrap">
           <div class="switch disabled" id="swDate" role="switch" aria-checked="false" tabindex="-1"><div class="knob"></div></div>
@@ -120,6 +133,7 @@
     </section>
   </div>
 
+
   <!-- ======================================= SCANNER MODAL ======================================= -->
   <div class="scanner-modal" id="scannerModal" aria-hidden="true">
     <div class="scanner-card">
@@ -132,6 +146,7 @@
     </div>
   </div>
 
+
   <!-- ======================================= POPUP ALERT ======================================= -->
   <div id="customAlert">
     <div class="alert-box">
@@ -139,6 +154,7 @@
       <button class="alert-ok" id="alertOk">OK</button>
     </div>
   </div>
+
 
   <!-- ======================================= POPUP PROMPT / CONFIRM ======================================= -->
   <div id="customPrompt">
@@ -152,6 +168,7 @@
       </div>
     </div>
   </div>
+
 
   <script src="js/app.js"></script>
 </body>

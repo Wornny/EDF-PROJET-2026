@@ -6,14 +6,22 @@ const triangle = document.getElementById("gaugeTriangle");
 const overlay = document.querySelector(".gauge-overlay");
 const gaugeBg = document.getElementById("gaugeBg");
 
+const jaugeBdf = document.getElementById("jaugeBdf");
+const valeurBdf = document.getElementById("valeurBdf");
+const valueBoxBdf = document.getElementById("valueBoxBdf");
+const maskBdf = document.getElementById("gaugeMaskBdf");
+const triangleBdf = document.getElementById("gaugeTriangleBdf");
+const gaugeBgBdf = document.getElementById("gaugeBgBdf");
+const overlayBdf = gaugeBgBdf ? gaugeBgBdf.closest(".gauge-zone").querySelector(".gauge-overlay") : null;
+
 const cmId = Number(document.body.dataset.cmId || "1");
 const apiBase = document.body.dataset.apiBase || "";
 
 let hasPendingContamination = false;
+let hasPendingBruitFond = false;
 let hasPendingStatus = false;
 let currentStatus = "0";
-let isSendPressed = false;
-let sendPointerId = null;
+let isSendButtonPressed = false;
 
 const RAW_MAX = 10000;
 const P0 = 0;
@@ -172,6 +180,36 @@ function updateGauge(rawValue) {
   return valueText;
 }
 
+function updateGaugeBdf(rawValue) {
+  const raw = snap(rawValue);
+  if (jaugeBdf) jaugeBdf.value = raw;
+  const valueNum = sliderToValue(raw);
+  const valueText = formatValue(valueNum);
+  if (valeurBdf) valeurBdf.textContent = `${valueText} Bq/cm²`;
+  setValueBoxColor(valueBoxBdf, valueNum);
+  const percent = (raw / RAW_MAX) * 100;
+  if (maskBdf) maskBdf.style.width = `${100 - percent}%`;
+  if (triangleBdf) triangleBdf.style.left = `${percent}%`;
+  if (overlayBdf) overlayBdf.style.setProperty("--tri-left", `${percent}%`);
+  if (gaugeBgBdf) {
+    const toneClass = valueNum < TH_GREEN ? "gauge-tone-green" : valueNum < TH_ORANGE ? "gauge-tone-yellow" : "gauge-tone-red";
+    gaugeBgBdf.classList.remove("gauge-tone-green", "gauge-tone-yellow", "gauge-tone-red");
+    gaugeBgBdf.classList.add(toneClass);
+  }
+  if (triangleBdf) {
+    const toneClass = valueNum < TH_GREEN ? "gauge-tone-green" : valueNum < TH_ORANGE ? "gauge-tone-yellow" : "gauge-tone-red";
+    triangleBdf.classList.remove("gauge-tone-green", "gauge-tone-yellow", "gauge-tone-red");
+    triangleBdf.classList.add(toneClass);
+  }
+  return valueText;
+}
+
+function sendBruitDeFond() {
+  const raw = snap(Number(jaugeBdf ? jaugeBdf.value : 0));
+  const valueText = formatValue(sliderToValue(raw));
+  sendValue("BruitFond", valueText);
+}
+
 function updateSendButtonState() {
   const sendBtn = document.getElementById("sendBtn");
   if (!sendBtn) return;
@@ -204,6 +242,9 @@ function sendValue(type, valueText) {
       if (type === "Contamination") {
         hasPendingContamination = false;
       }
+      if (type === "BruitFond") {
+        hasPendingBruitFond = false;
+      }
       if (type === "Status") {
         hasPendingStatus = false;
       }
@@ -213,12 +254,20 @@ function sendValue(type, valueText) {
     });
 }
 
-function applyServerState(contamination, status) {
+function applyServerState(contamination, bruitFond, status) {
   if (!hasPendingContamination && typeof contamination === "string" && valeur) {
-    valeur.textContent = `${normalizeDisplayValue(contamination)} Bq/cm²`;
+    valeur.textContent = `${normalizeDisplayValue(contamination)} Bq`;
     if (jauge) {
       restoreSliderFromDisplayedValue(jauge, valeur);
       updateGauge(Number(jauge.value));
+    }
+  }
+
+  if (!hasPendingBruitFond && typeof bruitFond === "string" && valeurBdf) {
+    valeurBdf.textContent = `${normalizeDisplayValue(bruitFond)} Bq`;
+    if (jaugeBdf) {
+      restoreSliderFromDisplayedValue(jaugeBdf, valeurBdf);
+      updateGaugeBdf(Number(jaugeBdf.value));
     }
   }
 
@@ -238,13 +287,14 @@ function pollServerState() {
       if (!ok || !json || json.ok !== true) return;
 
       const contamination = String(json.NivContamination ?? "");
+      const bruitFond = String(json.NivBruitFond ?? "");
       const status = String(json.Status ?? "0");
-      const nextKey = `${contamination}|${status}`;
+      const nextKey = `${contamination}|${bruitFond}|${status}`;
 
       if (nextKey === lastServerStateKey) return;
       lastServerStateKey = nextKey;
 
-      applyServerState(contamination, status);
+      applyServerState(contamination, bruitFond, status);
     })
     .catch(() => {
       // Ignore temporary poll failures.
@@ -392,86 +442,91 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  if (jaugeBdf) {
+    if (valeurBdf) {
+      restoreSliderFromDisplayedValue(jaugeBdf, valeurBdf);
+    }
+    updateGaugeBdf(Number(jaugeBdf.value));
+
+    jaugeBdf.addEventListener("input", (event) => {
+      hasPendingBruitFond = true;
+      updateGaugeBdf(Number(event.currentTarget.value));
+    });
+
+    jaugeBdf.addEventListener("change", () => {
+      hasPendingBruitFond = true;
+      sendBruitDeFond();
+    });
+
+    enableGaugePointer(gaugeBgBdf, jaugeBdf, (raw) => {
+      hasPendingBruitFond = true;
+      updateGaugeBdf(raw);
+      sendBruitDeFond();
+    });
+
+    enableFineTune(jaugeBdf, gaugeBgBdf, (raw) => {
+      hasPendingBruitFond = true;
+      updateGaugeBdf(raw);
+      sendBruitDeFond();
+    });
+  }
+
   const sendBtn = document.getElementById("sendBtn");
   if (sendBtn) {
-    const sendPressStart = () => {
-      if (isSendPressed) return;
-      isSendPressed = true;
+    const sendPressStart = (event) => {
+      if (event) event.preventDefault();
+      if (isSendButtonPressed) return;
 
+      isSendButtonPressed = true;
       const contaminationRaw = snap(Number(jauge ? jauge.value : 0));
       const contaminationText = formatValue(sliderToValue(contaminationRaw));
+      const nextStatus = "1";
 
       hasPendingContamination = true;
       hasPendingStatus = true;
-      setStatus("1");
+      setStatus(nextStatus);
 
       Promise.all([
         sendValue("Contamination", contaminationText),
-        sendValue("Status", "1"),
+        sendValue("Status", nextStatus),
       ]).catch(() => {
         // Keep optimistic local state until next server poll.
       });
     };
 
-    const sendPressEnd = () => {
-      if (!isSendPressed) return;
-      isSendPressed = false;
+    const sendPressEnd = (event) => {
+      if (event) event.preventDefault();
+      if (!isSendButtonPressed) return;
 
+      isSendButtonPressed = false;
       hasPendingStatus = true;
       setStatus("0");
+
       sendValue("Status", "0").catch(() => {
         // Keep optimistic local state until next server poll.
       });
     };
 
-    sendBtn.addEventListener("pointerdown", (event) => {
-      if (event.button !== 0) return;
+    sendBtn.addEventListener("pointerdown", sendPressStart);
+    sendBtn.addEventListener("pointerup", sendPressEnd);
+    sendBtn.addEventListener("pointercancel", sendPressEnd);
+    sendBtn.addEventListener("lostpointercapture", sendPressEnd);
 
-      sendPointerId = event.pointerId;
-      sendPressStart();
-      if (typeof sendBtn.setPointerCapture === "function") {
-        sendBtn.setPointerCapture(event.pointerId);
-      }
-      event.preventDefault();
-    });
-
-    sendBtn.addEventListener("pointerup", (event) => {
-      if (sendPointerId !== event.pointerId) return;
-      sendPointerId = null;
-      sendPressEnd();
-    });
-
-    sendBtn.addEventListener("pointercancel", (event) => {
-      if (sendPointerId !== event.pointerId) return;
-      sendPointerId = null;
-      sendPressEnd();
-    });
-
-    sendBtn.addEventListener("lostpointercapture", () => {
-      sendPointerId = null;
+    window.addEventListener("pointerup", () => {
       sendPressEnd();
     });
 
     sendBtn.addEventListener("keydown", (event) => {
       if (event.repeat) return;
-      if (event.key !== " " && event.key !== "Enter") return;
-      sendPressStart();
-      event.preventDefault();
+      if (event.key === " " || event.key === "Enter") {
+        sendPressStart(event);
+      }
     });
 
     sendBtn.addEventListener("keyup", (event) => {
-      if (event.key !== " " && event.key !== "Enter") return;
-      sendPressEnd();
-      event.preventDefault();
-    });
-
-    sendBtn.addEventListener("blur", () => {
-      sendPressEnd();
-    });
-
-    window.addEventListener("blur", () => {
-      sendPointerId = null;
-      sendPressEnd();
+      if (event.key === " " || event.key === "Enter") {
+        sendPressEnd(event);
+      }
     });
   }
 
@@ -480,13 +535,44 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalClose = document.getElementById("cm-modal-close");
   const modalSubmit = document.getElementById("cm-modal-submit");
   const modalInput = document.getElementById("cm-modal-input");
-  const modalType = document.getElementById("cm-modal-type");
+  const modalId = document.getElementById("cm-modal-id");
   const modalError = document.getElementById("cm-modal-error");
 
-  const updatePlaceholder = () => {
-    if (!modalInput || !modalType) return;
-    const type = modalType.value || "CM";
-    modalInput.placeholder = `Ex: ${type} 3`;
+  const buildAssignedCmIds = () => {
+    const ids = new Set();
+    const links = document.querySelectorAll('.id-list .id-item .id-btn[href^="/ControllerMobile/"]');
+    links.forEach((link) => {
+      const href = String(link.getAttribute("href") || "");
+      const match = href.match(/\/ControllerMobile\/(\d+)$/);
+      if (!match) return;
+      const id = Number(match[1]);
+      if (Number.isInteger(id) && id >= 1 && id <= 16) {
+        ids.add(id);
+      }
+    });
+    return ids;
+  };
+
+  const refreshAddButtonVisibility = () => {
+    if (!addBtn) return;
+    const assigned = buildAssignedCmIds();
+    const hasFreeSlot = assigned.size < 16;
+    addBtn.style.display = hasFreeSlot ? "" : "none";
+  };
+
+  const updateIdChoices = () => {
+    if (!modalId) return;
+
+    const assigned = buildAssignedCmIds();
+    modalId.innerHTML = "";
+
+    for (let id = 1; id <= 16; id += 1) {
+      if (assigned.has(id)) continue;
+      const option = document.createElement("option");
+      option.value = String(id);
+      option.textContent = String(id);
+      modalId.appendChild(option);
+    }
   };
 
   const setError = (message) => {
@@ -500,9 +586,17 @@ document.addEventListener("DOMContentLoaded", () => {
     modal.setAttribute("aria-hidden", "false");
     modalInput.value = "";
     setError("");
-    updatePlaceholder();
+    updateIdChoices();
+
+    if (modalId && modalId.options.length === 0) {
+      setError("Tous les IDs 1 a 16 sont deja utilises.");
+      return;
+    }
+
     modalInput.focus();
   };
+
+  refreshAddButtonVisibility();
 
   const closeModal = () => {
     if (!modal) return;
@@ -532,7 +626,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (modalSubmit) {
     modalSubmit.addEventListener("click", () => {
       const name = (modalInput && modalInput.value ? modalInput.value : "").trim();
-      const type = (modalType && modalType.value ? modalType.value : "CM").trim();
+      const selectedId = Number(modalId && modalId.value ? modalId.value : "");
 
       if (!name) {
         setError("Le nom est obligatoire.");
@@ -540,11 +634,17 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      if (!Number.isInteger(selectedId) || selectedId < 1 || selectedId > 16) {
+        setError("Selectionne un ID valide (1 a 16).");
+        if (modalId) modalId.focus();
+        return;
+      }
+
       setError("");
 
       const data = new FormData();
       data.append("name", name);
-      data.append("type", type);
+      data.append("id", String(selectedId));
 
       fetch(`${apiBase}/ajouter-appareil`, {
         method: "POST",
@@ -559,17 +659,18 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           closeModal();
-          window.location.reload();
+          const createdId = Number(json.cm_id);
+          if (Number.isInteger(createdId) && createdId >= 1) {
+            window.location.href = `${apiBase}/${createdId}`;
+          } else {
+            window.location.reload();
+          }
         })
         .catch(() => {
           setError("Erreur serveur, reessaie.");
           if (modalInput) modalInput.focus();
         });
     });
-  }
-
-  if (modalType) {
-    modalType.addEventListener("change", updatePlaceholder);
   }
 
   if (modalInput) {

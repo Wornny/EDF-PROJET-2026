@@ -398,6 +398,11 @@ TOPIC_C2_GENRE = "FormaReaEDF/C2/+/Genre"
 mqtt_client_c2 = None
 c2_names = {1: "C2 ID 1", 2: "C2 ID 2"}
 c2_values = {}
+deleted_c2_ids: set[int] = set()
+
+
+def ids_c2_actifs() -> list[int]:
+	return ids_triees(i for i in c2_names.keys() if i not in deleted_c2_ids)
 
 
 def normaliser_liste_numerique(values):
@@ -606,6 +611,8 @@ if USE_MQTT:
 			c2_id = extraire_id_numerique_c2(parts[2])
 			if c2_id is None or c2_id < 1:
 				return
+			if c2_id in deleted_c2_ids:
+				return
 
 			payload = msg.payload.decode("utf-8", errors="ignore")
 			topic_suffix = parts[3].strip().lower()
@@ -647,6 +654,11 @@ def afficher_page_c2(c2_id: int):
 	if c2_id < 1:
 		c2_id = 1
 
+	if c2_id in deleted_c2_ids:
+		actifs = ids_c2_actifs()
+		cible = actifs[0] if actifs else 1
+		return redirect(url_for("c2.afficher_page_c2", c2_id=cible))
+
 	if c2_id not in c2_names:
 		c2_names[c2_id] = f"C2 ID {c2_id}"
 	if c2_id not in c2_values:
@@ -658,7 +670,7 @@ def afficher_page_c2(c2_id: int):
 		"c2/C2.html",
 		c2_id=c2_id,
 		c2_names=c2_names,
-		c2_ids=sorted(c2_names.keys()),
+		c2_ids=ids_c2_actifs(),
 		current_gender=genre_ui(c2_values[c2_id].get("genre", "M")),
 		role=session.get("role", "user"),
 	)
@@ -701,6 +713,8 @@ def publier_capteurs_complet():
 	genre_code = normaliser_genre(raw_genre, garantir_genre_entry(existing_entry or {}).get("genre", genre_aleatoire()))
 
 	if c2_numeric_id is not None and c2_numeric_id >= 1:
+		if c2_numeric_id in deleted_c2_ids:
+			return jsonify({"status": "error", "error": "c2_deleted"}), 400
 		c2_values[c2_numeric_id] = garantir_genre_entry({"F": f_list, "D": d_list, "genre": genre_code})
 		if c2_numeric_id not in c2_names:
 			c2_names[c2_numeric_id] = f"C2 ID {c2_numeric_id}"
@@ -738,24 +752,20 @@ def publier_capteurs_complet():
 @require_admin_role()
 def ajouter_appareil_c2():
 	name = request.form.get("name", "")
+	c2_id = lire_id_formulaire()
 	genre_code = normaliser_genre(request.form.get("gender"), None)
-	device_type = "C2"
 
-	ok, error = valider_nom_appareil(name, device_type)
-	if not ok:
-		return jsonify(ok=False, error=error), 400
+	if not str(name or "").strip():
+		return jsonify(ok=False, error="Le nom est obligatoire."), 400
 	if genre_code is None:
 		return jsonify(ok=False, error="Le genre est obligatoire."), 400
+	if c2_id is None or c2_id < 1 or c2_id > 4:
+		return jsonify(ok=False, error="ID C2 invalide (1 a 4)."), 400
+	if c2_id in ids_c2_actifs():
+		return jsonify(ok=False, error="Cet ID est deja assigne."), 400
 
-	c2_id = extraire_id_appareil(name, device_type)
-	if c2_id is None:
-		return jsonify(ok=False, error="Numero manquant dans le nom."), 400
-	if c2_id > 99:
-		return jsonify(ok=False, error="Maximum 2 chiffres (1 a 99)."), 400
-	if c2_id < 1 or c2_id > 99:
-		return jsonify(ok=False, error="ID C2 invalide (1 a 99)."), 400
-
-	c2_names[c2_id] = f"C2 ID {c2_id}"
+	c2_names[c2_id] = str(name).strip()
+	deleted_c2_ids.discard(c2_id)
 	entry = garantir_genre_entry(c2_values.get(c2_id, entree_c2_defaut()))
 	entry["genre"] = genre_code
 	c2_values[c2_id] = entry
@@ -768,7 +778,7 @@ def ajouter_appareil_c2():
 			return jsonify(ok=False, error="Publication MQTT impossible."), 500
 
 	print(f"C2 No{c2_id} a ete cree")
-	return jsonify(ok=True, genre=genre_code)
+	return jsonify(ok=True, genre=genre_code, c2_id=c2_id)
 
 
 @c2_bp.route("/supprimer-appareil", methods=["POST"])
@@ -781,8 +791,17 @@ def supprimer_appareil_c2():
 	if c2_id < 1:
 		return jsonify(ok=False, error="ID invalide."), 400
 
+	deleted_c2_ids.add(c2_id)
 	c2_names.pop(c2_id, None)
 	c2_values.pop(c2_id, None)
+
+	if USE_MQTT and mqtt_client_c2:
+		try:
+			mqtt_client_c2.publish(f"FormaReaEDF/C2/C2_{c2_id}/CapteursFace", "", qos=1, retain=True)
+			mqtt_client_c2.publish(f"FormaReaEDF/C2/C2_{c2_id}/CapteursDos", "", qos=1, retain=True)
+			mqtt_client_c2.publish(f"FormaReaEDF/C2/C2_{c2_id}/Genre", "", qos=1, retain=True)
+		except Exception as exc:
+			print("MQTT clear retained error:", exc)
 
 	print(f"C2 No{c2_id} a ete supprime")
 	return jsonify(ok=True)
@@ -792,6 +811,8 @@ def supprimer_appareil_c2():
 def obtenir_etat_c2(c2_id: int):
 	if c2_id < 1:
 		return jsonify(ok=False, error="ID invalide."), 400
+	if c2_id in deleted_c2_ids:
+		return jsonify(ok=False, error="ID supprime."), 404
 
 	entry = c2_values.get(c2_id)
 	if entry is None:
@@ -816,11 +837,12 @@ def obtenir_etat_c2(c2_id: int):
 cm_bp = Blueprint("cm", __name__, url_prefix="/ControllerMobile")
 
 TOPIC_CM_CONTAMINATION_WILDCARD = "FormaReaEDF/ControllerMobile/+/NivContamination"
+TOPIC_CM_BRUIT_FOND_WILDCARD = "FormaReaEDF/ControllerMobile/+/NivBruitFond"
 TOPIC_CM_STATUS_WILDCARD = "FormaReaEDF/ControllerMobile/+/Status"
 
 
 def entree_par_defaut_cm():
-	return {"NivContamination": "1", "Status": "0"}
+	return {"NivContamination": "1", "NivBruitFond": "1", "Status": "0"}
 
 
 def topic_contamination_cm(cm_id: int) -> str:
@@ -829,6 +851,10 @@ def topic_contamination_cm(cm_id: int) -> str:
 
 def topic_status_cm(cm_id: int) -> str:
 	return f"FormaReaEDF/ControllerMobile/CM_{cm_id}/Status"
+
+
+def topic_bruit_fond_cm(cm_id: int) -> str:
+	return f"FormaReaEDF/ControllerMobile/CM_{cm_id}/NivBruitFond"
 
 
 last_values_cm = {i: entree_par_defaut_cm() for i in range(1, 12)}
@@ -846,7 +872,9 @@ def initialiser_mqtt_cm(cm_id: int):
 		return
 
 	last_values_cm[cm_id].setdefault("Status", "0")
+	last_values_cm[cm_id].setdefault("NivBruitFond", "1")
 	mqtt_client_cm.publish(topic_contamination_cm(cm_id), f"{last_values_cm[cm_id]['NivContamination']}", retain=True)
+	mqtt_client_cm.publish(topic_bruit_fond_cm(cm_id), f"{last_values_cm[cm_id]['NivBruitFond']}", retain=True)
 	mqtt_client_cm.publish(topic_status_cm(cm_id), f"{last_values_cm[cm_id]['Status']}", retain=True)
 
 
@@ -855,6 +883,7 @@ def deconnecter_mqtt_cm(cm_id: int):
 		return
 
 	mqtt_client_cm.publish(topic_contamination_cm(cm_id), "", retain=True)
+	mqtt_client_cm.publish(topic_bruit_fond_cm(cm_id), "", retain=True)
 	mqtt_client_cm.publish(topic_status_cm(cm_id), "", retain=True)
 
 
@@ -865,6 +894,7 @@ def on_connect_mqtt_cm(client, userdata, flags, rc):
 
 	try:
 		result_conta, _ = client.subscribe(TOPIC_CM_CONTAMINATION_WILDCARD, qos=0)
+		result_bdf, _ = client.subscribe(TOPIC_CM_BRUIT_FOND_WILDCARD, qos=0)
 		result_status, _ = client.subscribe(TOPIC_CM_STATUS_WILDCARD, qos=0)
 	except ValueError as exc:
 		print(f"MQTT subscribe filter error: {exc}")
@@ -872,6 +902,8 @@ def on_connect_mqtt_cm(client, userdata, flags, rc):
 
 	if result_conta != mqtt.MQTT_ERR_SUCCESS:
 		print(f"MQTT subscribe failed for {TOPIC_CM_CONTAMINATION_WILDCARD}: {result_conta}")
+	if result_bdf != mqtt.MQTT_ERR_SUCCESS:
+		print(f"MQTT subscribe failed for {TOPIC_CM_BRUIT_FOND_WILDCARD}: {result_bdf}")
 	if result_status != mqtt.MQTT_ERR_SUCCESS:
 		print(f"MQTT subscribe failed for {TOPIC_CM_STATUS_WILDCARD}: {result_status}")
 
@@ -903,6 +935,8 @@ def traiter_message_mqtt_cm(client, userdata, msg):
 
 		if "NivContamination" in msg.topic:
 			last_values_cm[cm_id]["NivContamination"] = payload
+		elif "NivBruitFond" in msg.topic:
+			last_values_cm[cm_id]["NivBruitFond"] = payload
 		elif msg.topic.lower().endswith("/status"):
 			last_values_cm[cm_id]["Status"] = "1" if str(payload).strip() == "1" else "0"
 
@@ -935,11 +969,13 @@ def afficher_page_cm(cm_id: int):
 	if cm_id not in cm_names:
 		cm_names[cm_id] = f"CM ID {cm_id}"
 	last_values_cm[cm_id].setdefault("Status", "0")
+	last_values_cm[cm_id].setdefault("NivBruitFond", "1")
 
 	return render_template(
 		"cm/CM.html",
 		cm_id=cm_id,
 		valeur_conta=last_values_cm[cm_id]["NivContamination"],
+		valeur_bdf=last_values_cm[cm_id]["NivBruitFond"],
 		cm_names=cm_names,
 		cm_ids=ids_cm_actifs(),
 		role=session.get("role", "user"),
@@ -954,6 +990,7 @@ def slider_cm(cm_id: int):
 	if cm_id not in last_values_cm:
 		last_values_cm[cm_id] = entree_par_defaut_cm()
 	last_values_cm[cm_id].setdefault("Status", "0")
+	last_values_cm[cm_id].setdefault("NivBruitFond", "1")
 
 	value = request.form.get("value")
 	type_ = request.form.get("type")
@@ -969,6 +1006,11 @@ def slider_cm(cm_id: int):
 		topic = topic_status_cm(cm_id)
 		display_type = "Status"
 		value_to_publish = normalized_status
+	elif type_norm in ("bruitfond", "bruitdefond", "bruit_fond"):
+		last_values_cm[cm_id]["NivBruitFond"] = value
+		topic = topic_bruit_fond_cm(cm_id)
+		display_type = "BruitFond"
+		value_to_publish = value
 	else:
 		last_values_cm[cm_id]["NivContamination"] = value
 		topic = topic_contamination_cm(cm_id)
@@ -987,28 +1029,25 @@ def slider_cm(cm_id: int):
 @require_admin_role()
 def ajouter_appareil_cm():
 	name = request.form.get("name", "")
-	device_type = request.form.get("type", "")
+	cm_id = lire_id_formulaire()
 
-	ok, error = valider_nom_appareil(name, device_type)
-	if not ok:
-		return jsonify(ok=False, error=error), 400
+	if not str(name or "").strip():
+		return jsonify(ok=False, error="Le nom est obligatoire."), 400
 
-	cm_id = extraire_id_depuis_nom(name, "CM")
-	if cm_id is None:
-		return jsonify(ok=False, error="Numero manquant dans le nom."), 400
-	if cm_id > 99:
-		return jsonify(ok=False, error="Maximum 2 chiffres (1 a 99)."), 400
-	if cm_id < 1:
-		return jsonify(ok=False, error="ID CM invalide (1 a 99)."), 400
+	if cm_id is None or cm_id < 1 or cm_id > 16:
+		return jsonify(ok=False, error="ID CM invalide (1 a 16)."), 400
 
-	cm_names[cm_id] = f"CM ID {cm_id}"
+	if cm_id in ids_cm_actifs():
+		return jsonify(ok=False, error="Cet ID est deja assigne."), 400
+
+	cm_names[cm_id] = str(name).strip()
 	deleted_cm_ids.discard(cm_id)
 	if cm_id not in last_values_cm:
 		last_values_cm[cm_id] = entree_par_defaut_cm()
 	initialiser_mqtt_cm(cm_id)
 
 	print(f"Controller Mobile No{cm_id} a ete cree")
-	return jsonify(ok=True)
+	return jsonify(ok=True, cm_id=cm_id)
 
 
 @cm_bp.route("/supprimer-appareil", methods=["POST"], endpoint="supprimer_appareil")
@@ -1040,9 +1079,10 @@ def obtenir_etat_cm(cm_id: int):
 
 	entry = last_values_cm[cm_id]
 	contamination = str(entry.get("NivContamination", "1"))
+	bruit_fond = str(entry.get("NivBruitFond", "1"))
 	status = "1" if str(entry.get("Status", "0")).strip() == "1" else "0"
 
-	response = jsonify(ok=True, cm_id=cm_id, NivContamination=contamination, Status=status)
+	response = jsonify(ok=True, cm_id=cm_id, NivContamination=contamination, NivBruitFond=bruit_fond, Status=status)
 	return appliquer_headers_no_cache(response)
 
 
@@ -1195,28 +1235,25 @@ def traiter_jauge_cpo(cpo_id: int):
 @require_admin_role()
 def ajouter_appareil_cpo():
 	name = request.form.get("name", "")
-	device_type = request.form.get("type", "")
+	cpo_id = lire_id_formulaire()
 
-	ok, error = valider_nom_appareil(name, device_type)
-	if not ok:
-		return jsonify(ok=False, error=error), 400
+	if not str(name or "").strip():
+		return jsonify(ok=False, error="Le nom est obligatoire."), 400
 
-	cpo_id = extraire_id_depuis_nom(name, "CPO")
-	if cpo_id is None:
-		return jsonify(ok=False, error="Il manque le numero du nouvel appareil"), 400
-	if cpo_id > 99:
-		return jsonify(ok=False, error="Maximum 2 chiffres (1 a 99)."), 400
-	if cpo_id < 1:
-		return jsonify(ok=False, error="ID CPO invalide (1 a 99)."), 400
+	if cpo_id is None or cpo_id < 1 or cpo_id > 4:
+		return jsonify(ok=False, error="ID CPO invalide (1 a 4)."), 400
 
-	cpo_names[cpo_id] = f"CPO ID {cpo_id}"
+	if cpo_id in ids_cpo_actifs():
+		return jsonify(ok=False, error="Cet ID est deja assigne."), 400
+
+	cpo_names[cpo_id] = str(name).strip()
 	deleted_cpo_ids.discard(cpo_id)
 	if cpo_id not in last_values_cpo:
 		last_values_cpo[cpo_id] = entree_par_defaut_cpo()
 	initialiser_mqtt_cpo(cpo_id)
 
 	print(f"CPO ID {cpo_id} a ete cree")
-	return jsonify(ok=True)
+	return jsonify(ok=True, cpo_id=cpo_id)
 
 
 @cpo_bp.route("/supprimer-appareil", methods=["POST"], endpoint="supprimer_appareil")

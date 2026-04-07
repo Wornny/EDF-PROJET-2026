@@ -15,7 +15,7 @@
       document.documentElement.style.setProperty('--arrow-initial', 'scaleX(-1)');
     }
   </script>
-  <script defer src="{{ url_for('static', filename='CPO/scriptCPO.js') }}?v=3"></script>
+  <script defer src="{{ url_for('static', filename='CPO/scriptCPO.js') }}?v=4"></script>
 </head>
 
 <body class="cpo-page" data-cpo-id="{{ cpo_id }}" data-api-base="/CPO">
@@ -58,7 +58,7 @@
       <div class="detector-title">
         <span>Niveau Contamination</span>
         <span class="value-box value-green" id="valueBox">
-          <span id="valeur">{{ valeur_conta }} Bq/m²</span>
+          <span id="valeur">{{ valeur_conta }} Bq</span>
         </span>
       </div>
 
@@ -106,12 +106,12 @@
     <h3 class="cm-modal-title" id="cm-modal-title">Ajouter un appareil</h3>
     <div class="cm-modal-row">
       <label class="cm-modal-label" for="cm-modal-input">Nom du nouvel appareil :</label>
-      <input class="cm-modal-input" id="cm-modal-input" type="text" placeholder="Ex: CPO 3">
+      <input class="cm-modal-input" id="cm-modal-input" type="text" placeholder="Ex: Controleur portique homme">
       <div class="cm-modal-error" id="cm-modal-error" aria-live="polite"></div>
     </div>
     <div class="cm-modal-row">
-      <label class="cm-modal-label" for="cm-modal-type">Type :</label>
-      <input class="cm-modal-select" id="cm-modal-type" type="text" value="CPO" readonly>
+      <label class="cm-modal-label" for="cm-modal-id">ID :</label>
+      <select class="cm-modal-select" id="cm-modal-id"></select>
     </div>
     <button class="cm-modal-submit" id="cm-modal-submit" type="button">valider</button>
   </div>

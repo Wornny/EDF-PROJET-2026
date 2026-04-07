@@ -652,8 +652,46 @@ const c2Buttons = document.querySelectorAll('.id-btn[href^="/C2/"]');
 	const modalClose = pick('#c2-modal-close', '#modal-close', '.c2-modal-close');
 	const modalSubmit = pick('#c2-modal-submit', '#modal-submit', '.c2-modal-submit');
 	const modalInput = pick('#c2-modal-input', '#modal-input', '.c2-modal-input');
+	const modalId = pick('#c2-modal-id', '#modal-id', '.c2-modal-id');
 	const modalGender = pick('#c2-modal-gender', '#modal-gender', '.c2-modal-select');
 	const modalError = pick('#c2-modal-error', '#modal-error', '.c2-modal-error');
+
+	const buildAssignedC2Ids = () => {
+		const ids = new Set();
+		const links = document.querySelectorAll('.id-list .id-item .id-btn[href^="/C2/"]');
+		links.forEach((link) => {
+			const href = String(link.getAttribute('href') || '');
+			const match = href.match(/\/C2\/(\d+)$/);
+			if (!match) return;
+			const id = Number(match[1]);
+			if (Number.isInteger(id) && id >= 1 && id <= 4) {
+				ids.add(id);
+			}
+		});
+		return ids;
+	};
+
+	const refreshAddButtonVisibility = () => {
+		if (!addBtn) return;
+		const assigned = buildAssignedC2Ids();
+		const hasFreeSlot = assigned.size < 4;
+		addBtn.style.display = hasFreeSlot ? '' : 'none';
+	};
+
+	const updateIdChoices = () => {
+		if (!modalId) return;
+
+		const assigned = buildAssignedC2Ids();
+		modalId.innerHTML = '';
+
+		for (let id = 1; id <= 4; id += 1) {
+			if (assigned.has(id)) continue;
+			const option = document.createElement('option');
+			option.value = String(id);
+			option.textContent = String(id);
+			modalId.appendChild(option);
+		}
+	};
 
 	const setError = (message) => {
 		if (!modalError) return;
@@ -665,8 +703,13 @@ const c2Buttons = document.querySelectorAll('.id-btn[href^="/C2/"]');
 		modal.classList.add('open');
 		modal.setAttribute('aria-hidden', 'false');
 		modalInput.value = '';
+		updateIdChoices();
 		if (modalGender) modalGender.value = currentGender;
 		setError('');
+		if (modalId && modalId.options.length === 0) {
+			setError('Tous les IDs 1 a 4 sont deja utilises.');
+			return;
+		}
 		modalInput.focus();
 	};
 
@@ -687,6 +730,8 @@ const c2Buttons = document.querySelectorAll('.id-btn[href^="/C2/"]');
 		console.warn('Modal C2 introuvable ou incomplet: verifie les ids/classes c2-modal*');
 	}
 
+	refreshAddButtonVisibility();
+
 	if (modalClose) {
 		modalClose.addEventListener('click', closeModal);
 	}
@@ -700,16 +745,23 @@ const c2Buttons = document.querySelectorAll('.id-btn[href^="/C2/"]');
 	if (modalSubmit) {
 		modalSubmit.addEventListener('click', () => {
 			const name = (modalInput?.value || '').trim();
+			const selectedId = Number(modalId?.value || '');
 			const gender = normalizeGenderValue(modalGender?.value || 'homme');
 			if (!name) {
 				setError('Le nom est obligatoire.');
 				modalInput?.focus();
 				return;
 			}
+			if (!Number.isInteger(selectedId) || selectedId < 1 || selectedId > 4) {
+				setError('Selectionne un ID valide (1 a 4).');
+				modalId?.focus();
+				return;
+			}
 			setError('');
 
 			const data = new FormData();
 			data.append('name', name);
+			data.append('id', String(selectedId));
 			data.append('gender', normalizeGenderCode(gender));
 
 			fetch(`${apiBase}/ajouter-appareil`, {
@@ -736,7 +788,12 @@ const c2Buttons = document.querySelectorAll('.id-btn[href^="/C2/"]');
 						return;
 					}
 					closeModal();
-					window.location.reload();
+					const createdId = Number(json?.c2_id);
+					if (Number.isInteger(createdId) && createdId >= 1) {
+						window.location.href = `${apiBase}/${createdId}`;
+					} else {
+						window.location.reload();
+					}
 				})
 				.catch(() => {
 					setError('Erreur serveur, reessaie.');

@@ -15,7 +15,7 @@
       document.documentElement.style.setProperty('--arrow-initial', 'scaleX(-1)');
     }
   </script>
-  <script defer src="{{ url_for('static', filename='CM/scriptCM.js') }}?v=3"></script>
+  <script defer src="{{ url_for('static', filename='CM/scriptCM.js') }}?v=5"></script>
 </head>
 
 <body class="cm-page" data-cm-id="{{ cm_id }}" data-api-base="/ControllerMobile">
@@ -64,7 +64,7 @@
         <span>Niveau Contamination</span>
 
         <span class="value-box value-green" id="valueBox">
-          <span id="valeur">{{ valeur_conta }} Bq/m²</span>
+          <span id="valeur">{{ valeur_conta }} Bq/cm²</span>
         </span>
       </div>
 
@@ -110,6 +110,45 @@
       </div>
     </div>
 
+    <!-- ===== PANEL BRUIT DE FOND ===== -->
+    <div class="detector-panel">
+      <div class="detector-title">
+        <span>Bruit de Fond</span>
+        <span class="value-box value-green" id="valueBoxBdf">
+          <span id="valeurBdf">{{ valeur_bdf }} Bq/cm²</span>
+        </span>
+      </div>
+      <div class="detector-content">
+        <div class="beta-icon">&beta;</div>
+        <div class="gauge-zone">
+          <div class="gauge-overlay">
+            <div class="gauge-triangle" id="gaugeTriangleBdf"></div>
+          </div>
+          <div class="gauge-bg" id="gaugeBgBdf">
+            <div class="gauge-mask" id="gaugeMaskBdf"></div>
+            <div class="gauge-separators">
+              <span style="left:0%"></span>
+              <span style="left:20%"></span>
+              <span style="left:40%"></span>
+              <span style="left:60%"></span>
+              <span style="left:80%"></span>
+              <span style="left:100%"></span>
+            </div>
+          </div>
+          <div class="scale">
+            <span style="left:0%">0</span>
+            <span style="left:20%">1</span>
+            <span style="left:40%">10</span>
+            <span style="left:60%">100</span>
+            <span style="left:80%">1000</span>
+            <span style="left:100%">C/S</span>
+          </div>
+          <input type="range" id="jaugeBdf" min="0" max="10000" step="1" value="2000">
+        </div>
+        <div class="send-btn-placeholder"></div>
+      </div>
+    </div>
+
   </div>
 
 </div>
@@ -121,12 +160,12 @@
     <h3 class="cm-modal-title" id="cm-modal-title">Ajouter un appareil</h3>
     <div class="cm-modal-row">
       <label class="cm-modal-label" for="cm-modal-input">Nom du nouvel appareil :</label>
-      <input class="cm-modal-input" id="cm-modal-input" type="text" placeholder="Ex: CM Mobile 12">
+      <input class="cm-modal-input" id="cm-modal-input" type="text" placeholder="Ex: Controleur mobile homme">
       <div class="cm-modal-error" id="cm-modal-error" aria-live="polite"></div>
     </div>
     <div class="cm-modal-row">
-      <label class="cm-modal-label" for="cm-modal-type">Type :</label>
-      <input class="cm-modal-select" id="cm-modal-type" type="text" value="CM" readonly>
+      <label class="cm-modal-label" for="cm-modal-id">ID :</label>
+      <select class="cm-modal-select" id="cm-modal-id"></select>
     </div>
     <button class="cm-modal-submit" id="cm-modal-submit">valider</button>
   </div>

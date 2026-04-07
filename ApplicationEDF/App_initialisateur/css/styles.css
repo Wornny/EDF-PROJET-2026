@@ -42,44 +42,8 @@
     font-size: 62px; font-weight: 900; z-index: 50; cursor: pointer;
   }
   .back:hover { background: rgba(200,200,200,1); }
-  #topControls {
-    position: fixed;
-    top: 4px;
-    right: 8px;
-    z-index: 99999;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  #btnHome {
-    width: 50px;
-    height: 50px;
-    border-radius: 12px;
-    border: 2px solid rgba(127, 134, 158, 0.9);
-    background: linear-gradient(145deg, rgba(20, 32, 66, 0.9), rgba(9, 18, 40, 0.95));
-    color: rgba(255, 255, 255, 0.92);
-    display: grid;
-    place-items: center;
-    text-decoration: none;
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-    transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
-    -webkit-tap-highlight-color: transparent;
-  }
-  #btnHome:hover {
-    transform: scale(1.03);
-    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-    background: linear-gradient(145deg, rgba(24, 40, 80, 0.95), rgba(12, 22, 48, 0.98));
-  }
-  #btnHome:focus-visible {
-    outline: 2px solid rgba(140, 200, 255, 0.9);
-    outline-offset: 3px;
-  }
-  #btnHome svg {
-    width: 26px;
-    height: 26px;
-  }
   #btnFS {
-    position: static;
+    position: fixed; top: 4px; right: 8px; z-index: 99999;
     background: rgba(0,0,0,0.6); color: #fff; border: none;
     border-radius: 12px; padding: 10px 20px;
     font-size: 22px; font-weight: 700; cursor: pointer;
@@ -122,14 +86,24 @@
     box-shadow: 0 2px 10px rgba(0,0,0,0.12);
     padding: 10px 18px; border-radius: 8px; margin-bottom: 36px;
   }
-  #page-index .select-wrap { position: relative; }
+  .select-wrap { position: relative; width: 100%; }
+  .select-wrap select {
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    width: 100%; min-width: 240px; border: 1px solid rgba(0,0,0,0.18);
+    background: rgba(255,255,255,0.95); color: var(--text);
+    font-size: 16px; padding: 12px 40px 12px 14px;
+    border-radius: 14px; cursor: pointer;
+  }
+  .select-wrap::after {
+    content: "▾"; position: absolute; right: 14px; top: 50%;
+    transform: translateY(-50%); font-size: 14px; opacity: 0.7; pointer-events: none;
+  }
   #page-index .select-wrap select {
-    appearance: none; border: 0; outline: 0; background: transparent;
-    font-size: 15px; padding: 2px 30px 2px 6px; cursor: pointer; color: var(--text);
+    background: transparent; border: none; padding: 2px 30px 2px 6px;
+    font-size: 15px; color: var(--text);
   }
   #page-index .select-wrap::after {
-    content: "▾"; position: absolute; right: 8px; top: 50%;
-    transform: translateY(-50%); font-size: 12px; opacity: 0.7; pointer-events: none;
+    right: 8px; font-size: 12px;
   }
   #page-index .plus {
     width: 28px; height: 28px; border-radius: 50%;
@@ -203,6 +177,18 @@
      ======================================= */
 
   #page-attestation .panel { padding: 80px; min-height: 530px; }
+  .attestation-select-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; width: 100%; margin: 26px 0; flex-wrap: wrap;
+  }
+  .attestation-select-wrap { width: min(420px, 100%); }
+  .refresh-badges-btn {
+    border: 0; background: rgba(255,255,255,0.95); color: var(--text);
+    width: 56px; height: 56px; border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.16); cursor: pointer;
+    font-size: 24px; display: grid; place-items: center;
+  }
+  .refresh-badges-btn:hover { transform: translateY(-1px); }
   #page-attestation .title {
     font-size: 30px; font-weight: 800; color: #fff;
     text-shadow: 0 3px 10px rgba(0,0,0,0.45); text-align: center; white-space: nowrap;
@@ -362,3 +348,39 @@
     padding: 14px 40px;
     cursor: pointer;
   }
+
+  /* =======================================
+          BOUTON MINUS
+     ======================================= */
+
+  #page-index .minus {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 2px solid #e74c3c; background: rgba(255,255,255,0.6);
+    cursor: pointer; display: grid; place-items: center;
+    font-size: 20px; font-weight: 700; color: #e74c3c;
+    flex-shrink: 0;
+  }
+  #page-index .minus:active { opacity: 0.7; }
+
+
+.home-btn {
+  position: fixed;
+  top: 4px;
+  right: 175px; /* juste à gauche du btnFS */
+  z-index: 99999;
+  width: 50px;
+  height: 50px;
+  background: rgba(0,0,0,0.6);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.home-btn:hover {
+  background: rgba(0,0,0,0.9);
+  transform: scale(0.96);
+}
