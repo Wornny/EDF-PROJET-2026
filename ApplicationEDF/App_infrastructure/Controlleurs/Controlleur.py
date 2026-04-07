@@ -83,17 +83,21 @@ def appliquer_headers_no_cache(response):
 
 MQTT_USERNAME = "client"
 MQTT_PASSWORD = "normandie765"
+BROKER_HOST = os.environ.get("BROKER_HOST", "127.0.0.1")
+BROKER_PORT = int(os.environ.get("BROKER_PORT", "1883"))
 
 
-def chemin_certificat_ca() -> str:
-	return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ca.crt")
+def getenv_int(name: str, default: int) -> int:
+	try:
+		return int(os.environ.get(name, str(default)))
+	except (TypeError, ValueError):
+		return default
 
 
 def configurer_demarrer_mqtt(client, on_connect, on_message):
 	client.on_connect = on_connect
 	client.on_message = on_message
-	client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
-	client.tls_set(ca_certs=chemin_certificat_ca())
+	client.username_pw_set(os.environ.get("MQTT_USERNAME", MQTT_USERNAME), os.environ.get("MQTT_PASSWORD", MQTT_PASSWORD))
 	client.reconnect_delay_set(min_delay=1, max_delay=30)
 	try:
 		client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
@@ -125,11 +129,11 @@ MAX_LOGIN_ATTEMPTS = 5
 LOCK_DURATION_SECONDS = 5
 
 MYSQL_CONFIG = {
-	"host": "192.168.10.3",
-	"user": "admin",
-	"password": "superbddnormandie765",
-	"database": "EDF",
-	"port": 3306,
+	"host": os.environ.get("MYSQL_HOST", "127.0.0.1"),
+	"user": os.environ.get("MYSQL_USER", "root"),
+	"password": os.environ.get("MYSQL_PASSWORD", ""),
+	"database": os.environ.get("MYSQL_DATABASE", "EDF"),
+	"port": getenv_int("MYSQL_PORT", 3306),
 }
 
 
@@ -240,7 +244,7 @@ def authentifier_utilisateur(username: str, password: str) -> tuple:
 	try:
 		connection = mysql.connector.connect(**MYSQL_CONFIG)
 		cursor = connection.cursor(dictionary=True)
-		query = "SELECT * FROM users WHERE username = %s"
+		query = "SELECT * FROM users WHERE LOWER(username) = LOWER(%s)"
 		cursor.execute(query, (username,))
 		user = cursor.fetchone()
 		cursor.close()
@@ -386,8 +390,6 @@ def initialisateur_files(filename: str):
 # ---------------------------------------------------------------------------
 c2_bp = Blueprint("c2", __name__, url_prefix="/C2")
 
-BROKER_HOST = "192.168.10.3"
-BROKER_PORT = 8883
 TOPIC_C2_CAPTEURS_LEGACY = "FormaReaEDF/C2/+/Capteurs"
 TOPIC_C2_CAPTEURS_FACE = "FormaReaEDF/C2/+/CapteursFace"
 TOPIC_C2_CAPTEURS_DOS = "FormaReaEDF/C2/+/CapteursDos"
