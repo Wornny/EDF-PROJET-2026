@@ -1,0 +1,57 @@
+2026-04-28 07:24:11,498 - INFO - Connecté au broker MQTT !
+2026-04-28 07:24:38,862 - INFO - id DOSI recu : {'id_dosi': '305681'}
+2026-04-28 07:24:38,938 - INFO - Dosimètre non présent dans la bdd
+2026-04-28 07:24:42,710 - INFO - id DOSI recu : {'id_dosi': '305681'}
+2026-04-28 07:24:42,767 - INFO - Dosimètre non présent dans la bdd
+2026-04-28 07:25:31,975 - INFO - id DOSI recu : {'id_dosi': '220486'}
+2026-04-28 07:25:32,047 - INFO - État du dosimètre envoyé : {'id_dosi': '220486', 'batterie': '0', 'hors_service': '1'}
+2026-04-28 07:29:55,249 - INFO - Connecté au broker MQTT !
+2026-04-28 07:29:56,246 - INFO - id DOSI recu : {'id_dosi': '220486'}
+2026-04-28 07:29:56,317 - INFO - État du dosimètre envoyé : {'id_dosi': '220486', 'batterie': '0', 'hors_service': '1'}
+2026-04-28 07:30:00,089 - INFO - id DOSI recu : {'id_dosi': '220486'}
+2026-04-28 07:30:00,155 - INFO - État du dosimètre envoyé : {'id_dosi': '220486', 'batterie': '0', 'hors_service': '1'}
+2026-04-28 07:30:04,935 - INFO - id DOSI recu : {'id_dosi': '305681'}
+2026-04-28 07:30:04,991 - INFO - Dosimètre non présent dans la bdd
+2026-04-28 07:30:26,563 - INFO - id DOSI recu : {'id_dosi': '305681'}
+2026-04-28 07:30:26,624 - INFO - Dosimètre non présent dans la bdd
+2026-04-28 07:30:33,577 - INFO - id DOSI recu : {'id_dosi': '220486'}
+2026-04-28 07:30:33,644 - INFO - État du dosimètre envoyé : {'id_dosi': '220486', 'batterie': '0', 'hors_service': '1'}
+2026-04-28 07:30:38,328 - INFO - id DOSI recu : {'id_dosi': '305681'}
+2026-04-28 07:30:38,389 - INFO - Dosimètre non présent dans la bdd
+2026-04-28 08:38:59,980 - INFO - Connecté au broker MQTT !
+2026-04-28 08:44:34,208 - INFO - Connecté au broker MQTT !
+2026-04-28 08:50:28,192 - INFO - Connecté au broker MQTT !
+2026-04-28 08:57:32,765 - INFO - Connecté au broker MQTT !
+2026-04-28 09:56:55,082 - INFO - Connecté au broker MQTT !
+2026-04-28 09:59:53,553 - INFO - Connecté au broker MQTT !
+2026-04-28 10:04:10,452 - INFO - Connecté au broker MQTT !
+2026-04-28 10:09:52,943 - INFO - Connecté au broker MQTT !
+2026-04-28 10:16:48,582 - INFO - Connecté au broker MQTT !
+2026-04-29 06:15:34,971 - INFO - Connecté au broker MQTT !
+2026-04-29 06:18:32,016 - INFO - Connecté au broker MQTT !
+2026-04-29 06:25:33,753 - INFO - Connecté au broker MQTT !
+2026-04-29 06:31:07,748 - INFO - Connecté au broker MQTT !
+2026-04-29 06:35:05,118 - INFO - Connecté au broker MQTT !
+2026-04-29 06:42:48,138 - INFO - Connecté au broker MQTT !
+2026-04-29 06:53:59,554 - INFO - Connecté au broker MQTT !
+2026-04-29 07:02:27,252 - INFO - Connecté au broker MQTT !
+2026-04-29 07:10:03,329 - INFO - Connecté au broker MQTT !
+2026-04-29 07:37:10,717 - INFO - Connecté au broker MQTT !
+2026-04-29 08:25:59,659 - INFO - Connecté au broker MQTT !
+2026-04-29 08:30:21,394 - INFO - Connecté au broker MQTT !
+2026-04-29 08:39:51,639 - INFO - Connecté au broker MQTT !
+2026-04-29 08:44:26,835 - INFO - Connecté au broker MQTT !
+2026-04-29 08:44:46,293 - INFO - Connecté au broker MQTT !
+2026-04-29 08:47:34,843 - INFO - Connecté au broker MQTT !
+2026-04-29 08:47:54,310 - INFO - Connecté au broker MQTT !
+2026-04-29 09:31:16,911 - INFO - Connecté au broker MQTT !
+2026-04-29 09:57:27,726 - INFO - Connecté au broker MQTT !
+2026-04-29 09:59:42,392 - INFO - Connecté au broker MQTT !
+2026-04-29 10:05:34,726 - INFO - Connecté au broker MQTT !
+2026-04-29 11:09:21,130 - INFO - Connecté au broker MQTT !
+2026-04-29 11:11:36,835 - INFO - Connecté au broker MQTT !
+2026-04-29 11:20:05,578 - INFO - Connecté au broker MQTT !
+2026-04-29 11:36:57,914 - INFO - Connecté au broker MQTT !
+2026-04-29 11:37:42,192 - INFO - Connecté au broker MQTT !
+2026-04-29 11:39:01,578 - INFO - Connecté au broker MQTT !
+2026-04-29 12:40:37,247 - INFO - Connecté au broker MQTT !

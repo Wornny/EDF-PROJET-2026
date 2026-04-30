@@ -6,9 +6,14 @@
   <link rel="icon" type="image/jpeg" href="../static/accueil/img/EDF.jpg">
   <title>Accueil</title>
   <script src="{{ url_for('static', filename='accueil/forcer_reconnexion_reouverture_onglet.js') }}"></script>
-  <link rel="stylesheet" href="{{ url_for('static', filename='accueil/accueil.css') }}?v=12" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='accueil/accueil.css') }}?v=13" />
 </head>
 <body class="menu-page">
+  {% if session.get('role') == 'admin' %}
+  <div class="settings-button">
+    <a href="{{ url_for('reglages.reglages_page') }}" class="btn-settings">Réglages</a>
+  </div>
+  {% endif %}
   <div class="logout-button">
     <a href="{{ url_for('login.deconnexion') }}" class="btn-logout">Déconnexion</a>
   </div>
@@ -43,7 +48,8 @@
     </div>
   </div>
 
-  <script defer src="{{ url_for('static', filename='accueil/accueil.js') }}?v=3"></script>
+  <script defer src="{{ url_for('static', filename='accueil/accueil.js') }}?v=4"></script>
+
 
 </body>
 </html>

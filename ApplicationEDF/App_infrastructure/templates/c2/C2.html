@@ -18,7 +18,7 @@
         }
     </script>
 </head>
-<body data-c2-id="C2_{{ c2_id }}" data-c2-gender="{{ current_gender }}">
+<body data-c2-id="C2_{{ c2_id }}" data-c2-gender="{{ current_gender }}" data-has-equipment="{{ '1' if has_equipment else '0' }}" data-max-c2="{{ max_c2 }}">
 <!-- DRAWER GAUCHE -->
 <div class="drawer" id="drawer">
     <div class="drawer-content">
@@ -49,19 +49,38 @@
     </div>
 </div>
 
+<button class="help-button" id="helpButton" aria-label="Aide" aria-expanded="false">?</button>
+<aside class="help-panel" id="helpPanel" aria-hidden="true">
+  <div class="help-panel-header">
+    <h2 class="help-panel-title">Aide C2</h2>
+    <button class="help-panel-close" id="helpClose" aria-label="Fermer">×</button>
+  </div>
+  <div class="help-panel-body">
+    <p>Utilisez cette page pour piloter les capteurs C2 et voir leur état.</p>
+    <div class="help-panel-subtitle">Comment faire</div>
+    <ul>
+      <li>Appuyez sur un numéro pour sélectionner ou modifier un capteur.</li>
+      <li>Les boutons indiquent la position des capteurs sur le corps (face ou dos).</li>
+      <li>Le menu de gauche permet de changer d'identifiant C2.</li>
+      <li>Le bouton de réinitialisation remet les capteurs à leur état par défaut.</li>
+    </ul>
+    <div class="help-panel-note">Le contenu se met à jour en temps réel avec MQTT/MySQL.</div>
+  </div>
+</aside>
+
 <!-- TOGGLE BUTTON DROIT (Rectangle avec triangle) -->
 <button class="drawer-toggle-btn-right" id="drawerToggleRight"></button>
 
 <div class="banner">
     <div class="banner-text"></div>
-    <p class="c2-id-display">C2 Id : {{ c2_id }}</p>
+    <p class="c2-id-display">{% if has_equipment %}C2 Id : {{ c2_id }}{% else %}Aucun equipement C2{% endif %}</p>
     <a class="home-link" href="{{ url_for('accueil.menu') }}" title="Accueil" aria-label="Accueil">
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="M3 10.5L12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5v-9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
       <path d="M9 20v-6h6v6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
     </svg>
   </a>
-  <button class="control-btn-reset" id="resetCapsBtn" type="button" title="Réinitialiser les capteurs" aria-label="Réinitialiser les capteurs">
+    {% if has_equipment %}<button class="control-btn-reset" id="resetCapsBtn" type="button" title="Réinitialiser les capteurs" aria-label="Réinitialiser les capteurs">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="24"
@@ -79,8 +98,9 @@
                             <polyline points="6 3 6 7 10 7" />
                             <line x1="4" y1="20" x2="20" y2="4" />
                         </svg>
-                </button>
+                </button>{% endif %}
 </div>
+{% if has_equipment %}
 <div class="c2-wrapper">
     <div class="c2-container">
         <div id="page"></div>
@@ -449,8 +469,13 @@
         </div>
     </div>
 </footer>
+{% else %}
+<div style="min-height: calc(100vh - 180px); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 1.1rem; color: #1f2937; width: 100%; padding: 0 20px; box-sizing: border-box;">
+    Aucun equipement C2 configure. Ajoute un appareil avec le bouton +.
+</div>
+{% endif %}
 
-<script src="{{ url_for('static', filename='C2/scriptC2.js') }}?v=2"></script>
+<script src="{{ url_for('static', filename='C2/scriptC2.js') }}?v=3"></script>
 
 <!-- BOUTON + POUR AJOUTER UN APPAREIL -->
 <div class="c2-modal" id="c2-modal" aria-hidden="true">

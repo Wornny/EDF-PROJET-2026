@@ -115,15 +115,80 @@ def lire_id_formulaire(field_name: str = "id"):
 		return None
 
 
+def lire_reglages_mysql(ids: tuple[int, ...]) -> dict[int, str]:
+	if not USE_MYSQL:
+		return {}
+
+	clean_ids = tuple(int(i) for i in ids if int(i) > 0)
+	if not clean_ids:
+		return {}
+
+	connection = None
+	cursor = None
+	try:
+		connection = mysql.connector.connect(**MYSQL_CONFIG)
+		cursor = connection.cursor(dictionary=True)
+		placeholders = ", ".join(["%s"] * len(clean_ids))
+		cursor.execute(
+			f"SELECT `id`, `valeur` FROM `reglage` WHERE `id` IN ({placeholders})",
+			clean_ids,
+		)
+		rows = cursor.fetchall() or []
+		result = {}
+		for row in rows:
+			try:
+				reg_id = int(row.get("id"))
+			except (TypeError, ValueError):
+				continue
+			result[reg_id] = str(row.get("valeur") or "")
+		return result
+	except Exception as err:
+		print("MySQL reglage read error:", err)
+		return {}
+	finally:
+		if cursor is not None:
+			cursor.close()
+		if connection is not None:
+			connection.close()
+
+
+def enregistrer_reglages_mysql(reglages: list[tuple[int, str, str]]) -> tuple[bool, str | None]:
+	if not USE_MYSQL:
+		return False, "MySQL desactive"
+
+	connection = None
+	cursor = None
+	try:
+		connection = mysql.connector.connect(**MYSQL_CONFIG)
+		cursor = connection.cursor()
+
+		# On garde strictement 4 lignes de reglages (id 1..4).
+		cursor.execute("DELETE FROM `reglage` WHERE `id` NOT IN (1, 2, 3, 4)")
+
+		for reglage_id, reglage_type, reglage_valeur in reglages:
+			cursor.execute(
+				"INSERT INTO `reglage` (`id`, `type`, `valeur`) VALUES (%s, %s, %s) "
+				"ON DUPLICATE KEY UPDATE `type` = VALUES(`type`), `valeur` = VALUES(`valeur`)",
+				(int(reglage_id), str(reglage_type), str(reglage_valeur)),
+			)
+
+		connection.commit()
+		return True, None
+	except Exception as err:
+		if connection is not None:
+			connection.rollback()
+		return False, str(err)
+	finally:
+		if cursor is not None:
+			cursor.close()
+		if connection is not None:
+			connection.close()
+
+
 # ---------------------------------------------------------------------------
 # Login
 # ---------------------------------------------------------------------------
 login_bp = Blueprint("login", __name__)
-
-_LOCAL_USERS = [
-	{"id": 1, "username": "admin", "password": "adminormandie765", "role": "admin"},
-	{"id": 2, "username": "formateur", "password": "fnormandie765", "role": "user"},
-]
 
 MAX_LOGIN_ATTEMPTS = 5
 LOCK_DURATION_SECONDS = 5
@@ -135,6 +200,258 @@ MYSQL_CONFIG = {
 	"database": os.environ.get("MYSQL_DATABASE", "EDF"),
 	"port": getenv_int("MYSQL_PORT", 3306),
 }
+
+
+def lire_limite_reglage_mysql(reglage_id: int, default_limit: int) -> int:
+	if not USE_MYSQL:
+		return default_limit
+
+	connection = None
+	cursor = None
+	try:
+		connection = mysql.connector.connect(**MYSQL_CONFIG)
+		cursor = connection.cursor(dictionary=True)
+		cursor.execute("SELECT `valeur` FROM `reglage` WHERE `id` = %s LIMIT 1", (int(reglage_id),))
+		row = cursor.fetchone() or {}
+		raw = str(row.get("valeur", "")).strip()
+		if not raw:
+			return default_limit
+		try:
+			limit = int(float(raw))
+		except (TypeError, ValueError):
+			return default_limit
+		return limit if limit > 0 else default_limit
+	except Exception as err:
+		print("MySQL reglage read error:", err)
+		return default_limit
+	finally:
+		if cursor is not None:
+			cursor.close()
+		if connection is not None:
+			connection.close()
+
+
+def lire_equipements_mysql(types: tuple[str, ...]) -> tuple:
+	if not USE_MYSQL:
+		return {}, {}
+
+	connection = None
+	cursor = None
+	try:
+		connection = mysql.connector.connect(**MYSQL_CONFIG)
+		cursor = connection.cursor(dictionary=True)
+		cursor.execute("SHOW COLUMNS FROM equipements")
+		columns_info = cursor.fetchall()
+		columns_map = {str(col.get("Field", "")).strip().lower(): str(col.get("Field", "")).strip() for col in columns_info}
+
+		nom_col = columns_map.get("nom")
+		type_col = columns_map.get("type")
+		id_col = columns_map.get("groupe_id") or columns_map.get("group_id") or columns_map.get("id")
+		genre_col = columns_map.get("genre")
+
+		if not nom_col or not type_col or not id_col:
+			return {}, {}
+
+		types_values = tuple(str(t).strip() for t in types if str(t).strip())
+		if not types_values:
+			return {}, {}
+
+		placeholders = ", ".join(["%s"] * len(types_values))
+		select_cols = [f"`{nom_col}` AS nom", f"`{type_col}` AS type_name", f"`{id_col}` AS equip_id"]
+		if genre_col:
+			select_cols.append(f"`{genre_col}` AS genre")
+
+		sql = (
+			f"SELECT {', '.join(select_cols)} FROM `equipements` "
+			f"WHERE LOWER(`{type_col}`) IN ({placeholders})"
+		)
+		cursor.execute(sql, tuple(v.lower() for v in types_values))
+		rows = cursor.fetchall() or []
+
+		names = {}
+		genres = {}
+		for row in rows:
+			try:
+				equip_id = int(row.get("equip_id"))
+			except (TypeError, ValueError):
+				continue
+			if equip_id < 1:
+				continue
+
+			names[equip_id] = str(row.get("nom") or "").strip() or f"{row.get('type_name', 'Equipement')} ID {equip_id}"
+			if "genre" in row:
+				genres[equip_id] = normaliser_genre(row.get("genre"), None)
+
+		return names, genres
+	except Exception as err:
+		print("MySQL equipements read error:", err)
+		return {}, {}
+	finally:
+		if cursor is not None:
+			cursor.close()
+		if connection is not None:
+			connection.close()
+
+
+def supprimer_equipement_mysql(equip_id: int, equip_type: str) -> tuple:
+	if not USE_MYSQL:
+		return True, None
+
+	connection = None
+	cursor = None
+	try:
+		connection = mysql.connector.connect(**MYSQL_CONFIG)
+		cursor = connection.cursor()
+		cursor.execute("SHOW COLUMNS FROM equipements")
+		columns_info = cursor.fetchall()
+		columns_map = {str(col[0]).strip().lower(): str(col[0]).strip() for col in columns_info}
+
+		type_col = columns_map.get("type")
+		id_col = columns_map.get("groupe_id") or columns_map.get("group_id") or columns_map.get("id")
+		if not type_col or not id_col:
+			return False, "Colonnes type/id manquantes dans equipements"
+
+		if isinstance(equip_type, (list, tuple, set)):
+			types_values = [str(t).strip() for t in equip_type if str(t).strip()]
+		else:
+			types_values = [str(equip_type or "").strip()]
+
+		if not types_values:
+			return False, "Type equipement manquant"
+
+		placeholders = ", ".join(["%s"] * len(types_values))
+		sql = (
+			f"DELETE FROM `equipements` "
+			f"WHERE LOWER(`{type_col}`) IN ({placeholders}) AND `{id_col}` = %s"
+		)
+		params = tuple(v.lower() for v in types_values) + (int(equip_id),)
+		cursor.execute(sql, params)
+		connection.commit()
+		return True, None
+	except Exception as err:
+		return False, str(err)
+	finally:
+		if cursor is not None:
+			cursor.close()
+		if connection is not None:
+			connection.close()
+
+
+def normaliser_genre_mysql(value):
+	text = str(value or "").strip().lower()
+	if text in {"f", "femme"}:
+		return "femme"
+	if text in {"m", "h", "homme"}:
+		return "homme"
+	return None
+
+
+def composer_id_equipement_mysql(equip_type: str, equip_id: int) -> int:
+	type_norm = str(equip_type or "").strip().upper()
+	try:
+		numeric_id = int(equip_id)
+	except (TypeError, ValueError):
+		numeric_id = 0
+
+	prefixes = {
+		"C2": 1000,
+		"CPO": 2000,
+		"MIP10": 3000,
+	}
+	base = prefixes.get(type_norm, 9000)
+	return base + max(0, numeric_id)
+
+
+def enregistrer_equipement_mysql(equip_id: int, nom: str, equip_type: str, genre=None) -> tuple:
+	if not USE_MYSQL:
+		return True, None
+
+	connection = None
+	cursor = None
+	try:
+		connection = mysql.connector.connect(**MYSQL_CONFIG)
+		cursor = connection.cursor()
+		cursor.execute("SHOW COLUMNS FROM equipements")
+		columns_info = cursor.fetchall()
+		columns_map = {str(col[0]).strip().lower(): str(col[0]).strip() for col in columns_info}
+		id_col_info = next((col for col in columns_info if str(col[0]).strip().lower() == "id"), None)
+
+		for required in ("id", "nom", "type"):
+			if required not in columns_map:
+				return False, f"Colonne manquante dans equipements: {required}"
+
+		nom_value = str(nom or "").strip()
+		type_value = str(equip_type or "").strip()
+		genre_value = normaliser_genre_mysql(genre)
+		groupe_col = columns_map.get("groupe_id") or columns_map.get("group_id")
+
+		if groupe_col:
+			cursor.execute(
+				f"SELECT `{columns_map['id']}` FROM `equipements` WHERE LOWER(`{columns_map['type']}`) = LOWER(%s) AND `{groupe_col}` = %s LIMIT 1",
+				(type_value, int(equip_id)),
+			)
+		else:
+			cursor.execute(
+				f"SELECT `{columns_map['id']}` FROM `equipements` WHERE LOWER(`{columns_map['type']}`) = LOWER(%s) AND LOWER(`{columns_map['nom']}`) = LOWER(%s) LIMIT 1",
+				(type_value, nom_value),
+			)
+		existing = cursor.fetchone()
+
+		if existing:
+			update_parts = [f"`{columns_map['nom']}` = %s", f"`{columns_map['type']}` = %s"]
+			update_values = [nom_value, type_value]
+			if "genre" in columns_map:
+				update_parts.append(f"`{columns_map['genre']}` = %s")
+				update_values.append(genre_value)
+			if groupe_col:
+				update_parts.append(f"`{groupe_col}` = %s")
+				update_values.append(int(equip_id))
+
+			update_values.append(existing[0])
+			cursor.execute(
+				f"UPDATE `equipements` SET {', '.join(update_parts)} WHERE `{columns_map['id']}` = %s",
+				tuple(update_values),
+			)
+			connection.commit()
+			return True, None
+
+		insert_cols = [columns_map["nom"], columns_map["type"]]
+		insert_values = [nom_value, type_value]
+
+		if "genre" in columns_map:
+			insert_cols.append(columns_map["genre"])
+			insert_values.append(genre_value)
+		if groupe_col:
+			insert_cols.append(groupe_col)
+			insert_values.append(int(equip_id))
+
+		if id_col_info is not None:
+			id_null = str(id_col_info[2]).strip().upper() == "YES"
+			id_default = id_col_info[4]
+			id_extra = str(id_col_info[5] or "").strip().lower()
+			id_is_auto = "auto_increment" in id_extra
+
+			if not id_is_auto and not id_null and id_default is None:
+				cursor.execute(f"SELECT COALESCE(MAX(`{columns_map['id']}`), 0) + 1 FROM `equipements`")
+				next_id_row = cursor.fetchone()
+				next_id = int(next_id_row[0]) if next_id_row and next_id_row[0] is not None else 1
+				insert_cols.insert(0, columns_map["id"])
+				insert_values.insert(0, next_id)
+
+		cols_sql = ", ".join([f"`{c}`" for c in insert_cols])
+		placeholders = ", ".join(["%s"] * len(insert_values))
+
+		sql = f"INSERT INTO `equipements` ({cols_sql}) VALUES ({placeholders})"
+		cursor.execute(sql, tuple(insert_values))
+		connection.commit()
+		return True, None
+	except Exception as err:
+		return False, str(err)
+	finally:
+		if cursor is not None:
+			cursor.close()
+		if connection is not None:
+			connection.close()
 
 
 def obtenir_secondes_verrou_restantes() -> int:
@@ -232,13 +549,6 @@ def enregistrer_tentative_echec() -> int:
 
 def authentifier_utilisateur(username: str, password: str) -> tuple:
 	if not username or not password:
-		return False, None
-
-	if not USE_MYSQL:
-		for user in _LOCAL_USERS:
-			if user["username"] == username:
-				if verifier_mot_de_passe(password, user.get("password", "")):
-					return True, dict(user)
 		return False, None
 
 	try:
@@ -364,6 +674,73 @@ def accueil_page():
 	return render_template("accueil/accueil.html")
 
 
+# ---------------------------------------------------------------------------
+# Réglages (admin uniquement)
+# ---------------------------------------------------------------------------
+reglages_bp = Blueprint("reglages", __name__, url_prefix="/reglages")
+
+
+@reglages_bp.route("", methods=["GET"])
+def reglages_page():
+	if not session.get("is_authenticated"):
+		return redirect(url_for("login.connexion"))
+	if not is_admin():
+		return redirect(url_for("accueil.accueil_page"))
+	current = lire_reglages_mysql((1, 2, 3, 4))
+	return render_template(
+		"reglages/reglages.html",
+		reglages_nom=current.get(1, ""),
+		reglages_cm=current.get(2, ""),
+		reglages_cpo=current.get(3, ""),
+		reglages_c2=current.get(4, ""),
+	)
+
+
+@reglages_bp.route("", methods=["POST"])
+@require_admin_role()
+def reglages_save():
+	data = request.get_json(silent=True) or {}
+	nom_raw = data.get("nom")
+	valeur1_raw = data.get("valeur1")
+	valeur2_raw = data.get("valeur2")
+	valeur3_raw = data.get("valeur3")
+
+	nom = str(nom_raw or "").strip()
+
+	for label, raw_val in [("Valeur 1", valeur1_raw), ("Valeur 2", valeur2_raw), ("Valeur 3", valeur3_raw)]:
+		if raw_val is None or str(raw_val).strip() == "":
+			continue
+		try:
+			n = float(raw_val)
+		except (TypeError, ValueError):
+			return {"error": f"{label} doit être un nombre valide."}, 400
+		if n <= 0:
+			return {"error": f"{label} doit etre strictement superieur a 0."}, 400
+
+	current = lire_reglages_mysql((1, 2, 3, 4))
+
+	valeur1 = str(valeur1_raw).strip() if valeur1_raw is not None and str(valeur1_raw).strip() != "" else current.get(2, "")
+	valeur2 = str(valeur2_raw).strip() if valeur2_raw is not None and str(valeur2_raw).strip() != "" else current.get(3, "")
+	valeur3 = str(valeur3_raw).strip() if valeur3_raw is not None and str(valeur3_raw).strip() != "" else current.get(4, "")
+
+	if not nom:
+		nom = current.get(1, "")
+
+	reglages = [
+		(1, "nom", nom),
+		(2, "CM", valeur1),
+		(3, "CPO", valeur2),
+		(4, "C2", valeur3),
+	]
+
+	ok, err = enregistrer_reglages_mysql(reglages)
+	if not ok:
+		print("MySQL reglage save error:", err)
+		return {"error": "Erreur MySQL reglage."}, 500
+
+	return {"ok": True}, 200
+
+
 @accueil_bp.route("/menu")
 def menu():
 	return redirect(url_for("accueil.accueil_page"))
@@ -396,13 +773,30 @@ TOPIC_C2_CAPTEURS_DOS = "FormaReaEDF/C2/+/CapteursDos"
 TOPIC_C2_GENRE = "FormaReaEDF/C2/+/Genre"
 
 mqtt_client_c2 = None
-c2_names = {1: "C2 ID 1", 2: "C2 ID 2"}
+c2_names = {}
 c2_values = {}
 deleted_c2_ids: set[int] = set()
 
 
 def ids_c2_actifs() -> list[int]:
 	return ids_triees(i for i in c2_names.keys() if i not in deleted_c2_ids)
+
+
+def rafraichir_c2_depuis_mysql():
+	if not USE_MYSQL:
+		return
+	names, genres = lire_equipements_mysql(("C2",))
+	c2_names.clear()
+	c2_names.update(names)
+	deleted_c2_ids.intersection_update(set(c2_names.keys()))
+	for c2_id in list(c2_values.keys()):
+		if c2_id not in c2_names:
+			c2_values.pop(c2_id, None)
+	for c2_id, genre_code in genres.items():
+		entry = garantir_genre_entry(c2_values.get(c2_id, entree_c2_defaut()))
+		if genre_code is not None:
+			entry["genre"] = genre_code
+		c2_values[c2_id] = entry
 
 
 def normaliser_liste_numerique(values):
@@ -590,58 +984,57 @@ def extraire_id_appareil(name: str, device_type: str):
 		return None
 
 
-if USE_MQTT:
-	mqtt_client_c2 = mqtt.Client(client_id=f"IHM_C2_{uuid.uuid4().hex[:8]}")
+mqtt_client_c2 = mqtt.Client(client_id=f"IHM_C2_{uuid.uuid4().hex[:8]}")
 
-	def connecter_mqtt_c2(client, userdata, flags, rc):
-		try:
-			client.subscribe(TOPIC_C2_CAPTEURS_LEGACY)
-			client.subscribe(TOPIC_C2_CAPTEURS_FACE)
-			client.subscribe(TOPIC_C2_CAPTEURS_DOS)
-			client.subscribe(TOPIC_C2_GENRE)
-			print(f"C2 MQTT connected (rc={rc}) and subscribed", flush=True)
-		except Exception as exc:
-			print("MQTT on_connect subscribe error:", exc)
+def connecter_mqtt_c2(client, userdata, flags, rc):
+	try:
+		client.subscribe(TOPIC_C2_CAPTEURS_LEGACY)
+		client.subscribe(TOPIC_C2_CAPTEURS_FACE)
+		client.subscribe(TOPIC_C2_CAPTEURS_DOS)
+		client.subscribe(TOPIC_C2_GENRE)
+		print(f"C2 MQTT connected (rc={rc}) and subscribed", flush=True)
+	except Exception as exc:
+		print("MQTT on_connect subscribe error:", exc)
 
-	def traiter_message_mqtt_c2(client, userdata, msg):
-		try:
-			parts = msg.topic.split("/")
-			if len(parts) < 4:
-				return
-			c2_id = extraire_id_numerique_c2(parts[2])
-			if c2_id is None or c2_id < 1:
-				return
-			if c2_id in deleted_c2_ids:
-				return
+def traiter_message_mqtt_c2(client, userdata, msg):
+	try:
+		parts = msg.topic.split("/")
+		if len(parts) < 4:
+			return
+		c2_id = extraire_id_numerique_c2(parts[2])
+		if c2_id is None or c2_id < 1:
+			return
+		if c2_id in deleted_c2_ids:
+			return
+		if c2_id not in c2_names:
+			return
 
-			payload = msg.payload.decode("utf-8", errors="ignore")
-			topic_suffix = parts[3].strip().lower()
+		payload = msg.payload.decode("utf-8", errors="ignore")
+		topic_suffix = parts[3].strip().lower()
 
-			if c2_id not in c2_values:
-				c2_values[c2_id] = entree_c2_defaut()
-			else:
-				c2_values[c2_id] = garantir_genre_entry(c2_values[c2_id])
+		if c2_id not in c2_values:
+			c2_values[c2_id] = entree_c2_defaut()
+		else:
+			c2_values[c2_id] = garantir_genre_entry(c2_values[c2_id])
 
-			if topic_suffix == "capteursface":
-				c2_values[c2_id]["F"] = parser_liste_capteurs_texte(payload)
-			elif topic_suffix == "capteursdos":
-				c2_values[c2_id]["D"] = parser_liste_capteurs_texte(payload)
-			elif topic_suffix == "genre":
-				c2_values[c2_id]["genre"] = normaliser_genre(payload, c2_values[c2_id].get("genre", "M"))
-			else:
-				f_values, d_values = analyser_charge_capteurs(payload)
-				c2_values[c2_id] = {
-					"F": f_values,
-					"D": d_values,
-					"genre": c2_values[c2_id].get("genre", "M"),
-				}
+		if topic_suffix == "capteursface":
+			c2_values[c2_id]["F"] = parser_liste_capteurs_texte(payload)
+		elif topic_suffix == "capteursdos":
+			c2_values[c2_id]["D"] = parser_liste_capteurs_texte(payload)
+		elif topic_suffix == "genre":
+			c2_values[c2_id]["genre"] = normaliser_genre(payload, c2_values[c2_id].get("genre", "M"))
+		else:
+			f_values, d_values = analyser_charge_capteurs(payload)
+			c2_values[c2_id] = {
+				"F": f_values,
+				"D": d_values,
+				"genre": c2_values[c2_id].get("genre", "M"),
+			}
 
-			if c2_id not in c2_names:
-				c2_names[c2_id] = f"C2 ID {c2_id}"
-		except Exception as exc:
-			print("MQTT on_message error:", exc)
+	except Exception as exc:
+		print("MQTT on_message error:", exc)
 
-	mqtt_client_c2 = configurer_demarrer_mqtt(mqtt_client_c2, connecter_mqtt_c2, traiter_message_mqtt_c2)
+mqtt_client_c2 = configurer_demarrer_mqtt(mqtt_client_c2, connecter_mqtt_c2, traiter_message_mqtt_c2)
 
 
 @c2_bp.route("/")
@@ -651,16 +1044,32 @@ def accueil_c2():
 
 @c2_bp.route("/<int:c2_id>")
 def afficher_page_c2(c2_id: int):
+	rafraichir_c2_depuis_mysql()
+	max_c2 = lire_limite_reglage_mysql(4, 4)
+
 	if c2_id < 1:
 		c2_id = 1
 
+	actifs = ids_c2_actifs()
+	if not actifs:
+		return render_template(
+			"c2/C2.html",
+			c2_id=0,
+			c2_names={},
+			c2_ids=[],
+			max_c2=max_c2,
+			current_gender="homme",
+			role=session.get("role", "user"),
+			has_equipment=False,
+		)
+	if c2_id not in actifs:
+		cible = actifs[0]
+		return redirect(url_for("c2.afficher_page_c2", c2_id=cible))
+
 	if c2_id in deleted_c2_ids:
-		actifs = ids_c2_actifs()
 		cible = actifs[0] if actifs else 1
 		return redirect(url_for("c2.afficher_page_c2", c2_id=cible))
 
-	if c2_id not in c2_names:
-		c2_names[c2_id] = f"C2 ID {c2_id}"
 	if c2_id not in c2_values:
 		c2_values[c2_id] = entree_c2_defaut()
 	else:
@@ -671,13 +1080,17 @@ def afficher_page_c2(c2_id: int):
 		c2_id=c2_id,
 		c2_names=c2_names,
 		c2_ids=ids_c2_actifs(),
+		max_c2=max_c2,
 		current_gender=genre_ui(c2_values[c2_id].get("genre", "M")),
 		role=session.get("role", "user"),
+		has_equipment=True,
 	)
 
 
 @c2_bp.route("/publish_capteurs_full", methods=["POST"])
 def publier_capteurs_complet():
+	rafraichir_c2_depuis_mysql()
+
 	raw_c2_id = request.form.get("c2_id") or request.values.get("c2_id")
 	raw_f = request.form.get("F")
 	raw_d = request.form.get("D")
@@ -715,9 +1128,19 @@ def publier_capteurs_complet():
 	if c2_numeric_id is not None and c2_numeric_id >= 1:
 		if c2_numeric_id in deleted_c2_ids:
 			return jsonify({"status": "error", "error": "c2_deleted"}), 400
+		if c2_numeric_id not in ids_c2_actifs():
+			return jsonify({"status": "error", "error": "c2_unknown"}), 404
 		c2_values[c2_numeric_id] = garantir_genre_entry({"F": f_list, "D": d_list, "genre": genre_code})
-		if c2_numeric_id not in c2_names:
-			c2_names[c2_numeric_id] = f"C2 ID {c2_numeric_id}"
+
+		sync_ok, sync_err = enregistrer_equipement_mysql(
+			c2_numeric_id,
+			c2_names.get(c2_numeric_id, f"C2 ID {c2_numeric_id}"),
+			"C2",
+			genre_code,
+		)
+		if not sync_ok:
+			print("MySQL equipements sync error:", sync_err)
+			return jsonify({"status": "error", "error": "mysql_equipements_sync_failed"}), 500
 
 	topic_face = f"FormaReaEDF/C2/{c2_token}/CapteursFace"
 	topic_dos = f"FormaReaEDF/C2/{c2_token}/CapteursDos"
@@ -751,6 +1174,9 @@ def publier_capteurs_complet():
 @c2_bp.route("/ajouter-appareil", methods=["POST"])
 @require_admin_role()
 def ajouter_appareil_c2():
+	rafraichir_c2_depuis_mysql()
+	max_c2 = lire_limite_reglage_mysql(4, 4)
+
 	name = request.form.get("name", "")
 	c2_id = lire_id_formulaire()
 	genre_code = normaliser_genre(request.form.get("gender"), None)
@@ -759,8 +1185,10 @@ def ajouter_appareil_c2():
 		return jsonify(ok=False, error="Le nom est obligatoire."), 400
 	if genre_code is None:
 		return jsonify(ok=False, error="Le genre est obligatoire."), 400
-	if c2_id is None or c2_id < 1 or c2_id > 4:
-		return jsonify(ok=False, error="ID C2 invalide (1 a 4)."), 400
+	if c2_id is None or c2_id < 1 or c2_id > max_c2:
+		return jsonify(ok=False, error=f"ID C2 invalide (1 a {max_c2})."), 400
+	if len(ids_c2_actifs()) >= max_c2:
+		return jsonify(ok=False, error=f"Limite C2 atteinte ({max_c2})."), 400
 	if c2_id in ids_c2_actifs():
 		return jsonify(ok=False, error="Cet ID est deja assigne."), 400
 
@@ -770,7 +1198,12 @@ def ajouter_appareil_c2():
 	entry["genre"] = genre_code
 	c2_values[c2_id] = entry
 
-	if USE_MQTT and mqtt_client_c2:
+	sync_ok, sync_err = enregistrer_equipement_mysql(c2_id, c2_names[c2_id], "C2", genre_code)
+	if not sync_ok:
+		print("MySQL equipements sync error:", sync_err)
+		return jsonify(ok=False, error="Erreur MySQL equipements."), 500
+
+	if mqtt_client_c2:
 		try:
 			mqtt_client_c2.publish(f"FormaReaEDF/C2/C2_{c2_id}/Genre", genre_code, qos=1, retain=True)
 		except Exception as exc:
@@ -784,6 +1217,8 @@ def ajouter_appareil_c2():
 @c2_bp.route("/supprimer-appareil", methods=["POST"])
 @require_admin_role()
 def supprimer_appareil_c2():
+	rafraichir_c2_depuis_mysql()
+
 	c2_id = lire_id_formulaire()
 	if c2_id is None:
 		return jsonify(ok=False, error="ID invalide."), 400
@@ -795,7 +1230,12 @@ def supprimer_appareil_c2():
 	c2_names.pop(c2_id, None)
 	c2_values.pop(c2_id, None)
 
-	if USE_MQTT and mqtt_client_c2:
+	db_ok, db_err = supprimer_equipement_mysql(c2_id, "C2")
+	if not db_ok:
+		print("MySQL equipements delete error:", db_err)
+		return jsonify(ok=False, error="Erreur MySQL equipements."), 500
+
+	if mqtt_client_c2:
 		try:
 			mqtt_client_c2.publish(f"FormaReaEDF/C2/C2_{c2_id}/CapteursFace", "", qos=1, retain=True)
 			mqtt_client_c2.publish(f"FormaReaEDF/C2/C2_{c2_id}/CapteursDos", "", qos=1, retain=True)
@@ -809,10 +1249,14 @@ def supprimer_appareil_c2():
 
 @c2_bp.route("/state/<int:c2_id>")
 def obtenir_etat_c2(c2_id: int):
+	rafraichir_c2_depuis_mysql()
+
 	if c2_id < 1:
 		return jsonify(ok=False, error="ID invalide."), 400
 	if c2_id in deleted_c2_ids:
 		return jsonify(ok=False, error="ID supprime."), 404
+	if c2_id not in ids_c2_actifs():
+		return jsonify(ok=False, error="ID inconnu."), 404
 
 	entry = c2_values.get(c2_id)
 	if entry is None:
@@ -857,8 +1301,8 @@ def topic_bruit_fond_cm(cm_id: int) -> str:
 	return f"FormaReaEDF/ControllerMobile/CM_{cm_id}/NivBruitFond"
 
 
-last_values_cm = {i: entree_par_defaut_cm() for i in range(1, 12)}
-cm_names = {i: f"CM ID {i}" for i in range(1, 12)}
+last_values_cm = {}
+cm_names = {}
 deleted_cm_ids: set[int] = set()
 mqtt_client_cm = None
 
@@ -867,8 +1311,20 @@ def ids_cm_actifs() -> list[int]:
 	return ids_triees(i for i in cm_names.keys() if i not in deleted_cm_ids)
 
 
+def rafraichir_cm_depuis_mysql():
+	if not USE_MYSQL:
+		return
+	names, _ = lire_equipements_mysql(("MIP10", "CM", "CONTROLLERMOBILE"))
+	cm_names.clear()
+	cm_names.update(names)
+	deleted_cm_ids.intersection_update(set(cm_names.keys()))
+	for cm_id in list(last_values_cm.keys()):
+		if cm_id not in cm_names:
+			last_values_cm.pop(cm_id, None)
+
+
 def initialiser_mqtt_cm(cm_id: int):
-	if not (USE_MQTT and mqtt_client_cm):
+	if not mqtt_client_cm:
 		return
 
 	last_values_cm[cm_id].setdefault("Status", "0")
@@ -879,7 +1335,7 @@ def initialiser_mqtt_cm(cm_id: int):
 
 
 def deconnecter_mqtt_cm(cm_id: int):
-	if not (USE_MQTT and mqtt_client_cm):
+	if not mqtt_client_cm:
 		return
 
 	mqtt_client_cm.publish(topic_contamination_cm(cm_id), "", retain=True)
@@ -956,18 +1412,35 @@ def accueil_cm():
 
 @cm_bp.route("/<int:cm_id>")
 def afficher_page_cm(cm_id: int):
+	rafraichir_cm_depuis_mysql()
+	max_cm = lire_limite_reglage_mysql(2, 16)
+
 	if cm_id < 1:
 		cm_id = 1
 
+	actifs = ids_cm_actifs()
+	if not actifs:
+		return render_template(
+			"cm/CM.html",
+			cm_id=0,
+			valeur_conta="0",
+			valeur_bdf="0",
+			cm_names={},
+			cm_ids=[],
+			max_cm=max_cm,
+			role=session.get("role", "user"),
+			has_equipment=False,
+		)
+	if cm_id not in actifs:
+		cible = actifs[0]
+		return redirect(url_for("cm.afficher_page_cm", cm_id=cible))
+
 	if cm_id in deleted_cm_ids:
-		actifs = ids_cm_actifs()
 		cible = actifs[0] if actifs else 1
 		return redirect(url_for("cm.afficher_page_cm", cm_id=cible))
 
 	if cm_id not in last_values_cm:
 		last_values_cm[cm_id] = entree_par_defaut_cm()
-	if cm_id not in cm_names:
-		cm_names[cm_id] = f"CM ID {cm_id}"
 	last_values_cm[cm_id].setdefault("Status", "0")
 	last_values_cm[cm_id].setdefault("NivBruitFond", "1")
 
@@ -978,14 +1451,20 @@ def afficher_page_cm(cm_id: int):
 		valeur_bdf=last_values_cm[cm_id]["NivBruitFond"],
 		cm_names=cm_names,
 		cm_ids=ids_cm_actifs(),
+		max_cm=max_cm,
 		role=session.get("role", "user"),
+		has_equipment=True,
 	)
 
 
 @cm_bp.route("/slider/<int:cm_id>", methods=["POST"])
 def slider_cm(cm_id: int):
+	rafraichir_cm_depuis_mysql()
+
 	if cm_id < 1:
 		return "unknown cm_id", 400
+	if cm_id not in ids_cm_actifs():
+		return "unknown cm_id", 404
 
 	if cm_id not in last_values_cm:
 		last_values_cm[cm_id] = entree_par_defaut_cm()
@@ -1028,14 +1507,19 @@ def slider_cm(cm_id: int):
 @cm_bp.route("/ajouter-appareil", methods=["POST"], endpoint="ajouter_appareil")
 @require_admin_role()
 def ajouter_appareil_cm():
+	rafraichir_cm_depuis_mysql()
+	max_cm = lire_limite_reglage_mysql(2, 16)
+
 	name = request.form.get("name", "")
 	cm_id = lire_id_formulaire()
 
 	if not str(name or "").strip():
 		return jsonify(ok=False, error="Le nom est obligatoire."), 400
 
-	if cm_id is None or cm_id < 1 or cm_id > 16:
-		return jsonify(ok=False, error="ID CM invalide (1 a 16)."), 400
+	if cm_id is None or cm_id < 1 or cm_id > max_cm:
+		return jsonify(ok=False, error=f"ID CM invalide (1 a {max_cm})."), 400
+	if len(ids_cm_actifs()) >= max_cm:
+		return jsonify(ok=False, error=f"Limite CM atteinte ({max_cm})."), 400
 
 	if cm_id in ids_cm_actifs():
 		return jsonify(ok=False, error="Cet ID est deja assigne."), 400
@@ -1044,6 +1528,12 @@ def ajouter_appareil_cm():
 	deleted_cm_ids.discard(cm_id)
 	if cm_id not in last_values_cm:
 		last_values_cm[cm_id] = entree_par_defaut_cm()
+
+	sync_ok, sync_err = enregistrer_equipement_mysql(cm_id, cm_names[cm_id], "MIP10", None)
+	if not sync_ok:
+		print("MySQL equipements sync error:", sync_err)
+		return jsonify(ok=False, error="Erreur MySQL equipements."), 500
+
 	initialiser_mqtt_cm(cm_id)
 
 	print(f"Controller Mobile No{cm_id} a ete cree")
@@ -1053,6 +1543,8 @@ def ajouter_appareil_cm():
 @cm_bp.route("/supprimer-appareil", methods=["POST"], endpoint="supprimer_appareil")
 @require_admin_role()
 def supprimer_appareil_cm():
+	rafraichir_cm_depuis_mysql()
+
 	cm_id = lire_id_formulaire()
 	if cm_id is None:
 		return jsonify(ok=False, error="ID invalide."), 400
@@ -1063,6 +1555,12 @@ def supprimer_appareil_cm():
 	deleted_cm_ids.add(cm_id)
 	cm_names.pop(cm_id, None)
 	last_values_cm.pop(cm_id, None)
+
+	db_ok, db_err = supprimer_equipement_mysql(cm_id, ("MIP10", "CM", "CONTROLLERMOBILE"))
+	if not db_ok:
+		print("MySQL equipements delete error:", db_err)
+		return jsonify(ok=False, error="Erreur MySQL equipements."), 500
+
 	deconnecter_mqtt_cm(cm_id)
 
 	print(f"Controller Mobile No{cm_id} a ete supprime")
@@ -1071,8 +1569,12 @@ def supprimer_appareil_cm():
 
 @cm_bp.route("/state/<int:cm_id>", endpoint="obtenir_etat")
 def obtenir_etat_cm(cm_id: int):
+	rafraichir_cm_depuis_mysql()
+
 	if cm_id < 1:
 		return jsonify(ok=False, error="ID invalide."), 400
+	if cm_id not in ids_cm_actifs():
+		return jsonify(ok=False, error="ID inconnu."), 404
 
 	if cm_id not in last_values_cm:
 		last_values_cm[cm_id] = entree_par_defaut_cm()
@@ -1102,8 +1604,8 @@ def topic_contamination_cpo(cpo_id: int) -> str:
 	return f"FormaReaEDF/CPO/CPO_{cpo_id}/NivContamination"
 
 
-last_values_cpo = {i: entree_par_defaut_cpo() for i in range(1, 5)}
-cpo_names = {i: f"CPO ID {i}" for i in range(1, 5)}
+last_values_cpo = {}
+cpo_names = {}
 deleted_cpo_ids: set[int] = set()
 mqtt_client_cpo = None
 
@@ -1112,15 +1614,27 @@ def ids_cpo_actifs() -> list[int]:
 	return ids_triees(i for i in cpo_names.keys() if i not in deleted_cpo_ids)
 
 
+def rafraichir_cpo_depuis_mysql():
+	if not USE_MYSQL:
+		return
+	names, _ = lire_equipements_mysql(("CPO",))
+	cpo_names.clear()
+	cpo_names.update(names)
+	deleted_cpo_ids.intersection_update(set(cpo_names.keys()))
+	for cpo_id in list(last_values_cpo.keys()):
+		if cpo_id not in cpo_names:
+			last_values_cpo.pop(cpo_id, None)
+
+
 def initialiser_mqtt_cpo(cpo_id: int):
-	if not (USE_MQTT and mqtt_client_cpo):
+	if not mqtt_client_cpo:
 		return
 
 	mqtt_client_cpo.publish(topic_contamination_cpo(cpo_id), f"{last_values_cpo[cpo_id]['NivContamination']}", retain=True)
 
 
 def deconnecter_mqtt_cpo(cpo_id: int):
-	if not (USE_MQTT and mqtt_client_cpo):
+	if not mqtt_client_cpo:
 		return
 
 	mqtt_client_cpo.publish(topic_contamination_cpo(cpo_id), "", retain=True)
@@ -1185,18 +1699,34 @@ def accueil_cpo():
 
 @cpo_bp.route("/<int:cpo_id>")
 def afficher_page_cpo(cpo_id: int):
+	rafraichir_cpo_depuis_mysql()
+	max_cpo = lire_limite_reglage_mysql(3, 4)
+
 	if cpo_id < 1:
 		cpo_id = 1
 
+	actifs = ids_cpo_actifs()
+	if not actifs:
+		return render_template(
+			"cpo/CPO.html",
+			cpo_id=0,
+			valeur_conta="0",
+			cpo_names={},
+			cpo_ids=[],
+			max_cpo=max_cpo,
+			role=session.get("role", "user"),
+			has_equipment=False,
+		)
+	if cpo_id not in actifs:
+		cible = actifs[0]
+		return redirect(url_for("cpo.afficher_page_cpo", cpo_id=cible))
+
 	if cpo_id in deleted_cpo_ids:
-		actifs = ids_cpo_actifs()
 		cible = actifs[0] if actifs else 1
 		return redirect(url_for("cpo.afficher_page_cpo", cpo_id=cible))
 
 	if cpo_id not in last_values_cpo:
 		last_values_cpo[cpo_id] = entree_par_defaut_cpo()
-	if cpo_id not in cpo_names:
-		cpo_names[cpo_id] = f"CPO ID {cpo_id}"
 
 	return render_template(
 		"cpo/CPO.html",
@@ -1204,14 +1734,20 @@ def afficher_page_cpo(cpo_id: int):
 		valeur_conta=last_values_cpo[cpo_id]["NivContamination"],
 		cpo_names=cpo_names,
 		cpo_ids=ids_cpo_actifs(),
+		max_cpo=max_cpo,
 		role=session.get("role", "user"),
+		has_equipment=True,
 	)
 
 
 @cpo_bp.route("/slider/<int:cpo_id>", methods=["POST"], endpoint="traiter_jauge")
 def traiter_jauge_cpo(cpo_id: int):
+	rafraichir_cpo_depuis_mysql()
+
 	if cpo_id < 1:
 		return "unknown cpo_id", 400
+	if cpo_id not in ids_cpo_actifs():
+		return "unknown cpo_id", 404
 
 	if cpo_id not in last_values_cpo:
 		last_values_cpo[cpo_id] = entree_par_defaut_cpo()
@@ -1234,14 +1770,19 @@ def traiter_jauge_cpo(cpo_id: int):
 @cpo_bp.route("/ajouter-appareil", methods=["POST"], endpoint="ajouter_appareil")
 @require_admin_role()
 def ajouter_appareil_cpo():
+	rafraichir_cpo_depuis_mysql()
+	max_cpo = lire_limite_reglage_mysql(3, 4)
+
 	name = request.form.get("name", "")
 	cpo_id = lire_id_formulaire()
 
 	if not str(name or "").strip():
 		return jsonify(ok=False, error="Le nom est obligatoire."), 400
 
-	if cpo_id is None or cpo_id < 1 or cpo_id > 4:
-		return jsonify(ok=False, error="ID CPO invalide (1 a 4)."), 400
+	if cpo_id is None or cpo_id < 1 or cpo_id > max_cpo:
+		return jsonify(ok=False, error=f"ID CPO invalide (1 a {max_cpo})."), 400
+	if len(ids_cpo_actifs()) >= max_cpo:
+		return jsonify(ok=False, error=f"Limite CPO atteinte ({max_cpo})."), 400
 
 	if cpo_id in ids_cpo_actifs():
 		return jsonify(ok=False, error="Cet ID est deja assigne."), 400
@@ -1250,6 +1791,12 @@ def ajouter_appareil_cpo():
 	deleted_cpo_ids.discard(cpo_id)
 	if cpo_id not in last_values_cpo:
 		last_values_cpo[cpo_id] = entree_par_defaut_cpo()
+
+	sync_ok, sync_err = enregistrer_equipement_mysql(cpo_id, cpo_names[cpo_id], "CPO", None)
+	if not sync_ok:
+		print("MySQL equipements sync error:", sync_err)
+		return jsonify(ok=False, error="Erreur MySQL equipements."), 500
+
 	initialiser_mqtt_cpo(cpo_id)
 
 	print(f"CPO ID {cpo_id} a ete cree")
@@ -1259,6 +1806,8 @@ def ajouter_appareil_cpo():
 @cpo_bp.route("/supprimer-appareil", methods=["POST"], endpoint="supprimer_appareil")
 @require_admin_role()
 def supprimer_appareil_cpo():
+	rafraichir_cpo_depuis_mysql()
+
 	cpo_id = lire_id_formulaire()
 	if cpo_id is None:
 		return jsonify(ok=False, error="ID invalide."), 400
@@ -1269,6 +1818,12 @@ def supprimer_appareil_cpo():
 	deleted_cpo_ids.add(cpo_id)
 	cpo_names.pop(cpo_id, None)
 	last_values_cpo.pop(cpo_id, None)
+
+	db_ok, db_err = supprimer_equipement_mysql(cpo_id, "CPO")
+	if not db_ok:
+		print("MySQL equipements delete error:", db_err)
+		return jsonify(ok=False, error="Erreur MySQL equipements."), 500
+
 	deconnecter_mqtt_cpo(cpo_id)
 
 	print(f"CPO ID {cpo_id} a ete supprime")
@@ -1277,8 +1832,12 @@ def supprimer_appareil_cpo():
 
 @cpo_bp.route("/state/<int:cpo_id>", endpoint="obtenir_etat")
 def obtenir_etat_cpo(cpo_id: int):
+	rafraichir_cpo_depuis_mysql()
+
 	if cpo_id < 1:
 		return jsonify(ok=False, error="ID invalide."), 400
+	if cpo_id not in ids_cpo_actifs():
+		return jsonify(ok=False, error="ID inconnu."), 404
 
 	if cpo_id not in last_values_cpo:
 		last_values_cpo[cpo_id] = entree_par_defaut_cpo()

@@ -2,7 +2,7 @@ import os
 
 from flask import Flask, redirect, request, session, url_for
 
-from Controlleurs.Controlleur import accueil_bp, c2_bp, cm_bp, cpo_bp, login_bp
+from Controlleurs.Controlleur import accueil_bp, c2_bp, cm_bp, cpo_bp, login_bp, reglages_bp
 
 
 def create_app() -> Flask:
@@ -28,6 +28,7 @@ def create_app() -> Flask:
     app.register_blueprint(c2_bp)
     app.register_blueprint(cm_bp)
     app.register_blueprint(cpo_bp)
+    app.register_blueprint(reglages_bp)
 
     return app
 
@@ -37,4 +38,4 @@ if __name__ == "__main__":
     # Keep default port aligned with NAT rule (external 55001 -> internal 5001).
     port = int(os.environ.get("FLASK_PORT", "5001"))
     debug = os.environ.get("FLASK_DEBUG", "0") == "1"
-    create_app().run(host=host, port=port, debug=debug, use_reloader=False)
+    create_app().run(host=host, port=port, debug=debug, use_reloader=False, ssl_context=('cert.pem', 'key.pem'))

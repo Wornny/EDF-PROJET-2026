@@ -12,7 +12,7 @@ function showPage(id) {
 /* ======================================= INITIALISATEUR PREFIX ======================================= */
 function getInitPrefix() {
   const val = document.getElementById('initSelect').value;
-  return val || 'initialisateur';
+  return val ? val.replace("initialisateur", "") : "1";;
 }
 
 
@@ -83,7 +83,14 @@ function exitFullscreen() {
   if (efs) efs.call(document).catch(() => {});
   localStorage.setItem('fs_actif', '0'); updateBtnFS(false);
 }
-function updateBtnFS(isFS) { document.getElementById('btnFS').textContent = isFS ? '✕ Quitter' : '⛶ Plein écran'; }
+
+// ✅ Vérification null avant tout accès
+function updateBtnFS(isFS) {
+  const btn = document.getElementById('btnFS');
+  if (!btn) return; // ← sécurisé
+  btn.textContent = isFS ? '✕ Quitter' : '⛶ Plein écran';
+}
+
 if (localStorage.getItem('fs_actif') === '1') {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;z-index:99998;background:transparent;cursor:pointer;';
@@ -94,14 +101,17 @@ if (localStorage.getItem('fs_actif') === '1') {
     if (el && el !== overlay) el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: e.clientX, clientY: e.clientY }));
   }, { once: true });
 }
-document.getElementById('btnFS').addEventListener('click', () => {
+
+// ✅ Optional chaining — ne plante pas si btnFS absent
+document.getElementById('btnFS')?.addEventListener('click', () => {
   const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
   isFS ? exitFullscreen() : goFullscreen();
 });
+
 ['fullscreenchange', 'webkitfullscreenchange'].forEach(evt => {
   document.addEventListener(evt, () => {
     const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
-    updateBtnFS(isFS);
+    updateBtnFS(isFS); // ← déjà protégé par le if(!btn) return
     if (!isFS) localStorage.setItem('fs_actif', '0');
   });
 });
@@ -126,9 +136,8 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 
 /* ======================================= CONFIG ======================================= */
-const BASE_URL = window.location.protocol === 'https:'
-  ? 'https://192.168.190.8:3001'
-  : 'http://192.168.190.8:3000';
+const BASE_URL = 'http://192.168.10.3:55001';
+//
 let scannedCode   = null;
 let currentNom    = null;
 let currentPrenom = null;

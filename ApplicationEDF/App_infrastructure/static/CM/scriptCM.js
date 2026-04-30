@@ -16,6 +16,8 @@ const overlayBdf = gaugeBgBdf ? gaugeBgBdf.closest(".gauge-zone").querySelector(
 
 const cmId = Number(document.body.dataset.cmId || "1");
 const apiBase = document.body.dataset.apiBase || "";
+const rawMaxCm = Number(document.body.dataset.maxCm || "16");
+const maxCm = Number.isInteger(rawMaxCm) && rawMaxCm > 0 ? rawMaxCm : 16;
 
 let hasPendingContamination = false;
 let hasPendingBruitFond = false;
@@ -546,7 +548,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const match = href.match(/\/ControllerMobile\/(\d+)$/);
       if (!match) return;
       const id = Number(match[1]);
-      if (Number.isInteger(id) && id >= 1 && id <= 16) {
+      if (Number.isInteger(id) && id >= 1 && id <= maxCm) {
         ids.add(id);
       }
     });
@@ -556,7 +558,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const refreshAddButtonVisibility = () => {
     if (!addBtn) return;
     const assigned = buildAssignedCmIds();
-    const hasFreeSlot = assigned.size < 16;
+    const hasFreeSlot = assigned.size < maxCm;
     addBtn.style.display = hasFreeSlot ? "" : "none";
   };
 
@@ -566,7 +568,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const assigned = buildAssignedCmIds();
     modalId.innerHTML = "";
 
-    for (let id = 1; id <= 16; id += 1) {
+    for (let id = 1; id <= maxCm; id += 1) {
       if (assigned.has(id)) continue;
       const option = document.createElement("option");
       option.value = String(id);
@@ -589,7 +591,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateIdChoices();
 
     if (modalId && modalId.options.length === 0) {
-      setError("Tous les IDs 1 a 16 sont deja utilises.");
+      setError(`Tous les IDs 1 a ${maxCm} sont deja utilises.`);
       return;
     }
 
@@ -634,8 +636,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      if (!Number.isInteger(selectedId) || selectedId < 1 || selectedId > 16) {
-        setError("Selectionne un ID valide (1 a 16).");
+      if (!Number.isInteger(selectedId) || selectedId < 1 || selectedId > maxCm) {
+        setError(`Selectionne un ID valide (1 a ${maxCm}).`);
         if (modalId) modalId.focus();
         return;
       }
@@ -686,14 +688,88 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const ensureDeleteModal = () => {
+    let deleteModal = document.getElementById("cm-delete-modal");
+    if (!deleteModal) {
+      deleteModal = document.createElement("div");
+      deleteModal.id = "cm-delete-modal";
+      deleteModal.className = "cm-modal";
+      deleteModal.setAttribute("aria-hidden", "true");
+      deleteModal.innerHTML = `
+        <div class="cm-modal-card" role="dialog" aria-modal="true" aria-labelledby="cm-delete-title">
+          <button class="cm-modal-close" id="cm-delete-close" aria-label="Fermer" type="button">X</button>
+          <h3 class="cm-modal-title" id="cm-delete-title">Confirmer la suppression</h3>
+          <div class="cm-modal-row">
+            <p class="cm-modal-label" id="cm-delete-message" style="margin: 0;"></p>
+          </div>
+          <div class="cm-modal-row" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px;">
+            <button class="cm-modal-submit" id="cm-delete-cancel" type="button">Annuler</button>
+            <button class="cm-modal-submit" id="cm-delete-confirm" type="button">Supprimer</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(deleteModal);
+    }
+
+    return {
+      modal: deleteModal,
+      close: deleteModal.querySelector("#cm-delete-close"),
+      cancel: deleteModal.querySelector("#cm-delete-cancel"),
+      confirm: deleteModal.querySelector("#cm-delete-confirm"),
+      message: deleteModal.querySelector("#cm-delete-message"),
+    };
+  };
+
+  const askDeleteConfirmation = (id) => new Promise((resolve) => {
+    const refs = ensureDeleteModal();
+    if (!refs.modal || !refs.close || !refs.cancel || !refs.confirm || !refs.message) {
+      resolve(false);
+      return;
+    }
+
+    refs.message.textContent = `Supprimer l'equipement CM ID ${id} ?`;
+
+    const closeWith = (result) => {
+      refs.modal.classList.remove("open");
+      refs.modal.setAttribute("aria-hidden", "true");
+      refs.close.removeEventListener("click", onCancel);
+      refs.cancel.removeEventListener("click", onCancel);
+      refs.confirm.removeEventListener("click", onConfirm);
+      refs.modal.removeEventListener("click", onBackdrop);
+      document.removeEventListener("keydown", onEsc);
+      resolve(result);
+    };
+
+    const onCancel = () => closeWith(false);
+    const onConfirm = () => closeWith(true);
+    const onBackdrop = (event) => {
+      if (event.target === refs.modal) closeWith(false);
+    };
+    const onEsc = (event) => {
+      if (event.key === "Escape") closeWith(false);
+    };
+
+    refs.close.addEventListener("click", onCancel);
+    refs.cancel.addEventListener("click", onCancel);
+    refs.confirm.addEventListener("click", onConfirm);
+    refs.modal.addEventListener("click", onBackdrop);
+    document.addEventListener("keydown", onEsc);
+
+    refs.modal.classList.add("open");
+    refs.modal.setAttribute("aria-hidden", "false");
+    refs.confirm.focus();
+  });
+
   const deleteButtons = document.querySelectorAll(".id-delete");
   deleteButtons.forEach((btn) => {
-    btn.addEventListener("click", (event) => {
+    btn.addEventListener("click", async (event) => {
       event.preventDefault();
       event.stopPropagation();
 
       const id = btn.getAttribute("data-id");
       if (!id) return;
+      const confirmed = await askDeleteConfirmation(id);
+      if (!confirmed) return;
 
       const data = new FormData();
       data.append("id", id);
@@ -730,4 +806,49 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   });
+
+  const initHelpPanel = () => {
+    const helpButton = document.getElementById("helpButton");
+    const helpPanel = document.getElementById("helpPanel");
+    const helpClose = document.getElementById("helpClose");
+    if (!helpButton || !helpPanel || !helpClose) return;
+
+    const openHelp = () => {
+      helpPanel.classList.add("open");
+      helpPanel.setAttribute("aria-hidden", "false");
+      helpButton.setAttribute("aria-expanded", "true");
+      helpClose.focus();
+    };
+
+    const closeHelp = () => {
+      helpPanel.classList.remove("open");
+      helpPanel.setAttribute("aria-hidden", "true");
+      helpButton.setAttribute("aria-expanded", "false");
+      helpButton.focus();
+    };
+
+    helpButton.addEventListener("click", () => {
+      if (helpPanel.classList.contains("open")) {
+        closeHelp();
+      } else {
+        openHelp();
+      }
+    });
+
+    helpClose.addEventListener("click", closeHelp);
+
+    helpPanel.addEventListener("click", (event) => {
+      if (event.target === helpPanel) {
+        closeHelp();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && helpPanel.classList.contains("open")) {
+        closeHelp();
+      }
+    });
+  };
+
+  initHelpPanel();
 });

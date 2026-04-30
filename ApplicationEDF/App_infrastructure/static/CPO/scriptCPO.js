@@ -8,6 +8,9 @@ const gaugeBg = document.getElementById("gaugeBg");
 
 const cpoId = Number(document.body.dataset.cpoId || "1");
 const apiBase = document.body.dataset.apiBase || "";
+const hasEquipment = document.body.dataset.hasEquipment === "1";
+const rawMaxCpo = Number(document.body.dataset.maxCpo || "4");
+const maxCpo = Number.isInteger(rawMaxCpo) && rawMaxCpo > 0 ? rawMaxCpo : 4;
 
 const RAW_MAX = 10000;
 const P0 = 0;
@@ -326,10 +329,12 @@ function initDrawer() {
 document.addEventListener("DOMContentLoaded", () => {
   initDrawer();
 
-  pollServerState();
-  setInterval(pollServerState, 1000);
+  if (hasEquipment) {
+    pollServerState();
+    setInterval(pollServerState, 1000);
+  }
 
-  if (jauge) {
+  if (hasEquipment && jauge) {
     const initialText = normalizeDisplayValue(valeur ? valeur.textContent : "0");
     const initialRaw = snap(displayValueToRaw(initialText));
     updateGauge(initialRaw);
@@ -352,7 +357,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const sendBtn = document.getElementById("sendBtn");
-  if (sendBtn) {
+  if (hasEquipment && sendBtn) {
     sendBtn.addEventListener("click", () => {
       const contaminationRaw = snap(Number(jauge ? jauge.value : 0));
       const contaminationText = formatValue(sliderToValue(contaminationRaw));
@@ -376,7 +381,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const match = href.match(/\/CPO\/(\d+)$/);
       if (!match) return;
       const id = Number(match[1]);
-      if (Number.isInteger(id) && id >= 1 && id <= 4) {
+      if (Number.isInteger(id) && id >= 1 && id <= maxCpo) {
         ids.add(id);
       }
     });
@@ -386,7 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const refreshAddButtonVisibility = () => {
     if (!addBtn) return;
     const assigned = buildAssignedCpoIds();
-    const hasFreeSlot = assigned.size < 4;
+    const hasFreeSlot = assigned.size < maxCpo;
     addBtn.style.display = hasFreeSlot ? "" : "none";
   };
 
@@ -396,7 +401,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const assigned = buildAssignedCpoIds();
     modalId.innerHTML = "";
 
-    for (let id = 1; id <= 4; id += 1) {
+    for (let id = 1; id <= maxCpo; id += 1) {
       if (assigned.has(id)) continue;
       const option = document.createElement("option");
       option.value = String(id);
@@ -419,7 +424,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateIdChoices();
 
     if (modalId && modalId.options.length === 0) {
-      setError("Tous les IDs 1 a 4 sont deja utilises.");
+      setError(`Tous les IDs 1 a ${maxCpo} sont deja utilises.`);
       return;
     }
 
@@ -464,8 +469,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      if (!Number.isInteger(selectedId) || selectedId < 1 || selectedId > 4) {
-        setError("Selectionne un ID valide (1 a 4).");
+      if (!Number.isInteger(selectedId) || selectedId < 1 || selectedId > maxCpo) {
+        setError(`Selectionne un ID valide (1 a ${maxCpo}).`);
         if (modalId) modalId.focus();
         return;
       }
@@ -516,14 +521,88 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const ensureDeleteModal = () => {
+    let deleteModal = document.getElementById("cpo-delete-modal");
+    if (!deleteModal) {
+      deleteModal = document.createElement("div");
+      deleteModal.id = "cpo-delete-modal";
+      deleteModal.className = "cm-modal";
+      deleteModal.setAttribute("aria-hidden", "true");
+      deleteModal.innerHTML = `
+        <div class="cm-modal-card" role="dialog" aria-modal="true" aria-labelledby="cpo-delete-title">
+          <button class="cpo-modal-close" id="cpo-delete-close" aria-label="Fermer" type="button">X</button>
+          <h3 class="cm-modal-title" id="cpo-delete-title">Confirmer la suppression</h3>
+          <div class="cm-modal-row">
+            <p class="cm-modal-label" id="cpo-delete-message" style="margin: 0;"></p>
+          </div>
+          <div class="cm-modal-row" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px;">
+            <button class="cm-modal-submit" id="cpo-delete-cancel" type="button">Annuler</button>
+            <button class="cm-modal-submit" id="cpo-delete-confirm" type="button">Supprimer</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(deleteModal);
+    }
+
+    return {
+      modal: deleteModal,
+      close: deleteModal.querySelector("#cpo-delete-close"),
+      cancel: deleteModal.querySelector("#cpo-delete-cancel"),
+      confirm: deleteModal.querySelector("#cpo-delete-confirm"),
+      message: deleteModal.querySelector("#cpo-delete-message"),
+    };
+  };
+
+  const askDeleteConfirmation = (id) => new Promise((resolve) => {
+    const refs = ensureDeleteModal();
+    if (!refs.modal || !refs.close || !refs.cancel || !refs.confirm || !refs.message) {
+      resolve(false);
+      return;
+    }
+
+    refs.message.textContent = `Supprimer l'equipement CPO ID ${id} ?`;
+
+    const closeWith = (result) => {
+      refs.modal.classList.remove("open");
+      refs.modal.setAttribute("aria-hidden", "true");
+      refs.close.removeEventListener("click", onCancel);
+      refs.cancel.removeEventListener("click", onCancel);
+      refs.confirm.removeEventListener("click", onConfirm);
+      refs.modal.removeEventListener("click", onBackdrop);
+      document.removeEventListener("keydown", onEsc);
+      resolve(result);
+    };
+
+    const onCancel = () => closeWith(false);
+    const onConfirm = () => closeWith(true);
+    const onBackdrop = (event) => {
+      if (event.target === refs.modal) closeWith(false);
+    };
+    const onEsc = (event) => {
+      if (event.key === "Escape") closeWith(false);
+    };
+
+    refs.close.addEventListener("click", onCancel);
+    refs.cancel.addEventListener("click", onCancel);
+    refs.confirm.addEventListener("click", onConfirm);
+    refs.modal.addEventListener("click", onBackdrop);
+    document.addEventListener("keydown", onEsc);
+
+    refs.modal.classList.add("open");
+    refs.modal.setAttribute("aria-hidden", "false");
+    refs.confirm.focus();
+  });
+
   const deleteButtons = document.querySelectorAll(".id-delete");
   deleteButtons.forEach((btn) => {
-    btn.addEventListener("click", (event) => {
+    btn.addEventListener("click", async (event) => {
       event.preventDefault();
       event.stopPropagation();
 
       const id = btn.getAttribute("data-id");
       if (!id) return;
+      const confirmed = await askDeleteConfirmation(id);
+      if (!confirmed) return;
 
       const data = new FormData();
       data.append("id", id);
@@ -559,4 +638,49 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   });
+
+  const initHelpPanel = () => {
+    const helpButton = document.getElementById("helpButton");
+    const helpPanel = document.getElementById("helpPanel");
+    const helpClose = document.getElementById("helpClose");
+    if (!helpButton || !helpPanel || !helpClose) return;
+
+    const openHelp = () => {
+      helpPanel.classList.add("open");
+      helpPanel.setAttribute("aria-hidden", "false");
+      helpButton.setAttribute("aria-expanded", "true");
+      helpClose.focus();
+    };
+
+    const closeHelp = () => {
+      helpPanel.classList.remove("open");
+      helpPanel.setAttribute("aria-hidden", "true");
+      helpButton.setAttribute("aria-expanded", "false");
+      helpButton.focus();
+    };
+
+    helpButton.addEventListener("click", () => {
+      if (helpPanel.classList.contains("open")) {
+        closeHelp();
+      } else {
+        openHelp();
+      }
+    });
+
+    helpClose.addEventListener("click", closeHelp);
+
+    helpPanel.addEventListener("click", (event) => {
+      if (event.target === helpPanel) {
+        closeHelp();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && helpPanel.classList.contains("open")) {
+        closeHelp();
+      }
+    });
+  };
+
+  initHelpPanel();
 });

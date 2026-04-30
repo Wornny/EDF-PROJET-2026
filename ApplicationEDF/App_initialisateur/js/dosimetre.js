@@ -1,7 +1,4 @@
-const BASE_URL = window.location.protocol === 'https:'
-  ? 'https://192.168.190.8:3001'
-  : 'http://192.168.190.8:3000';
-let currentDosiExists = false;
+const BASE_URL = 'http://192.168.10.3:3000';
 
 /* ======================================= RETOUR ======================================= */
 document.getElementById('backBadge').addEventListener('click', () => { history.back(); });

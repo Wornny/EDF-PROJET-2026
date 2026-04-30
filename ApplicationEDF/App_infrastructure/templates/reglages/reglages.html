@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Réglages</title>
+  <script src="{{ url_for('static', filename='accueil/forcer_reconnexion_reouverture_onglet.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='reglages/styleReglages.css') }}?v=2">
+  <script defer src="{{ url_for('static', filename='reglages/scriptReglages.js') }}?v=2"></script>
+</head>
+<body class="reglages-page">
+
+  <div class="banner">
+    <p class="reglages-id-display">Réglages</p>
+    <a class="home-link" href="{{ url_for('accueil.accueil_page') }}" title="Accueil" aria-label="Accueil">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M3 10.5L12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5v-9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="M9 20v-6h6v6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+      </svg>
+    </a>
+  </div>
+
+  <main class="reglages-main">
+    <form class="reglages-form" id="reglages-form" novalidate autocomplete="off">
+
+      <div class="reglages-group">
+        <label class="reglages-label" for="reglages-nom">Nom de l'application </label>
+        <input class="reglages-input" id="reglages-nom" name="nom" type="text" maxlength="64" placeholder="{{ reglages_nom or 'Ex : Configuration principale' }}" />
+      </div>
+
+      <div class="reglages-group">
+        <label class="reglages-label" for="reglages-valeur1">Nombres de controlleur mobile</label>
+        <input class="reglages-input" id="reglages-valeur1" name="valeur1" type="number" min="1" step="any" placeholder="{{ reglages_cm or '0' }}" />
+      </div>
+
+      <div class="reglages-group">
+        <label class="reglages-label" for="reglages-valeur2">Nombre de CPO</label>
+        <input class="reglages-input" id="reglages-valeur2" name="valeur2" type="number" min="1" step="any" placeholder="{{ reglages_cpo or '0' }}" />
+      </div>
+
+      <div class="reglages-group">
+        <label class="reglages-label" for="reglages-valeur3">Nombre de C2</label>
+        <input class="reglages-input" id="reglages-valeur3" name="valeur3" type="number" min="1" step="any" placeholder="{{ reglages_c2 or '0' }}" />
+      </div>
+
+      <div class="reglages-error" id="reglages-error" aria-live="polite"></div>
+
+      <button class="reglages-submit" id="reglages-submit" type="submit">Enregistrer</button>
+
+    </form>
+  </main>
+
+</body>
+</html>

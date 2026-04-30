@@ -19,6 +19,71 @@
     z-index: -1; will-change: transform;
   }
 
+.home-btn {
+  position: fixed;
+  top: 4px;
+  right: 175px; /* juste à gauche du btnFS */
+  z-index: 99999;
+  width: 50px;
+  height: 50px;
+  background: rgba(0,0,0,0.6);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.home-btn:hover {
+  background: rgba(0,0,0,0.9);
+  transform: scale(0.96);
+}  
+
+/* Conteneur fixé en haut à droite (ou gauche selon ton projet) */
+.top-buttons {
+  position: fixed;
+  top: 8px;
+  right: 12px;           /* ajuste selon ton layout */
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  gap: 8px;              /* espace entre btnFS et le bouton home */
+}
+
+/* Bouton home — plus de position: absolute, il suit le flux flex */
+.home-link {
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
+  border: 2px solid rgba(127, 134, 158, 0.9);
+  background: linear-gradient(145deg, rgba(20, 32, 66, 0.9), rgba(9, 18, 40, 0.95));
+  color: rgba(255, 255, 255, 0.92);
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
+  /* ← PAS de position: absolute, PAS de top/right ici */
+}
+
+.home-link:hover {
+  transform: scale(1.03);   /* ← plus de translateY(-50%) */
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  background: linear-gradient(145deg, rgba(24, 40, 80, 0.95), rgba(12, 22, 48, 0.98));
+}
+
+.home-link:focus-visible {
+  outline: 2px solid rgba(140, 200, 255, 0.9);
+  outline-offset: 3px;
+}
+
+.home-link svg {
+  width: 26px;
+  height: 26px;
+}
+
   /* =======================================
           STYLES COMMUNS
      ======================================= */
@@ -363,24 +428,3 @@
   #page-index .minus:active { opacity: 0.7; }
 
 
-.home-btn {
-  position: fixed;
-  top: 4px;
-  right: 175px; /* juste à gauche du btnFS */
-  z-index: 99999;
-  width: 50px;
-  height: 50px;
-  background: rgba(0,0,0,0.6);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.4);
-  transition: background 0.2s ease, transform 0.2s ease;
-}
-
-.home-btn:hover {
-  background: rgba(0,0,0,0.9);
-  transform: scale(0.96);
-}

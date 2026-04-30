@@ -815,13 +815,87 @@ const c2Buttons = document.querySelectorAll('.id-btn[href^="/C2/"]');
 		});
 	}
 
+	const ensureDeleteModal = () => {
+		let deleteModal = document.getElementById('c2-delete-modal');
+		if (!deleteModal) {
+			deleteModal = document.createElement('div');
+			deleteModal.id = 'c2-delete-modal';
+			deleteModal.className = 'c2-modal';
+			deleteModal.setAttribute('aria-hidden', 'true');
+			deleteModal.innerHTML = `
+				<div class="c2-modal-card" role="dialog" aria-modal="true" aria-labelledby="c2-delete-title">
+					<button class="c2-modal-close" id="c2-delete-close" aria-label="Fermer" type="button">X</button>
+					<h3 class="c2-modal-title" id="c2-delete-title">Confirmer la suppression</h3>
+					<div class="c2-modal-row">
+						<p class="c2-modal-label" id="c2-delete-message" style="margin: 0;"></p>
+					</div>
+					<div class="c2-modal-row" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px;">
+						<button class="c2-modal-submit" id="c2-delete-cancel" type="button">Annuler</button>
+						<button class="c2-modal-submit" id="c2-delete-confirm" type="button">Supprimer</button>
+					</div>
+				</div>
+			`;
+			document.body.appendChild(deleteModal);
+		}
+
+		return {
+			modal: deleteModal,
+			close: deleteModal.querySelector('#c2-delete-close'),
+			cancel: deleteModal.querySelector('#c2-delete-cancel'),
+			confirm: deleteModal.querySelector('#c2-delete-confirm'),
+			message: deleteModal.querySelector('#c2-delete-message')
+		};
+	};
+
+	const askDeleteConfirmation = (id) => new Promise((resolve) => {
+		const refs = ensureDeleteModal();
+		if (!refs.modal || !refs.close || !refs.cancel || !refs.confirm || !refs.message) {
+			resolve(false);
+			return;
+		}
+
+		refs.message.textContent = `Supprimer l'equipement C2 ID ${id} ?`;
+
+		const closeWith = (result) => {
+			refs.modal.classList.remove('open');
+			refs.modal.setAttribute('aria-hidden', 'true');
+			refs.close.removeEventListener('click', onCancel);
+			refs.cancel.removeEventListener('click', onCancel);
+			refs.confirm.removeEventListener('click', onConfirm);
+			refs.modal.removeEventListener('click', onBackdrop);
+			document.removeEventListener('keydown', onEsc);
+			resolve(result);
+		};
+
+		const onCancel = () => closeWith(false);
+		const onConfirm = () => closeWith(true);
+		const onBackdrop = (event) => {
+			if (event.target === refs.modal) closeWith(false);
+		};
+		const onEsc = (event) => {
+			if (event.key === 'Escape') closeWith(false);
+		};
+
+		refs.close.addEventListener('click', onCancel);
+		refs.cancel.addEventListener('click', onCancel);
+		refs.confirm.addEventListener('click', onConfirm);
+		refs.modal.addEventListener('click', onBackdrop);
+		document.addEventListener('keydown', onEsc);
+
+		refs.modal.classList.add('open');
+		refs.modal.setAttribute('aria-hidden', 'false');
+		refs.confirm.focus();
+	});
+
 	const deleteButtons = document.querySelectorAll('.id-delete');
 	deleteButtons.forEach((btn) => {
-		btn.addEventListener('click', (e) => {
+		btn.addEventListener('click', async (e) => {
 			e.preventDefault();
 			e.stopPropagation();
 			const id = btn.getAttribute('data-id');
 			if (!id) return;
+			const confirmed = await askDeleteConfirmation(id);
+			if (!confirmed) return;
 
 			const data = new FormData();
 			data.append('id', id);

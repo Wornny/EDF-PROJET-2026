@@ -15,10 +15,10 @@
       document.documentElement.style.setProperty('--arrow-initial', 'scaleX(-1)');
     }
   </script>
-  <script defer src="{{ url_for('static', filename='CPO/scriptCPO.js') }}?v=4"></script>
+  <script defer src="{{ url_for('static', filename='CPO/scriptCPO.js') }}?v=5"></script>
 </head>
 
-<body class="cpo-page" data-cpo-id="{{ cpo_id }}" data-api-base="/CPO">
+<body class="cpo-page" data-cpo-id="{{ cpo_id }}" data-api-base="/CPO" data-has-equipment="{{ '1' if has_equipment else '0' }}" data-max-cpo="{{ max_cpo }}">
 
 <!-- DRAWER GAUCHE -->
 <div class="drawer" id="drawer">
@@ -43,7 +43,7 @@
 
 <!-- BANNER -->
 <div class="banner">
-  <p class="cpo-id-display">CPO ID : {{ cpo_id }}</p>
+  <p class="cpo-id-display">{% if has_equipment %}CPO ID : {{ cpo_id }}{% else %}Aucun equipement CPO{% endif %}</p>
   <a class="home-link" href="{{ url_for('accueil.accueil_page') }}" title="Accueil" aria-label="Accueil">
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="M3 10.5L12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5v-9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
@@ -54,6 +54,7 @@
 
 <div class="tablet">
   <div class="right-area">
+    {% if has_equipment %}
     <div class="detector-panel">
       <div class="detector-title">
         <span>Niveau Contamination</span>
@@ -96,6 +97,11 @@
         <button class="send-btn" id="sendBtn" title="Envoyer les valeurs au MQTT"></button>
       </div>
     </div>
+    {% else %}
+    <div style="min-height: calc(100vh - 180px); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 1.1rem; color: #1f2937; width: 100%; padding: 0 20px; box-sizing: border-box;">
+      Aucun equipement CPO configure. Ajoute un appareil avec le bouton +.
+    </div>
+    {% endif %}
   </div>
 </div>
 
@@ -116,6 +122,25 @@
     <button class="cm-modal-submit" id="cm-modal-submit" type="button">valider</button>
   </div>
 </div>
+
+<button class="help-button" id="helpButton" aria-label="Aide" aria-expanded="false">?</button>
+<aside class="help-panel" id="helpPanel" aria-hidden="true">
+  <div class="help-panel-header">
+    <h2 class="help-panel-title">Aide CPO</h2>
+    <button class="help-panel-close" id="helpClose" aria-label="Fermer">×</button>
+  </div>
+  <div class="help-panel-body">
+    <p>Cette page vous permet de suivre et de piloter un CPO.</p>
+    <div class="help-panel-subtitle">Ce que vous pouvez faire</div>
+    <ul>
+      <li>Changer de CPO avec la liste à gauche.</li>
+      <li>Ajouter un appareil avec le bouton + (admin uniquement).</li>
+      <li>Supprimer un appareil avec le bouton - à côté du nom (admin uniquement).</li>
+      <li>Voir le niveau de contamination et envoyer la valeur via MQTT.</li>
+    </ul>
+    <div class="help-panel-note">Appuyez sur le bouton d'aide à tout moment pour retrouver ces instructions.</div>
+  </div>
+</aside>
 
 </body>
 </html>
