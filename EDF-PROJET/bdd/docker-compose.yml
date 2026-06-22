@@ -1,0 +1,28 @@
+# Docker Compose pour la base de données MySQL.
+# Utilisé pour lancer le service de base de données local.
+
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: superbddnormandie765
+      MYSQL_DATABASE: edfsql
+      MYSQL_USER: user
+      MYSQL_PASSWORD: bddnormandie765
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - broker-network
+
+volumes:
+  mysql_data:
+
+networks:
+  broker-network:
+    external: true

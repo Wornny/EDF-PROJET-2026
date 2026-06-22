@@ -1,0 +1,72 @@
+<!-- Template page générale. Affiche le contenu général de l'application. -->
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  {% block icon %}{% endblock %}
+  <title>{% block title %}{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="{{ url_for('static', filename='accueil/forcer_reconnexion_reouverture_onglet.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='general/general.css') }}">
+  {% block css %}{% endblock %}
+  <script>
+    if (localStorage.getItem("drawerOpen") === "true") {
+      document.documentElement.style.setProperty('--drawer-initial', 'translateX(0)');
+      document.documentElement.style.setProperty('--toggle-initial', '220px');
+      document.documentElement.style.setProperty('--arrow-initial', 'scaleX(-1)');
+    }
+  </script>
+  {% block head_scripts %}{% endblock %}
+</head>
+
+<body {% block body_attrs %}{% endblock %}>
+
+<!-- DRAWER GAUCHE -->
+<div class="drawer" id="drawer">
+  <div class="drawer-content">
+    <h2>Panneau de Contrôle</h2>
+    <div class="drawer-section">
+      <div class="id-list">
+        {% block drawer_list %}{% endblock %}
+      </div>
+    </div>
+    {% block drawer_extra %}{% endblock %}
+  </div>
+</div>
+
+<!-- TOGGLE BUTTON -->
+<button class="drawer-toggle-btn" id="drawerToggle"></button>
+
+<button class="help-button" id="helpButton" aria-label="Aide" aria-expanded="false">?</button>
+<aside class="help-panel" id="helpPanel" aria-hidden="true">
+  <div class="help-panel-header">
+    <h2 class="help-panel-title">{% block help_title %}Aide{% endblock %}</h2>
+    <button class="help-panel-close" id="helpClose" aria-label="Fermer">×</button>
+  </div>
+  <div class="help-panel-body">
+    {% block help_body %}{% endblock %}
+  </div>
+</aside>
+
+<!-- BANNER -->
+<div class="banner">
+  {% block banner_left %}{% endblock %}
+  {% block banner_id %}{% endblock %}
+  <a class="home-link" href="{% block home_link_url %}{{ url_for('accueil.accueil_page') }}{% endblock %}" title="Accueil" aria-label="Accueil">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M3 10.5L12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5v-9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+      <path d="M9 20v-6h6v6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+    </svg>
+  </a>
+  {% block banner_right %}{% endblock %}
+</div>
+
+{% block main %}{% endblock %}
+
+{% block foot_scripts %}{% endblock %}
+
+{% block modal %}{% endblock %}
+
+</body>
+</html>

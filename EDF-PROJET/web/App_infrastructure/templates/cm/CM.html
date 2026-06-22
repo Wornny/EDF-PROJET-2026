@@ -1,0 +1,143 @@
+<!-- Template page Controller Mobile. Affiche les jauges et états du CM. -->
+
+{% extends 'general/general.html' %}
+
+{% block icon %}<link rel="icon" type="image/jpeg" href="../static/CM/img/EDF.jpg">{% endblock %}
+{% block title %}Controleur Mobile{% endblock %}
+{% block css %}<link rel="stylesheet" href="{{ url_for('static', filename='CM/styleCM.css') }}">{% endblock %}
+{% block head_scripts %}<script defer src="{{ url_for('static', filename='CM/scriptCM.js') }}?v=7"></script>{% endblock %}
+
+{% block body_attrs %}class="cm-page" data-cm-id="{{ cm_id }}" data-api-base="/ControllerMobile" data-has-equipment="{{ '1' if has_equipment else '0' }}" data-max-cm="{{ max_cm }}"{% endblock %}
+
+{% block drawer_list %}
+  {% for i in cm_ids %}
+    <div class="id-item">
+      <a class="id-btn {% if cm_id == i %}active{% endif %}" href="/ControllerMobile/{{ i }}">{{ cm_names[i] }}</a>
+      {% if role == "admin" %}<button class="id-delete" type="button" data-id="{{ i }}" title="Supprimer"><span class="id-delete-mark">-</span></button>{% endif %}
+    </div>
+  {% endfor %}
+  {% if role == "admin" %}<a class="id-btn id-add" id="id-add" href="#" title="Ajouter un appareil">+</a>{% endif %}
+{% endblock %}
+
+{% block help_title %}Aide Controleur Mobile{% endblock %}
+{% block help_body %}
+  <p>Cette page vous permet de suivre et de transmettre les données du controleur mobile.</p>
+  <div class="help-panel-subtitle">Ce que vous pouvez faire</div>
+  <ul>
+    <li>Voir la valeur de contamination et le bruit de fond.</li>
+    <li>Maintenez le bouton d'envoi pour transmettre la mesure de contamination : le statut passe à 1 pendant le maintien et revient à 0 au relâchement.</li>
+    <li>Changer de Controller Mobile avec le menu à gauche.</li>
+    <li>Ajouter ou supprimer un appareil via le bouton + si vous êtes admin.</li>
+    <li>La valeur pour les 2 jauges est affichée en Coulombs par seconde donc multipliée par la valeur 0.05. </li>
+  </ul>
+  <div class="help-panel-note">Si aucun équipement n'est configuré, ajoutez-en un pour accéder à l'interface.</div>
+{% endblock %}
+
+{% block banner_id %}<p class="cm-id-display">{% if has_equipment %}CM ID : {{ cm_id }}{% else %}Aucun equipement MIP10{% endif %}</p>{% endblock %}
+
+{% block main %}
+<div class="tablet">
+  <div class="right-area right-area-single">
+    {% if has_equipment %}
+    <div class="detector-panel">
+      <div class="detector-title">
+        <span>Niveau Contamination</span>
+        <span class="value-box value-green" id="valueBox">
+          <span id="valeur">{{ "%.2f"|format(valeur_conta|float * 0.5) }} Bq/cm²</span>
+        </span>
+      </div>
+      <div class="detector-content">
+        <div class="beta-icon">β</div>
+        <div class="gauge-zone">
+          <div class="gauge-overlay">
+            <div class="gauge-triangle" id="gaugeTriangle"></div>
+          </div>
+          <div class="gauge-bg" id="gaugeBg">
+            <div class="gauge-mask" id="gaugeMask"></div>
+            <div class="gauge-separators">
+              <span style="left:0%"></span>
+              <span style="left:20%"></span>
+              <span style="left:40%"></span>
+              <span style="left:60%"></span>
+              <span style="left:80%"></span>
+              <span style="left:100%"></span>
+            </div>
+          </div>
+          <div class="scale">
+            <span style="left:0%">0</span>
+            <span style="left:20%">1</span>
+            <span style="left:40%">10</span>
+            <span style="left:60%">100</span>
+            <span style="left:80%">1000</span>
+            <span style="left:100%">C/S</span>
+          </div>
+          <input type="range" id="jauge" min="0" max="10000" step="1" value="0">
+        </div>
+        <button class="send-btn" id="sendBtn" title="Envoyer la contamination + statut" aria-pressed="false"></button>
+      </div>
+    </div>
+
+    <div class="detector-panel">
+      <div class="detector-title">
+        <span>Bruit de Fond</span>
+        <span class="value-box value-green" id="valueBoxBdf">
+          <span id="valeurBdf">{{ "%.2f"|format(valeur_bdf|float * 0.5) }} Bq/cm²</span>
+        </span>
+      </div>
+      <div class="detector-content">
+        <div class="beta-icon">&beta;</div>
+        <div class="gauge-zone">
+          <div class="gauge-overlay">
+            <div class="gauge-triangle" id="gaugeTriangleBdf"></div>
+          </div>
+          <div class="gauge-bg" id="gaugeBgBdf">
+            <div class="gauge-mask" id="gaugeMaskBdf"></div>
+            <div class="gauge-separators">
+              <span style="left:0%"></span>
+              <span style="left:20%"></span>
+              <span style="left:40%"></span>
+              <span style="left:60%"></span>
+              <span style="left:80%"></span>
+              <span style="left:100%"></span>
+            </div>
+          </div>
+          <div class="scale">
+            <span style="left:0%">0</span>
+            <span style="left:20%">1</span>
+            <span style="left:40%">10</span>
+            <span style="left:60%">100</span>
+            <span style="left:80%">1000</span>
+            <span style="left:100%">C/S</span>
+          </div>
+          <input type="range" id="jaugeBdf" min="0" max="10000" step="1" value="2000">
+        </div>
+        <div class="send-btn-placeholder"></div>
+      </div>
+    </div>
+    {% else %}
+    <div style="min-height: calc(100vh - 180px); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 1.1rem; color: #1f2937; width: 100%;">
+      Aucun equipement MIP10 configure. Ajoute un appareil avec le bouton +.
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block modal %}
+<div class="cm-modal" id="cm-modal" aria-hidden="true">
+  <div class="cm-modal-card" role="dialog" aria-modal="true" aria-labelledby="cm-modal-title">
+    <button class="cm-modal-close" id="cm-modal-close" aria-label="Fermer">X</button>
+    <h3 class="cm-modal-title" id="cm-modal-title">Ajouter un appareil</h3>
+    <div class="cm-modal-row">
+      <label class="cm-modal-label" for="cm-modal-input">Nom du nouvel appareil :</label>
+      <input class="cm-modal-input" id="cm-modal-input" type="text" placeholder="Ex: Controleur mobile homme">
+      <div class="cm-modal-error" id="cm-modal-error" aria-live="polite"></div>
+    </div>
+    <div class="cm-modal-row">
+      <label class="cm-modal-label" for="cm-modal-id">ID :</label>
+      <select class="cm-modal-select" id="cm-modal-id"></select>
+    </div>
+    <button class="cm-modal-submit" id="cm-modal-submit">valider</button>
+  </div>
+</div>
+{% endblock %}

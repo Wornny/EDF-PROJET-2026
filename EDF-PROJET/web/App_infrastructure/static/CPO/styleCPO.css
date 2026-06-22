@@ -1,0 +1,29 @@
+/* ===== CPO — Styles spécifiques =====
+   general.css doit être chargé EN PREMIER (contient le CSS partagé CM+CPO).
+   ======================================================================== */
+
+/* ─── Fond animé (avec préfixe .cpo-page) ─── */
+body.cpo-page::before {
+  content: "";
+  position: fixed;
+  inset: -8%;
+  background: url('img/Background.png') center center / cover no-repeat;
+  transform: translate3d(-2%, -1%, 0) scale(1.08);
+  will-change: transform;
+  animation: bg-float 40s linear infinite;
+  z-index: -1;
+}
+
+/* ─── Zone droite — position CPO ─── */
+.right-area {
+  position: absolute;
+  left: 266px;
+  right: 40px;
+  top: 110px;
+  bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: none;
+}

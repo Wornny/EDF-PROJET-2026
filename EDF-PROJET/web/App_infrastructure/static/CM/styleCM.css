@@ -1,0 +1,39 @@
+/* ===== CM — Styles spécifiques =====
+   general.css doit être chargé EN PREMIER (contient le CSS partagé CM+CPO).
+   ======================================================================= */
+
+/* ─── Fond animé (pas de préfixe de classe) ─── */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -8%;
+  background: url("img/Background.png") center / cover no-repeat;
+  transform: translate3d(0, 0, 0) scale(1.08);
+  will-change: transform;
+  animation: bg-float 40s linear infinite;
+  z-index: -1;
+}
+
+/* ─── Zone droite — position CM ─── */
+.right-area {
+  position: absolute;
+  left: 266px;
+  right: 40px;
+  top: 40px;
+  bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: none;
+}
+
+/* ─── Panneau seul : sans translation ─── */
+.right-area-single .detector-panel {
+  transform: none;
+}
+
+/* ─── Deux panneaux : espacement vertical ─── */
+.detector-panel + .detector-panel {
+  margin-top: 40px;
+}

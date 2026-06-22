@@ -1,0 +1,102 @@
+<!-- Template page CPO. Affiche la jauge de contamination et les contrôles CPO. -->
+
+{% extends 'general/general.html' %}
+
+{% block icon %}<link rel="icon" type="image/jpeg" href="../static/CPO/img/EDF.jpg">{% endblock %}
+{% block title %}CPO{% endblock %}
+{% block css %}<link rel="stylesheet" href="{{ url_for('static', filename='CPO/styleCPO.css') }}">{% endblock %}
+{% block head_scripts %}<script defer src="{{ url_for('static', filename='CPO/scriptCPO.js') }}?v=5"></script>{% endblock %}
+
+{% block body_attrs %}class="cpo-page" data-cpo-id="{{ cpo_id }}" data-api-base="/CPO" data-has-equipment="{{ '1' if has_equipment else '0' }}" data-max-cpo="{{ max_cpo }}"{% endblock %}
+
+{% block drawer_list %}
+  {% for i in cpo_ids %}
+    <div class="id-item">
+      <a class="id-btn {% if cpo_id == i %}active{% endif %}" href="/CPO/{{ i }}">{{ cpo_names[i] }}</a>
+      {% if role == "admin" %}<button class="id-delete" type="button" data-id="{{ i }}" title="Supprimer"><span class="id-delete-mark">-</span></button>{% endif %}
+    </div>
+  {% endfor %}
+  {% if role == "admin" %}<a class="id-btn id-add" id="id-add" href="#" title="Ajouter un appareil">+</a>{% endif %}
+{% endblock %}
+
+{% block help_title %}Aide CPO{% endblock %}
+{% block help_body %}
+  <p>Cette page vous permet de suivre et de piloter un CPO.</p>
+  <div class="help-panel-subtitle">Ce que vous pouvez faire</div>
+  <ul>
+    <li>Changer de CPO avec la liste à gauche.</li>
+    <li>Ajouter un appareil avec le bouton + (admin uniquement).</li>
+    <li>Supprimer un appareil avec le bouton - à côté du nom (admin uniquement).</li>
+    <li>Voir le niveau de contamination et envoyer la valeur via MQTT.</li>
+  </ul>
+  <div class="help-panel-note">Appuyez sur le bouton d'aide à tout moment pour retrouver ces instructions.</div>
+{% endblock %}
+
+{% block banner_id %}<p class="cpo-id-display">{% if has_equipment %}CPO ID : {{ cpo_id }}{% else %}Aucun equipement CPO{% endif %}</p>{% endblock %}
+
+{% block main %}
+<div class="tablet">
+  <div class="right-area">
+    {% if has_equipment %}
+    <div class="detector-panel">
+      <div class="detector-title">
+        <span>Niveau Contamination</span>
+        <span class="value-box value-green" id="valueBox">
+          <span id="valeur">{{ valeur_conta }} Bq</span>
+        </span>
+      </div>
+      <div class="detector-content">
+        <div class="beta-icon">β</div>
+        <div class="gauge-zone">
+          <div class="gauge-overlay">
+            <div class="gauge-triangle" id="gaugeTriangle"></div>
+          </div>
+          <div class="gauge-bg" id="gaugeBg">
+            <div class="gauge-mask" id="gaugeMask"></div>
+            <div class="gauge-separators">
+              <span style="left:0%"></span>
+              <span style="left:20%"></span>
+              <span style="left:40%"></span>
+              <span style="left:60%"></span>
+              <span style="left:100%"></span>
+            </div>
+          </div>
+          <div class="scale">
+            <span style="left:0%">0</span>
+            <span style="left:20%">10</span>
+            <span style="left:40%">100</span>
+            <span style="left:60%">1000</span>
+            <span style="left:80%"></span>
+            <span style="left:100%">Bq</span>
+          </div>
+          <input type="range" id="jauge" min="0" max="10000" step="1" value="0">
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div style="min-height: calc(100vh - 180px); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 1.1rem; color: #1f2937; width: 100%; padding: 0 20px; box-sizing: border-box;">
+      Aucun equipement CPO configure. Ajoute un appareil avec le bouton +.
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block modal %}
+<div class="cm-modal" id="cm-modal" aria-hidden="true">
+  <div class="cm-modal-card" role="dialog" aria-modal="true" aria-labelledby="cm-modal-title">
+    <button class="cpo-modal-close" id="cm-modal-close" aria-label="Fermer" type="button">X</button>
+    <h3 class="cm-modal-title" id="cm-modal-title">Ajouter un appareil</h3>
+    <div class="cm-modal-row">
+      <label class="cm-modal-label" for="cm-modal-input">Nom du nouvel appareil :</label>
+      <input class="cm-modal-input" id="cm-modal-input" type="text" placeholder="Ex: Controleur portique homme">
+      <div class="cm-modal-error" id="cm-modal-error" aria-live="polite"></div>
+    </div>
+    <div class="cm-modal-row">
+      <label class="cm-modal-label" for="cm-modal-id">ID :</label>
+      <select class="cm-modal-select" id="cm-modal-id"></select>
+    </div>
+    <button class="cm-modal-submit" id="cm-modal-submit" type="button">valider</button>
+  </div>
+</div>
+{% endblock %}

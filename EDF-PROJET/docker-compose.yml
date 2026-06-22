@@ -1,0 +1,72 @@
+# Docker Compose pour l'application principale.
+# Définit les services web, base de données, MQTT et la configuration réseau.
+
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.1
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: superbddnormandie765
+      MYSQL_DATABASE: EDF
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: superbddnormandie765
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./bdd/mysql_data:/var/lib/mysql
+    networks:
+      - broker-network
+
+  broker-mqtt:
+    image: eclipse-mosquitto:2.0
+    container_name: broker-mqtt
+    restart: always
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./broker/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./broker/config/passwd:/mosquitto/config/passwd
+      - ./broker/mosquitto_data:/mosquitto/data
+    networks:
+      - broker-network
+
+  python-app:
+    build:
+      context: ./web/App_infrastructure
+    container_name: python-app
+    restart: always
+    volumes:
+      - ./web/App_infrastructure:/App_infrastructure
+      - ./web/App_initialisateur:/App_initialisateur
+      - ./initialisateur/bdd_initialisateur:/bdd_initialisateur
+      - ./config/Certificats_https:/certs:ro
+    working_dir: /App_infrastructure
+    depends_on:
+      - mysql
+      - broker-mqtt
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: EDF
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: superbddnormandie765
+      BROKER_HOST: broker-mqtt
+      BROKER_PORT: 1883
+      MQTT_USERNAME: client
+      MQTT_PASSWORD: normandie765
+    command: sh -c "python app.py & sleep 10 && python /bdd_initialisateur/controller.py"
+    ports:
+      - "5001:5001"
+    networks:
+      - broker-network
+
+volumes:
+  mysql_data:
+  mosquitto_data:
+
+networks:
+  broker-network:
+    external: true

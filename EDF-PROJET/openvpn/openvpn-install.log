@@ -1,0 +1,480 @@
+2026-03-16 11:55:21 [DEBUG] Checking root privileges...
+2026-03-16 11:55:21 [DEBUG] Root check passed
+2026-03-16 11:55:21 [DEBUG] Checking TUN device availability...
+2026-03-16 11:55:21 [DEBUG] TUN device available at /dev/net/tun
+2026-03-16 11:55:21 [DEBUG] Detecting operating system...
+2026-03-16 11:55:21 [DEBUG] Detected OS: debian (Debian GNU/Linux 12 (bookworm))
+2026-03-16 11:55:24 [INFO] === OpenVPN Non-Interactive Install ===
+2026-03-16 11:55:24 [INFO] Running in non-interactive mode with the following settings:
+2026-03-16 11:55:24 [INFO]   ENDPOINT=194.167.189.193
+2026-03-16 11:55:24 [INFO]   ENDPOINT_TYPE=4
+2026-03-16 11:55:24 [INFO]   CLIENT_IPV4=y
+2026-03-16 11:55:24 [INFO]   CLIENT_IPV6=n
+2026-03-16 11:55:24 [INFO]   VPN_SUBNET_IPV4=10.8.0.0
+2026-03-16 11:55:24 [INFO]   VPN_SUBNET_IPV6=fd42:42:42:42::
+2026-03-16 11:55:24 [INFO]   PORT=1194
+2026-03-16 11:55:24 [INFO]   PROTOCOL=udp
+2026-03-16 11:55:24 [INFO]   DNS=cloudflare
+2026-03-16 11:55:24 [INFO]   MULTI_CLIENT=n
+2026-03-16 11:55:24 [INFO]   AUTH_MODE=pki
+2026-03-16 11:55:24 [INFO]   CLIENT=client
+2026-03-16 11:55:24 [INFO]   CLIENT_CERT_DURATION_DAYS=3650
+2026-03-16 11:55:24 [INFO]   SERVER_CERT_DURATION_DAYS=3650
+2026-03-16 11:55:24 === Installing OpenVPN ===
+2026-03-16 11:55:24 [INFO] Setting up official OpenVPN repository...
+2026-03-16 11:55:24 [CMD] apt-get update
+Atteint :1 http://deb.debian.org/debian bookworm InRelease
+Atteint :2 http://security.debian.org/debian-security bookworm-security InRelease
+Atteint :3 http://deb.debian.org/debian bookworm-updates InRelease
+Lecture des listes de paquets…
+2026-03-16 11:55:31 [DEBUG] Update package lists completed successfully
+2026-03-16 11:55:31 [CMD] apt-get install -y ca-certificates curl
+Lecture des listes de paquets…
+Construction de l'arbre des dépendances…
+Lecture des informations d'état…
+ca-certificates est déjà la version la plus récente (20230311+deb12u1).
+curl est déjà la version la plus récente (7.88.1-10+deb12u14).
+0 mis à jour, 0 nouvellement installés, 0 à enlever et 1 non mis à jour.
+2026-03-16 11:55:32 [DEBUG] Installing prerequisites completed successfully
+2026-03-16 11:55:32 [CMD] mkdir -p /etc/apt/keyrings
+2026-03-16 11:55:32 [DEBUG] Creating keyrings directory completed successfully
+2026-03-16 11:55:32 [CMD] curl -fsSL https://swupdate.openvpn.net/repos/repo-public.gpg -o /etc/apt/keyrings/openvpn-repo-public.asc
+2026-03-16 11:55:35 [DEBUG] Downloading OpenVPN GPG key completed successfully
+2026-03-16 11:55:35 [INFO] Updating package lists with new repository...
+2026-03-16 11:55:35 [CMD] apt-get update
+Atteint :1 http://security.debian.org/debian-security bookworm-security InRelease
+Atteint :2 http://deb.debian.org/debian bookworm InRelease
+Atteint :3 http://deb.debian.org/debian bookworm-updates InRelease
+Réception de :4 https://build.openvpn.net/debian/openvpn/stable bookworm InRelease [4 424 B]
+Réception de :5 https://build.openvpn.net/debian/openvpn/stable bookworm/main amd64 Packages [12,7 kB]
+17,1 ko réceptionnés en 7s (2 534 o/s)
+Lecture des listes de paquets…
+2026-03-16 11:55:42 [DEBUG] Update package lists completed successfully
+2026-03-16 11:55:42 [INFO] OpenVPN official repository configured
+2026-03-16 11:55:42 [INFO] Installing OpenVPN and dependencies...
+2026-03-16 11:55:42 [CMD] apt-get install -y openvpn iptables openssl curl ca-certificates tar dnsutils socat
+Lecture des listes de paquets…
+Construction de l'arbre des dépendances…
+Lecture des informations d'état…
+iptables est déjà la version la plus récente (1.8.9-2).
+iptables passé en « installé manuellement ».
+openssl est déjà la version la plus récente (3.0.18-1~deb12u2).
+openssl passé en « installé manuellement ».
+curl est déjà la version la plus récente (7.88.1-10+deb12u14).
+ca-certificates est déjà la version la plus récente (20230311+deb12u1).
+tar est déjà la version la plus récente (1.34+dfsg-1.2+deb12u1).
+socat est déjà la version la plus récente (1.7.4.4-2).
+socat passé en « installé manuellement ».
+Les paquets supplémentaires suivants seront installés : 
+  easy-rsa libccid libnl-genl-3-200 libpcsclite1 libpkcs11-helper1 opensc
+  opensc-pkcs11 pcscd
+Paquets suggérés :
+  pcmciautils resolvconf openvpn-dco-dkms openvpn-systemd-resolved
+Les NOUVEAUX paquets suivants seront installés :
+  dnsutils easy-rsa libccid libnl-genl-3-200 libpcsclite1 libpkcs11-helper1
+  opensc opensc-pkcs11 openvpn pcscd
+0 mis à jour, 10 nouvellement installés, 0 à enlever et 1 non mis à jour.
+Il est nécessaire de prendre 2 612 ko dans les archives.
+Après cette opération, 7 877 ko d'espace disque supplémentaires seront utilisés.
+Réception de :1 http://security.debian.org/debian-security bookworm-security/main amd64 dnsutils all 1:9.18.44-1~deb12u1 [11,3 kB]
+Réception de :2 http://deb.debian.org/debian bookworm/main amd64 libccid amd64 1.5.2-1 [367 kB]
+Réception de :3 https://build.openvpn.net/debian/openvpn/stable bookworm/main amd64 openvpn amd64 2.7.0-bookworm1 [678 kB]
+Réception de :4 http://deb.debian.org/debian bookworm/main amd64 libpcsclite1 amd64 1.9.9-2 [49,7 kB]
+Réception de :5 http://deb.debian.org/debian bookworm/main amd64 pcscd amd64 1.9.9-2 [89,7 kB]
+Réception de :6 http://deb.debian.org/debian bookworm/main amd64 easy-rsa all 3.1.0-1 [54,8 kB]
+Réception de :7 http://deb.debian.org/debian bookworm/main amd64 libnl-genl-3-200 amd64 3.7.0-0.2+b1 [21,6 kB]
+Réception de :8 http://deb.debian.org/debian bookworm/main amd64 libpkcs11-helper1 amd64 1.29.0-1 [51,2 kB]
+Réception de :9 http://deb.debian.org/debian bookworm/main amd64 opensc-pkcs11 amd64 0.23.0-0.3+deb12u2 [917 kB]
+Réception de :10 http://deb.debian.org/debian bookworm/main amd64 opensc amd64 0.23.0-0.3+deb12u2 [372 kB]
+Préconfiguration des paquets...
+2 612 ko réceptionnés en 8s (343 ko/s)
+Sélection du paquet libccid précédemment désélectionné.
+(Lecture de la base de données... (Lecture de la base de données... 5%(Lecture de la base de données... 10%(Lecture de la base de données... 15%(Lecture de la base de données... 20%(Lecture de la base de données... 25%(Lecture de la base de données... 30%(Lecture de la base de données... 35%(Lecture de la base de données... 40%(Lecture de la base de données... 45%(Lecture de la base de données... 50%(Lecture de la base de données... 55%(Lecture de la base de données... 60%(Lecture de la base de données... 65%(Lecture de la base de données... 70%(Lecture de la base de données... 75%(Lecture de la base de données... 80%(Lecture de la base de données... 85%(Lecture de la base de données... 90%(Lecture de la base de données... 95%(Lecture de la base de données... 100%(Lecture de la base de données... 47475 fichiers et répertoires déjà installés.)
+Préparation du dépaquetage de .../0-libccid_1.5.2-1_amd64.deb ...
+Dépaquetage de libccid (1.5.2-1) ...
+Sélection du paquet libpcsclite1:amd64 précédemment désélectionné.
+Préparation du dépaquetage de .../1-libpcsclite1_1.9.9-2_amd64.deb ...
+Dépaquetage de libpcsclite1:amd64 (1.9.9-2) ...
+Sélection du paquet pcscd précédemment désélectionné.
+Préparation du dépaquetage de .../2-pcscd_1.9.9-2_amd64.deb ...
+Dépaquetage de pcscd (1.9.9-2) ...
+Sélection du paquet dnsutils précédemment désélectionné.
+Préparation du dépaquetage de .../3-dnsutils_1%3a9.18.44-1~deb12u1_all.deb ...
+Dépaquetage de dnsutils (1:9.18.44-1~deb12u1) ...
+Sélection du paquet easy-rsa précédemment désélectionné.
+Préparation du dépaquetage de .../4-easy-rsa_3.1.0-1_all.deb ...
+Dépaquetage de easy-rsa (3.1.0-1) ...
+Sélection du paquet libnl-genl-3-200:amd64 précédemment désélectionné.
+Préparation du dépaquetage de .../5-libnl-genl-3-200_3.7.0-0.2+b1_amd64.deb ...
+Dépaquetage de libnl-genl-3-200:amd64 (3.7.0-0.2+b1) ...
+Sélection du paquet libpkcs11-helper1:amd64 précédemment désélectionné.
+Préparation du dépaquetage de .../6-libpkcs11-helper1_1.29.0-1_amd64.deb ...
+Dépaquetage de libpkcs11-helper1:amd64 (1.29.0-1) ...
+Sélection du paquet opensc-pkcs11:amd64 précédemment désélectionné.
+Préparation du dépaquetage de .../7-opensc-pkcs11_0.23.0-0.3+deb12u2_amd64.deb ...
+Dépaquetage de opensc-pkcs11:amd64 (0.23.0-0.3+deb12u2) ...
+Sélection du paquet opensc précédemment désélectionné.
+Préparation du dépaquetage de .../8-opensc_0.23.0-0.3+deb12u2_amd64.deb ...
+Dépaquetage de opensc (0.23.0-0.3+deb12u2) ...
+Sélection du paquet openvpn précédemment désélectionné.
+Préparation du dépaquetage de .../9-openvpn_2.7.0-bookworm1_amd64.deb ...
+Dépaquetage de openvpn (2.7.0-bookworm1) ...
+Paramétrage de libccid (1.5.2-1) ...
+Paramétrage de dnsutils (1:9.18.44-1~deb12u1) ...
+Paramétrage de libpkcs11-helper1:amd64 (1.29.0-1) ...
+Paramétrage de opensc-pkcs11:amd64 (0.23.0-0.3+deb12u2) ...
+Paramétrage de libpcsclite1:amd64 (1.9.9-2) ...
+Paramétrage de libnl-genl-3-200:amd64 (3.7.0-0.2+b1) ...
+Paramétrage de easy-rsa (3.1.0-1) ...
+Paramétrage de openvpn (2.7.0-bookworm1) ...
+Created symlink /etc/systemd/system/multi-user.target.wants/openvpn.service → /lib/systemd/system/openvpn.service.
+Paramétrage de opensc (0.23.0-0.3+deb12u2) ...
+Paramétrage de pcscd (1.9.9-2) ...
+Created symlink /etc/systemd/system/sockets.target.wants/pcscd.socket → /lib/systemd/system/pcscd.socket.
+pcscd.service is a disabled or a static unit, not starting it.
+Traitement des actions différées (« triggers ») pour mailcap (3.70+nmu1) ...
+Traitement des actions différées (« triggers ») pour libc-bin (2.36-9+deb12u13) ...
+Traitement des actions différées (« triggers ») pour man-db (2.11.2-2) ...
+2026-03-16 11:55:54 [DEBUG] Installing OpenVPN completed successfully
+2026-03-16 11:55:54 [INFO] Data Channel Offload (DCO) is not available (requires OpenVPN 2.6+ and kernel support)
+2026-03-16 11:55:54 [CMD] mkdir -p /etc/openvpn/server
+2026-03-16 11:55:54 [DEBUG] Creating server directory completed successfully
+2026-03-16 11:55:54 [CMD] curl -fL --retry 5 -o /root/easy-rsa.tgz https://github.com/OpenVPN/easy-rsa/releases/download/v3.2.6/EasyRSA-3.2.6.tgz
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:03 --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:--  0:00:03 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:04 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:05 --:--:--     0100 93543  100 93543    0     0  13957      0  0:00:06  0:00:06 --:--:-- 31860
+2026-03-16 11:56:00 [DEBUG] Downloading Easy-RSA v3.2.6 completed successfully
+2026-03-16 11:56:00 [INFO] Verifying Easy-RSA checksum...
+2026-03-16 11:56:00 [CHECKSUM] /root/easy-rsa.tgz: Réussi
+2026-03-16 11:56:00 [CMD] mkdir -p /etc/openvpn/server/easy-rsa
+2026-03-16 11:56:00 [DEBUG] Creating Easy-RSA directory completed successfully
+2026-03-16 11:56:00 [CMD] tar xzf /root/easy-rsa.tgz --strip-components=1 --no-same-owner --directory /etc/openvpn/server/easy-rsa
+tar: Le mot clé inconnu « LIBARCHIVE.xattr.com.apple.metadata:kMDItemTextContentLanguage » pour l'en-tête étendu a été ignoré
+2026-03-16 11:56:00 [DEBUG] Extracting Easy-RSA completed successfully
+2026-03-16 11:56:00 [CMD] rm -f /root/easy-rsa.tgz
+2026-03-16 11:56:00 [DEBUG] Cleaning up archive completed successfully
+2026-03-16 11:58:51 [DEBUG] Checking root privileges...
+2026-03-16 11:58:51 [DEBUG] Root check passed
+2026-03-16 11:58:51 [DEBUG] Checking TUN device availability...
+2026-03-16 11:58:51 [DEBUG] TUN device available at /dev/net/tun
+2026-03-16 11:58:51 [DEBUG] Detecting operating system...
+2026-03-16 11:58:51 [DEBUG] Detected OS: debian (Debian GNU/Linux 12 (bookworm))
+2026-03-16 11:58:51 [FATAL] OpenVPN is already installed. Use 'openvpn-install client' to manage clients or 'openvpn-install uninstall' to remove.
+2026-03-16 11:58:51 Script exited with error
+2026-03-16 12:04:51 [DEBUG] Checking root privileges...
+2026-03-16 12:04:51 [DEBUG] Root check passed
+2026-03-16 12:04:51 [DEBUG] Checking TUN device availability...
+2026-03-16 12:04:51 [DEBUG] TUN device available at /dev/net/tun
+2026-03-16 12:04:51 [DEBUG] Detecting operating system...
+2026-03-16 12:04:51 [DEBUG] Detected OS: debian (Debian GNU/Linux 12 (bookworm))
+2026-03-16 12:04:51 === OpenVPN Installer ===
+2026-03-16 12:04:51 [PROMPT] The git repository is available at: https://github.com/angristan/openvpn-install
+2026-03-16 12:04:51 [PROMPT] I need to ask you a few questions before starting the setup.
+2026-03-16 12:04:51 [PROMPT] You can leave the default options and just press enter if you are okay with them.
+2026-03-16 12:04:51 [PROMPT] Detecting server IP addresses...
+2026-03-16 12:04:51 [PROMPT]   IPv4 address detected: 192.168.10.3
+2026-03-16 12:04:51 [PROMPT]   No IPv6 address detected
+2026-03-16 12:04:51 [PROMPT] What IP version should clients use to connect to this server?
+2026-03-16 12:05:02 [PROMPT] Server listening IPv4 address:
+2026-03-16 12:06:14 [PROMPT] It seems this server is behind NAT. What is its public IPv4 address or hostname?
+2026-03-16 12:06:14 [PROMPT] We need it for the clients to connect to the server.
+2026-03-16 12:07:08 [DEBUG] Checking root privileges...
+2026-03-16 12:07:08 [DEBUG] Root check passed
+2026-03-16 12:07:08 [DEBUG] Checking TUN device availability...
+2026-03-16 12:07:08 [DEBUG] TUN device available at /dev/net/tun
+2026-03-16 12:07:08 [DEBUG] Detecting operating system...
+2026-03-16 12:07:08 [DEBUG] Detected OS: debian (Debian GNU/Linux 12 (bookworm))
+2026-03-16 12:07:08 === OpenVPN Installer ===
+2026-03-16 12:07:08 [PROMPT] The git repository is available at: https://github.com/angristan/openvpn-install
+2026-03-16 12:07:08 [PROMPT] I need to ask you a few questions before starting the setup.
+2026-03-16 12:07:08 [PROMPT] You can leave the default options and just press enter if you are okay with them.
+2026-03-16 12:07:08 [PROMPT] Detecting server IP addresses...
+2026-03-16 12:07:08 [PROMPT]   IPv4 address detected: 192.168.10.3
+2026-03-16 12:07:08 [PROMPT]   No IPv6 address detected
+2026-03-16 12:07:08 [PROMPT] What IP version should clients use to connect to this server?
+2026-03-16 12:07:11 [PROMPT] Server listening IPv4 address:
+2026-03-16 12:07:31 [PROMPT] It seems this server is behind NAT. What is its public IPv4 address or hostname?
+2026-03-16 12:07:31 [PROMPT] We need it for the clients to connect to the server.
+2026-03-16 12:07:37 [PROMPT] What IP versions should VPN clients use?
+2026-03-16 12:07:37 [PROMPT] This determines both their VPN addresses and internet access through the tunnel.
+2026-03-16 12:07:46 [PROMPT] IPv4 VPN subnet:
+2026-03-16 12:07:53 [PROMPT] What port do you want OpenVPN to listen to?
+2026-03-16 12:10:01 [PROMPT] What protocol do you want OpenVPN to use?
+2026-03-16 12:10:01 [PROMPT] UDP is faster. Unless it is not available, you shouldn't use TCP.
+2026-03-16 12:10:26 [PROMPT] What DNS resolvers do you want to use with the VPN?
+2026-03-16 12:12:05 [PROMPT] Do you want to allow a single .ovpn profile to be used on multiple devices simultaneously?
+2026-03-16 12:12:05 [PROMPT] Note: Enabling this disables persistent IP addresses for clients.
+2026-03-16 12:12:24 [PROMPT] Do you want to customize the tunnel MTU?
+2026-03-16 12:13:26 [PROMPT] Choose the authentication mode:
+2026-03-16 12:14:28 [PROMPT] Do you want to customize encryption settings?
+2026-03-16 12:14:28 [PROMPT] Unless you know what you're doing, you should stick with the default parameters provided by the script.
+2026-03-16 12:14:28 [PROMPT] Note that whatever you choose, all the choices presented in the script are safe (unlike OpenVPN's defaults).
+2026-03-16 12:14:28 [PROMPT] See https://github.com/angristan/openvpn-install#security-and-encryption to learn more.
+2026-03-16 12:14:52 [PROMPT] Okay, that was all I needed. We are ready to setup your OpenVPN server now.
+2026-03-16 12:14:52 [PROMPT] You will be able to generate a client at the end of the installation.
+2026-03-16 12:15:08 === Installing OpenVPN ===
+2026-03-16 12:15:08 [INFO] Setting up official OpenVPN repository...
+2026-03-16 12:15:08 [CMD] apt-get update
+Atteint :1 http://security.debian.org/debian-security bookworm-security InRelease
+Atteint :2 http://deb.debian.org/debian bookworm InRelease
+Atteint :3 http://deb.debian.org/debian bookworm-updates InRelease
+Atteint :4 https://build.openvpn.net/debian/openvpn/stable bookworm InRelease
+Lecture des listes de paquets…
+2026-03-16 12:15:15 [DEBUG] Update package lists completed successfully
+2026-03-16 12:15:15 [CMD] apt-get install -y ca-certificates curl
+Lecture des listes de paquets…
+Construction de l'arbre des dépendances…
+Lecture des informations d'état…
+ca-certificates est déjà la version la plus récente (20230311+deb12u1).
+curl est déjà la version la plus récente (7.88.1-10+deb12u14).
+0 mis à jour, 0 nouvellement installés, 0 à enlever et 1 non mis à jour.
+2026-03-16 12:15:16 [DEBUG] Installing prerequisites completed successfully
+2026-03-16 12:15:16 [CMD] mkdir -p /etc/apt/keyrings
+2026-03-16 12:15:16 [DEBUG] Creating keyrings directory completed successfully
+2026-03-16 12:15:16 [CMD] curl -fsSL https://swupdate.openvpn.net/repos/repo-public.gpg -o /etc/apt/keyrings/openvpn-repo-public.asc
+2026-03-16 12:15:19 [DEBUG] Downloading OpenVPN GPG key completed successfully
+2026-03-16 12:15:19 [INFO] Updating package lists with new repository...
+2026-03-16 12:15:19 [CMD] apt-get update
+Atteint :1 http://deb.debian.org/debian bookworm InRelease
+Atteint :2 http://security.debian.org/debian-security bookworm-security InRelease
+Atteint :3 http://deb.debian.org/debian bookworm-updates InRelease
+Atteint :4 https://build.openvpn.net/debian/openvpn/stable bookworm InRelease
+Lecture des listes de paquets…
+2026-03-16 12:15:26 [DEBUG] Update package lists completed successfully
+2026-03-16 12:15:26 [INFO] OpenVPN official repository configured
+2026-03-16 12:15:26 [INFO] Installing OpenVPN and dependencies...
+2026-03-16 12:15:26 [CMD] apt-get install -y openvpn iptables openssl curl ca-certificates tar dnsutils socat
+Lecture des listes de paquets…
+Construction de l'arbre des dépendances…
+Lecture des informations d'état…
+iptables est déjà la version la plus récente (1.8.9-2).
+openssl est déjà la version la plus récente (3.0.18-1~deb12u2).
+curl est déjà la version la plus récente (7.88.1-10+deb12u14).
+ca-certificates est déjà la version la plus récente (20230311+deb12u1).
+tar est déjà la version la plus récente (1.34+dfsg-1.2+deb12u1).
+dnsutils est déjà la version la plus récente (1:9.18.44-1~deb12u1).
+socat est déjà la version la plus récente (1.7.4.4-2).
+Les paquets supplémentaires suivants seront installés : 
+  easy-rsa libccid libnl-genl-3-200 libpcsclite1 libpkcs11-helper1 opensc
+  opensc-pkcs11 pcscd
+Paquets suggérés :
+  pcmciautils resolvconf openvpn-dco-dkms openvpn-systemd-resolved
+Les NOUVEAUX paquets suivants seront installés :
+  easy-rsa libccid libnl-genl-3-200 libpcsclite1 libpkcs11-helper1 opensc
+  opensc-pkcs11 openvpn pcscd
+Préconfiguration des paquets...
+0 mis à jour, 9 nouvellement installés, 0 à enlever et 1 non mis à jour.
+Il est nécessaire de prendre 0 o/2 601 ko dans les archives.
+Après cette opération, 7 853 ko d'espace disque supplémentaires seront utilisés.
+Sélection du paquet libccid précédemment désélectionné.
+(Lecture de la base de données... (Lecture de la base de données... 5%(Lecture de la base de données... 10%(Lecture de la base de données... 15%(Lecture de la base de données... 20%(Lecture de la base de données... 25%(Lecture de la base de données... 30%(Lecture de la base de données... 35%(Lecture de la base de données... 40%(Lecture de la base de données... 45%(Lecture de la base de données... 50%(Lecture de la base de données... 55%(Lecture de la base de données... 60%(Lecture de la base de données... 65%(Lecture de la base de données... 70%(Lecture de la base de données... 75%(Lecture de la base de données... 80%(Lecture de la base de données... 85%(Lecture de la base de données... 90%(Lecture de la base de données... 95%(Lecture de la base de données... 100%(Lecture de la base de données... 47487 fichiers et répertoires déjà installés.)
+Préparation du dépaquetage de .../0-libccid_1.5.2-1_amd64.deb ...
+Dépaquetage de libccid (1.5.2-1) ...
+Sélection du paquet libpcsclite1:amd64 précédemment désélectionné.
+Préparation du dépaquetage de .../1-libpcsclite1_1.9.9-2_amd64.deb ...
+Dépaquetage de libpcsclite1:amd64 (1.9.9-2) ...
+Sélection du paquet pcscd précédemment désélectionné.
+Préparation du dépaquetage de .../2-pcscd_1.9.9-2_amd64.deb ...
+Dépaquetage de pcscd (1.9.9-2) ...
+Sélection du paquet easy-rsa précédemment désélectionné.
+Préparation du dépaquetage de .../3-easy-rsa_3.1.0-1_all.deb ...
+Dépaquetage de easy-rsa (3.1.0-1) ...
+Sélection du paquet libnl-genl-3-200:amd64 précédemment désélectionné.
+Préparation du dépaquetage de .../4-libnl-genl-3-200_3.7.0-0.2+b1_amd64.deb ...
+Dépaquetage de libnl-genl-3-200:amd64 (3.7.0-0.2+b1) ...
+Sélection du paquet libpkcs11-helper1:amd64 précédemment désélectionné.
+Préparation du dépaquetage de .../5-libpkcs11-helper1_1.29.0-1_amd64.deb ...
+Dépaquetage de libpkcs11-helper1:amd64 (1.29.0-1) ...
+Sélection du paquet opensc-pkcs11:amd64 précédemment désélectionné.
+Préparation du dépaquetage de .../6-opensc-pkcs11_0.23.0-0.3+deb12u2_amd64.deb ...
+Dépaquetage de opensc-pkcs11:amd64 (0.23.0-0.3+deb12u2) ...
+Sélection du paquet opensc précédemment désélectionné.
+Préparation du dépaquetage de .../7-opensc_0.23.0-0.3+deb12u2_amd64.deb ...
+Dépaquetage de opensc (0.23.0-0.3+deb12u2) ...
+Sélection du paquet openvpn précédemment désélectionné.
+Préparation du dépaquetage de .../8-openvpn_2.7.0-bookworm1_amd64.deb ...
+Dépaquetage de openvpn (2.7.0-bookworm1) ...
+Paramétrage de libccid (1.5.2-1) ...
+Paramétrage de libpkcs11-helper1:amd64 (1.29.0-1) ...
+Paramétrage de opensc-pkcs11:amd64 (0.23.0-0.3+deb12u2) ...
+Paramétrage de libpcsclite1:amd64 (1.9.9-2) ...
+Paramétrage de libnl-genl-3-200:amd64 (3.7.0-0.2+b1) ...
+Paramétrage de easy-rsa (3.1.0-1) ...
+Paramétrage de openvpn (2.7.0-bookworm1) ...
+Created symlink /etc/systemd/system/multi-user.target.wants/openvpn.service → /lib/systemd/system/openvpn.service.
+Paramétrage de opensc (0.23.0-0.3+deb12u2) ...
+Paramétrage de pcscd (1.9.9-2) ...
+Traitement des actions différées (« triggers ») pour mailcap (3.70+nmu1) ...
+Traitement des actions différées (« triggers ») pour libc-bin (2.36-9+deb12u13) ...
+Traitement des actions différées (« triggers ») pour man-db (2.11.2-2) ...
+2026-03-16 12:15:30 [DEBUG] Installing OpenVPN completed successfully
+2026-03-16 12:15:30 [INFO] Data Channel Offload (DCO) is not available (requires OpenVPN 2.6+ and kernel support)
+2026-03-16 12:15:30 [CMD] mkdir -p /etc/openvpn/server
+2026-03-16 12:15:30 [DEBUG] Creating server directory completed successfully
+2026-03-16 12:15:30 [CMD] curl -fL --retry 5 -o /root/easy-rsa.tgz https://github.com/OpenVPN/easy-rsa/releases/download/v3.2.6/EasyRSA-3.2.6.tgz
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:03 --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:--  0:00:03 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:04 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:05 --:--:--     0100 93543  100 93543    0     0  14135      0  0:00:06  0:00:06 --:--:-- 33855
+2026-03-16 12:15:36 [DEBUG] Downloading Easy-RSA v3.2.6 completed successfully
+2026-03-16 12:15:36 [INFO] Verifying Easy-RSA checksum...
+2026-03-16 12:15:36 [CHECKSUM] /root/easy-rsa.tgz: Réussi
+2026-03-16 12:15:36 [CMD] mkdir -p /etc/openvpn/server/easy-rsa
+2026-03-16 12:15:36 [DEBUG] Creating Easy-RSA directory completed successfully
+2026-03-16 12:15:36 [CMD] tar xzf /root/easy-rsa.tgz --strip-components=1 --no-same-owner --directory /etc/openvpn/server/easy-rsa
+tar: Le mot clé inconnu « LIBARCHIVE.xattr.com.apple.metadata:kMDItemTextContentLanguage » pour l'en-tête étendu a été ignoré
+2026-03-16 12:15:36 [DEBUG] Extracting Easy-RSA completed successfully
+2026-03-16 12:15:36 [CMD] rm -f /root/easy-rsa.tgz
+2026-03-16 12:15:36 [DEBUG] Cleaning up archive completed successfully
+2026-03-17 08:23:02 [DEBUG] Checking root privileges...
+2026-03-17 08:23:02 [DEBUG] Root check passed
+2026-03-17 08:23:02 [DEBUG] Checking TUN device availability...
+2026-03-17 08:23:02 [DEBUG] TUN device available at /dev/net/tun
+2026-03-17 08:23:02 [DEBUG] Detecting operating system...
+2026-03-17 08:23:02 [DEBUG] Detected OS: debian (Debian GNU/Linux 12 (bookworm))
+2026-03-17 08:23:02 === OpenVPN Installer ===
+2026-03-17 08:23:02 [PROMPT] The git repository is available at: https://github.com/angristan/openvpn-install
+2026-03-17 08:23:02 [PROMPT] I need to ask you a few questions before starting the setup.
+2026-03-17 08:23:02 [PROMPT] You can leave the default options and just press enter if you are okay with them.
+2026-03-17 08:23:02 [PROMPT] Detecting server IP addresses...
+2026-03-17 08:23:02 [PROMPT]   IPv4 address detected: 192.168.10.3
+2026-03-17 08:23:02 [PROMPT]   No IPv6 address detected
+2026-03-17 08:23:02 [PROMPT] What IP version should clients use to connect to this server?
+2026-03-17 08:23:04 [PROMPT] Server listening IPv4 address:
+2026-03-17 08:23:07 [PROMPT] It seems this server is behind NAT. What is its public IPv4 address or hostname?
+2026-03-17 08:23:07 [PROMPT] We need it for the clients to connect to the server.
+2026-03-17 08:23:15 [PROMPT] What IP versions should VPN clients use?
+2026-03-17 08:23:15 [PROMPT] This determines both their VPN addresses and internet access through the tunnel.
+2026-03-17 08:23:21 [PROMPT] IPv4 VPN subnet:
+2026-03-17 08:23:26 [PROMPT] What port do you want OpenVPN to listen to?
+2026-03-17 08:23:29 [PROMPT] What protocol do you want OpenVPN to use?
+2026-03-17 08:23:29 [PROMPT] UDP is faster. Unless it is not available, you shouldn't use TCP.
+2026-03-17 08:23:31 [PROMPT] What DNS resolvers do you want to use with the VPN?
+2026-03-17 08:23:33 [PROMPT] Do you want to allow a single .ovpn profile to be used on multiple devices simultaneously?
+2026-03-17 08:23:33 [PROMPT] Note: Enabling this disables persistent IP addresses for clients.
+2026-03-17 08:23:35 [PROMPT] Do you want to customize the tunnel MTU?
+2026-03-17 08:23:44 [PROMPT] Choose the authentication mode:
+2026-03-17 08:23:48 [PROMPT] Do you want to customize encryption settings?
+2026-03-17 08:23:48 [PROMPT] Unless you know what you're doing, you should stick with the default parameters provided by the script.
+2026-03-17 08:23:48 [PROMPT] Note that whatever you choose, all the choices presented in the script are safe (unlike OpenVPN's defaults).
+2026-03-17 08:23:48 [PROMPT] See https://github.com/angristan/openvpn-install#security-and-encryption to learn more.
+2026-03-17 08:23:49 [PROMPT] Okay, that was all I needed. We are ready to setup your OpenVPN server now.
+2026-03-17 08:23:49 [PROMPT] You will be able to generate a client at the end of the installation.
+2026-03-17 08:24:01 === Installing OpenVPN ===
+2026-03-17 08:24:01 [INFO] Setting up official OpenVPN repository...
+2026-03-17 08:24:01 [CMD] apt-get update
+Atteint :1 http://security.debian.org/debian-security bookworm-security InRelease
+Atteint :2 http://deb.debian.org/debian bookworm InRelease
+Réception de :3 http://deb.debian.org/debian bookworm-updates InRelease [55,4 kB]
+Atteint :4 https://build.openvpn.net/debian/openvpn/stable bookworm InRelease
+55,4 ko réceptionnés en 7s (8 274 o/s)
+Lecture des listes de paquets…
+2026-03-17 08:24:08 [DEBUG] Update package lists completed successfully
+2026-03-17 08:24:08 [CMD] apt-get install -y ca-certificates curl
+Lecture des listes de paquets…
+Construction de l'arbre des dépendances…
+Lecture des informations d'état…
+ca-certificates est déjà la version la plus récente (20230311+deb12u1).
+curl est déjà la version la plus récente (7.88.1-10+deb12u14).
+0 mis à jour, 0 nouvellement installés, 0 à enlever et 0 non mis à jour.
+2026-03-17 08:24:09 [DEBUG] Installing prerequisites completed successfully
+2026-03-17 08:24:09 [CMD] mkdir -p /etc/apt/keyrings
+2026-03-17 08:24:09 [DEBUG] Creating keyrings directory completed successfully
+2026-03-17 08:24:09 [CMD] curl -fsSL https://swupdate.openvpn.net/repos/repo-public.gpg -o /etc/apt/keyrings/openvpn-repo-public.asc
+2026-03-17 08:24:12 [DEBUG] Downloading OpenVPN GPG key completed successfully
+2026-03-17 08:24:12 [INFO] Updating package lists with new repository...
+2026-03-17 08:24:12 [CMD] apt-get update
+Atteint :1 http://security.debian.org/debian-security bookworm-security InRelease
+Atteint :2 http://deb.debian.org/debian bookworm InRelease
+Atteint :3 http://deb.debian.org/debian bookworm-updates InRelease
+Atteint :4 https://build.openvpn.net/debian/openvpn/stable bookworm InRelease
+Lecture des listes de paquets…
+2026-03-17 08:24:19 [DEBUG] Update package lists completed successfully
+2026-03-17 08:24:19 [INFO] OpenVPN official repository configured
+2026-03-17 08:24:19 [INFO] Installing OpenVPN and dependencies...
+2026-03-17 08:24:19 [CMD] apt-get install -y openvpn iptables openssl curl ca-certificates tar dnsutils socat
+Lecture des listes de paquets…
+Construction de l'arbre des dépendances…
+Lecture des informations d'état…
+iptables est déjà la version la plus récente (1.8.9-2).
+openssl est déjà la version la plus récente (3.0.18-1~deb12u2).
+curl est déjà la version la plus récente (7.88.1-10+deb12u14).
+ca-certificates est déjà la version la plus récente (20230311+deb12u1).
+tar est déjà la version la plus récente (1.34+dfsg-1.2+deb12u1).
+dnsutils est déjà la version la plus récente (1:9.18.44-1~deb12u1).
+socat est déjà la version la plus récente (1.7.4.4-2).
+Les paquets supplémentaires suivants seront installés : 
+  easy-rsa libccid libnl-genl-3-200 libpcsclite1 libpkcs11-helper1 opensc
+  opensc-pkcs11 pcscd
+Paquets suggérés :
+  pcmciautils resolvconf openvpn-dco-dkms openvpn-systemd-resolved
+Les NOUVEAUX paquets suivants seront installés :
+  easy-rsa libccid libnl-genl-3-200 libpcsclite1 libpkcs11-helper1 opensc
+  opensc-pkcs11 openvpn pcscd
+Préconfiguration des paquets...
+0 mis à jour, 9 nouvellement installés, 0 à enlever et 0 non mis à jour.
+Il est nécessaire de prendre 0 o/2 601 ko dans les archives.
+Après cette opération, 7 853 ko d'espace disque supplémentaires seront utilisés.
+Sélection du paquet libccid précédemment désélectionné.
+(Lecture de la base de données... (Lecture de la base de données... 5%(Lecture de la base de données... 10%(Lecture de la base de données... 15%(Lecture de la base de données... 20%(Lecture de la base de données... 25%(Lecture de la base de données... 30%(Lecture de la base de données... 35%(Lecture de la base de données... 40%(Lecture de la base de données... 45%(Lecture de la base de données... 50%(Lecture de la base de données... 55%(Lecture de la base de données... 60%(Lecture de la base de données... 65%(Lecture de la base de données... 70%(Lecture de la base de données... 75%(Lecture de la base de données... 80%(Lecture de la base de données... 85%(Lecture de la base de données... 90%(Lecture de la base de données... 95%(Lecture de la base de données... 100%(Lecture de la base de données... 47488 fichiers et répertoires déjà installés.)
+Préparation du dépaquetage de .../0-libccid_1.5.2-1_amd64.deb ...
+Dépaquetage de libccid (1.5.2-1) ...
+Sélection du paquet libpcsclite1:amd64 précédemment désélectionné.
+Préparation du dépaquetage de .../1-libpcsclite1_1.9.9-2_amd64.deb ...
+Dépaquetage de libpcsclite1:amd64 (1.9.9-2) ...
+Sélection du paquet pcscd précédemment désélectionné.
+Préparation du dépaquetage de .../2-pcscd_1.9.9-2_amd64.deb ...
+Dépaquetage de pcscd (1.9.9-2) ...
+Sélection du paquet easy-rsa précédemment désélectionné.
+Préparation du dépaquetage de .../3-easy-rsa_3.1.0-1_all.deb ...
+Dépaquetage de easy-rsa (3.1.0-1) ...
+Sélection du paquet libnl-genl-3-200:amd64 précédemment désélectionné.
+Préparation du dépaquetage de .../4-libnl-genl-3-200_3.7.0-0.2+b1_amd64.deb ...
+Dépaquetage de libnl-genl-3-200:amd64 (3.7.0-0.2+b1) ...
+Sélection du paquet libpkcs11-helper1:amd64 précédemment désélectionné.
+Préparation du dépaquetage de .../5-libpkcs11-helper1_1.29.0-1_amd64.deb ...
+Dépaquetage de libpkcs11-helper1:amd64 (1.29.0-1) ...
+Sélection du paquet opensc-pkcs11:amd64 précédemment désélectionné.
+Préparation du dépaquetage de .../6-opensc-pkcs11_0.23.0-0.3+deb12u2_amd64.deb ...
+Dépaquetage de opensc-pkcs11:amd64 (0.23.0-0.3+deb12u2) ...
+Sélection du paquet opensc précédemment désélectionné.
+Préparation du dépaquetage de .../7-opensc_0.23.0-0.3+deb12u2_amd64.deb ...
+Dépaquetage de opensc (0.23.0-0.3+deb12u2) ...
+Sélection du paquet openvpn précédemment désélectionné.
+Préparation du dépaquetage de .../8-openvpn_2.7.0-bookworm1_amd64.deb ...
+Dépaquetage de openvpn (2.7.0-bookworm1) ...
+Paramétrage de libccid (1.5.2-1) ...
+Paramétrage de libpkcs11-helper1:amd64 (1.29.0-1) ...
+Paramétrage de opensc-pkcs11:amd64 (0.23.0-0.3+deb12u2) ...
+Paramétrage de libpcsclite1:amd64 (1.9.9-2) ...
+Paramétrage de libnl-genl-3-200:amd64 (3.7.0-0.2+b1) ...
+Paramétrage de easy-rsa (3.1.0-1) ...
+Paramétrage de openvpn (2.7.0-bookworm1) ...
+A reboot is required to replace the running openvpn.
+Please reboot the system as soon as possible.
+Created symlink /etc/systemd/system/multi-user.target.wants/openvpn.service → /lib/systemd/system/openvpn.service.
+Paramétrage de opensc (0.23.0-0.3+deb12u2) ...
+Paramétrage de pcscd (1.9.9-2) ...
+Traitement des actions différées (« triggers ») pour mailcap (3.70+nmu1) ...
+Traitement des actions différées (« triggers ») pour libc-bin (2.36-9+deb12u13) ...
+Traitement des actions différées (« triggers ») pour man-db (2.11.2-2) ...
+2026-03-17 08:24:23 [DEBUG] Installing OpenVPN completed successfully
+2026-03-17 08:24:23 [INFO] Data Channel Offload (DCO) is not available (requires OpenVPN 2.6+ and kernel support)
+2026-03-17 08:24:23 [CMD] mkdir -p /etc/openvpn/server
+2026-03-17 08:24:23 [DEBUG] Creating server directory completed successfully
+2026-03-17 08:24:23 [CMD] curl -fL --retry 5 -o /root/easy-rsa.tgz https://github.com/OpenVPN/easy-rsa/releases/download/v3.2.6/EasyRSA-3.2.6.tgz
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:03 --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:--  0:00:03 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:04 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:05 --:--:--     0 38 93543   38 35658    0     0   5323      0  0:00:17  0:00:06  0:00:11 12355100 93543  100 93543    0     0  13908      0  0:00:06  0:00:06 --:--:-- 32112
+2026-03-17 08:24:29 [DEBUG] Downloading Easy-RSA v3.2.6 completed successfully
+2026-03-17 08:24:29 [INFO] Verifying Easy-RSA checksum...
+2026-03-17 08:24:29 [CHECKSUM] /root/easy-rsa.tgz: Réussi
+2026-03-17 08:24:29 [CMD] mkdir -p /etc/openvpn/server/easy-rsa
+2026-03-17 08:24:30 [DEBUG] Creating Easy-RSA directory completed successfully
+2026-03-17 08:24:30 [CMD] tar xzf /root/easy-rsa.tgz --strip-components=1 --no-same-owner --directory /etc/openvpn/server/easy-rsa
+tar: Le mot clé inconnu « LIBARCHIVE.xattr.com.apple.metadata:kMDItemTextContentLanguage » pour l'en-tête étendu a été ignoré
+2026-03-17 08:24:30 [DEBUG] Extracting Easy-RSA completed successfully
+2026-03-17 08:24:30 [CMD] rm -f /root/easy-rsa.tgz
+2026-03-17 08:24:30 [DEBUG] Cleaning up archive completed successfully

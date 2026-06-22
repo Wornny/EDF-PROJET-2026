@@ -1,0 +1,411 @@
+/* Réinitialisation de base de la page */
+html, body {
+  margin: 0; /* Supprime les marges par défaut du navigateur */
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* Empêche l'apparition des barres de défilement */
+  overscroll-behavior: none; /* Désactive l'effet de rebond sur mobile */
+}
+
+/* Les dimensions incluent automatiquement padding et bordures */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif; /* Police principale */
+  min-height: 100dvh; /* Hauteur minimale de l'écran */
+  display: flex;
+  justify-content: center; /* Centre horizontalement */
+  align-items: center; /* Centre verticalement */
+  background: url("../images/Background.png") center/cover no-repeat;
+  background-size: cover;
+  background-position: center;
+  padding: 12px;
+}
+
+/* Mode plein écran */
+body.fullscreen {
+  overflow: hidden;
+  width: 100vw;
+  height: 100dvh;
+}
+
+/* Conteneur principal de l'application */
+.container {
+  width: min(900px, calc(100vw - 40px));
+  max-width: 900px;
+  background: rgba(255, 255, 255, 0.9); /* Fond blanc légèrement transparent */
+  border-radius: 30px;
+  padding: 20px 30px 24px;
+  text-align: center;
+  overflow: hidden;
+}
+
+/* Ajustement du pavé numérique en plein écran */
+body.fullscreen .keypad {
+  grid-template-columns: repeat(3, 70px);
+  gap: 15px;
+}
+
+/* Boutons du pavé numérique en plein écran */
+body.fullscreen .keypad button {
+  width: 70px;
+  height: 70px;
+  font-size: 25px;
+}
+
+/* Réduction de l'espacement des boutons d'action */
+body.fullscreen .action-buttons {
+  gap: 10px;
+}
+
+/* Conteneur des interrupteurs (switchs) */
+.switch-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+}
+
+/* Largeur fixe des labels */
+.switch-container label {
+    width: 280px;
+    text-align: center;
+}
+
+/* Alignement des textes Formation et Visite */
+#formationLabel,
+#visiteLabel {
+    display: inline-block;
+    width: 250px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* Taille des boutons d'action en plein écran */
+body.fullscreen .action-buttons button {
+  width: 180px;
+  height: 70px;
+  font-size: 18px;
+}
+
+/* Titre principal */
+h1 {
+  margin: 0;
+  font-size: 42px;
+  font-weight: bold;
+  color: #222;
+}
+
+/* Taille du titre en plein écran */
+body.fullscreen h1 {
+  font-size: 32px;
+}
+
+/* Bouton d'activation du plein écran */
+#fullscreenBtn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 18px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Effet au survol */
+#fullscreenBtn:hover {
+  background-color: #45a049;
+}
+
+/* Style général des listes déroulantes */
+select {
+  margin-top: 24px;
+  padding: 12px;
+  font-size: 18px;
+  border-radius: 8px;
+  border: none;
+}
+
+/* Réorganisation du conteneur des switchs */
+.switch-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  margin-top: 20px;
+  gap: 20px;
+}
+
+/* Style général des labels */
+label {
+  font-size: 22px;
+  font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Structure du switch personnalisé */
+.switch {
+  position: relative;
+  width: 90px;
+  height: 50px;
+}
+
+/* Cache la checkbox native */
+.switch input {
+  display: none;
+}
+
+/* Barre du switch */
+.slider {
+  position: absolute;
+  inset: 0;
+  background-color: #bbb;
+  border-radius: 50px;
+  transition: 0.3s;
+}
+
+/* Curseur du switch */
+.slider:before {
+  content: "";
+  position: absolute;
+  width: 38px;
+  height: 38px;
+  left: 6px;
+  top: 6px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+/* Switch activé */
+input:checked + .slider {
+  background-color: #4CAF50;
+}
+
+/* Déplacement du curseur */
+input:checked + .slider:before {
+  left: calc(100% - 44px);
+}
+
+/* Apparence lorsque le switch est désactivé */
+input:disabled + .slider {
+  background-color: #999;
+}
+
+/* Champ d'affichage du numéro saisi */
+#display {
+  margin: 16px auto;
+  padding: 12px;
+  width: 260px;
+  font-size: 24px;
+  text-align: center;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+}
+
+/* Zone contenant le clavier et les boutons d'action */
+.main-zone {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 35px;
+  margin-top: 15px;
+}
+
+/* Pavé numérique */
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 80px);
+  gap: 18px;
+}
+
+/* Boutons du clavier */
+.keypad button {
+  width: 80px;
+  height: 80px;
+  font-size: 30px;
+  font-weight: bold;
+  border-radius: 15px;
+  border: 2px solid black;
+  background: white;
+}
+
+/* Colonne des boutons d'action */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Style commun des boutons d'action */
+.action-buttons button {
+  width: 200px;
+  height: 80px;
+  font-size: 20px;
+  font-weight: bold;
+  border-radius: 15px;
+  border: none;
+}
+
+/* Bouton Rechercher */
+.search-btn {
+  background: #1e73e8;
+  color: white;
+}
+
+/* Bouton Enregistrer */
+.savebtn {
+  background: #18a118;
+  color: white;
+}
+
+/* Bouton Supprimer */
+.deletebtn {
+  background: #FF2C2C;
+  color: white;
+}
+
+/* Bouton Supprimer tout */
+.deleteallbtn {
+  background: #FF7518;
+  color: white;
+}
+
+/* Bouton retour flottant */
+.back {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: rgba(220,220,220,0.92);
+  border: 2px solid #ccc;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+  color: #4aa3ff;
+  display: grid;
+  place-items: center;
+  font-size: 62px;
+  font-weight: 900;
+  z-index: 50;
+  cursor: pointer;
+}
+
+/* Effet au survol du bouton retour */
+.back:hover {
+  background: rgba(200,200,200,1);
+}
+
+/* Apparence des boutons désactivés */
+button:disabled {
+  background: #bbb !important;
+  cursor: not-allowed;
+}
+
+/* Zone d'affichage des résultats */
+#result {
+  font-size: 18px;
+  font-weight: bold;
+  min-height: 24px;
+}
+
+/* Résultat agrandi en plein écran */
+body.fullscreen #result {
+  font-size: 24px;
+  color: #000;
+}
+
+/* ==========================
+   Fenêtre de confirmation
+   ========================== */
+#customConfirm {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6); /* Fond sombre */
+  display: none;
+  place-items: center;
+  z-index: 999999;
+}
+
+/* Affichage de la popup */
+#customConfirm.show {
+  display: grid;
+}
+
+/* Boîte centrale */
+#customConfirm .confirm-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 36px 48px;
+  text-align: center;
+  font-size: 26px;
+  font-weight: 700;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 320px;
+}
+
+/* Ligne des boutons */
+#customConfirm .confirm-row {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+/* Bouton Oui */
+#customConfirm .btn-oui {
+  background: #FF7518;
+  color: white;
+  font-weight: 900;
+  font-size: 22px;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 40px;
+  cursor: pointer;
+}
+
+/* Bouton Non */
+#customConfirm .btn-non {
+  background: #555;
+  color: white;
+  font-weight: 900;
+  font-size: 22px;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 40px;
+  cursor: pointer;
+}
+
+/* ==========================
+   Adaptation tablette
+   ========================== */
+@media (max-width: 1024px) {
+
+  /* Réduit légèrement les marges */
+  body {
+    padding: 8px;
+  }
+
+  /* Réduit la taille globale du conteneur */
+  .container {
+    transform: scale(0.88);
+    transform-origin: center center;
+  }
+
+  /* Bouton retour plus compact */
+  .back {
+    width: 82px;
+    height: 82px;
+    font-size: 42px;
+    left: 10px;
+    bottom: 10px;
+  }
+}

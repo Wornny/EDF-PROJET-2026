@@ -1,0 +1,127 @@
+<!-- Template page Réglages. Affiche les options de configuration et gestion des utilisateurs. -->
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Réglages</title>
+  <script src="{{ url_for('static', filename='accueil/forcer_reconnexion_reouverture_onglet.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='general/general.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='reglages/styleReglages.css') }}?v=2">
+  <script defer src="{{ url_for('static', filename='reglages/scriptReglages.js') }}?v=2"></script>
+</head>
+<body class="reglages-page">
+
+  <div class="banner">
+    <p class="reglages-id-display">Réglages</p>
+    <a class="home-link" href="{{ url_for('accueil.accueil_page') }}" title="Accueil" aria-label="Accueil">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M3 10.5L12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5v-9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="M9 20v-6h6v6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+      </svg>
+    </a>
+  </div>
+
+  <main class="reglages-main">
+    <form class="reglages-form" id="reglages-form" novalidate autocomplete="off">
+      <h2 class="user-management-title" id="user-management-title">Gestion de l'application</h2>
+       <p class="user-management-note">Ici vous pouvez configurer le nom de l'application ainsi que le nombre max de chaque équipements</p>
+
+      <div class="reglages-group">
+        <label class="reglages-label" for="reglages-nom">Nom de l'application </label>
+        <input class="reglages-input" id="reglages-nom" name="nom" type="text" maxlength="64" placeholder="{{ reglages_nom or 'Ex : Configuration principale' }}" />
+      </div>
+
+      <div class="reglages-group">
+        <label class="reglages-label" for="reglages-valeur1">Nombres de controlleur mobile</label>
+        <input class="reglages-input" id="reglages-valeur1" name="valeur1" type="number" min="1" max="30" step="1" placeholder="{{ reglages_cm or '0' }}" />
+      </div>
+
+      <div class="reglages-group">
+        <label class="reglages-label" for="reglages-valeur2">Nombre de CPO</label>
+        <input class="reglages-input" id="reglages-valeur2" name="valeur2" type="number" min="1" max="30" step="1" placeholder="{{ reglages_cpo or '0' }}" />
+      </div>
+
+      <div class="reglages-group">
+        <label class="reglages-label" for="reglages-valeur3">Nombre de C2</label>
+        <input class="reglages-input" id="reglages-valeur3" name="valeur3" type="number" min="1" max="6" step="1" placeholder="{{ reglages_c2 or '0' }}" />
+      </div>
+
+      <div class="reglages-error" id="reglages-error" aria-live="polite"></div>
+
+      <button class="reglages-submit" id="reglages-submit" type="submit">Enregistrer</button>
+
+    </form>
+
+    <section class="user-management" aria-labelledby="user-management-title">
+      <h2 class="user-management-title" id="user-management-title">Gestion des utilisateurs</h2>
+      <p class="user-management-note">Sélectionnez un utilisateur dans le menu déroulant et cliquez sur « Supprimer ». Vous ne pouvez pas supprimer votre propre compte.</p>
+
+      <div class="user-select-row">
+        <div class="custom-select" id="user-select">
+          <button class="custom-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+            <span class="custom-select-value">Choisir un utilisateur...</span>
+            <svg class="custom-select-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <ul class="custom-select-options" role="listbox">
+            {% if users %}
+              {% for user in users %}
+                <li class="custom-select-option{% if session.get('user_id') == user.id %} disabled{% endif %}"
+                    role="option"
+                    data-value="{{ user.id }}"
+                    data-username="{{ user.username }}"
+                    data-role="{{ user.role }}"
+                    {% if session.get('user_id') == user.id %}aria-disabled="true"{% endif %}>
+                  {{ user.username }}
+                </li>
+              {% endfor %}
+            {% endif %}
+          </ul>
+        </div>
+        <button class="user-delete" type="button" id="user-delete-btn" disabled>Supprimer</button>
+      </div>
+
+      <div class="user-add-form">
+        <div class="reglages-group">
+          <label class="reglages-label" for="user-add-username">Nouveau nom d'utilisateur</label>
+          <input class="reglages-input" id="user-add-username" type="text" maxlength="64" placeholder="Ex: utilisateur" />
+        </div>
+        <div class="reglages-group">
+          <label class="reglages-label" for="user-add-password">Mot de passe</label>
+          <input class="reglages-input" id="user-add-password" type="password" maxlength="64" placeholder="••••••••" />
+        </div>
+        <div class="reglages-group">
+          <label class="reglages-label" for="user-add-role">Rôle</label>
+          <select class="reglages-input" id="user-add-role">
+            <option value="utilisateur">Utilisateur</option>
+            <option value="administrateur">Administrateur</option>
+          </select>
+        </div>
+        <div class="reglages-error" id="user-error" aria-live="polite"></div>
+        <button class="reglages-submit" id="user-add-submit" type="button">Ajouter un utilisateur</button>
+      </div>
+    </section>
+
+    <section class="user-management" aria-labelledby="cert-section-title" style="flex:1 1 320px;text-align:center;">
+      <h2 class="user-management-title" id="cert-section-title">Certificat HTTPS</h2>
+      <p class="user-management-note" style="font-size:0.82rem;margin-bottom:16px;">Installez ce certificat pour accéder à l'application en HTTPS sans avertissement.</p>
+      <a class="reglages-submit" href="/ca.crt" download="ca.crt" style="display:block;text-decoration:none;">
+        Télécharger le certificat
+      </a>
+    </section>
+
+  </main>
+
+  <div class="reglages-modal" id="user-delete-modal" aria-hidden="true">
+    <div class="reglages-modal-card" role="dialog" aria-modal="true" aria-labelledby="user-delete-modal-title">
+      <button class="reglages-modal-close" type="button" id="user-delete-modal-close" aria-label="Fermer">×</button>
+      <h3 class="reglages-modal-title" id="user-delete-modal-title">Confirmation de suppression</h3>
+      <p class="reglages-modal-text">Êtes-vous sûr de vouloir supprimer cet utilisateur ?</p>
+      <div class="reglages-modal-error" id="user-delete-error" aria-live="polite"></div>
+      <button class="reglages-modal-submit btn-danger" id="user-delete-confirm" type="button">Oui, supprimer</button>
+      <button class="reglages-modal-submit btn-cancel" id="user-delete-cancel" type="button">Non, annuler</button>
+    </div>
+  </div>
+</body>
+</html>
